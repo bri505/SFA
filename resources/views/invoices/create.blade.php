@@ -1297,7 +1297,6 @@
     </div>
 
 </div>
-```
 
 </div>
 
@@ -1310,7 +1309,6 @@ MODAL NUEVA EMPRESA
     class="sfa-modal"
 >
 
-```
 <div class="sfa-modal-box">
 
     <div class="sfa-modal-header">
@@ -1414,7 +1412,6 @@ MODAL NUEVA EMPRESA
     </form>
 
 </div>
-```
 
 </div>
 
@@ -1427,7 +1424,6 @@ MODAL NUEVO BROKER
     class="sfa-modal"
 >
 
-```
 <div class="sfa-modal-box">
 
     <div class="sfa-modal-header">
@@ -1495,7 +1491,6 @@ MODAL NUEVO BROKER
     </form>
 
 </div>
-```
 
 </div>
 
@@ -1508,7 +1503,6 @@ MODAL NUEVO CONSIGNATARIO
     class="sfa-modal"
 >
 
-```
 <div class="sfa-modal-box">
 
     <div class="sfa-modal-header">
@@ -1590,7 +1584,6 @@ FORMULARIO REAL
     style="display:none;"
 >
 
-```
 @csrf
 
 <input
@@ -1650,7 +1643,6 @@ FORMULARIO REAL
 <div id="formRecordCompanies"></div>
 
 <div id="formRecords"></div>
-```
 
 </form>
 

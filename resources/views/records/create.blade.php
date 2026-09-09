@@ -1373,137 +1373,192 @@
         'DOMContentLoaded',
         function () {
 
+/* =====================================================
+   IMAGEN
+===================================================== */
 
-            /* =====================================================
-               IMAGEN
-            ===================================================== */
+const imageInput =
+    document.getElementById('recordImage');
 
-            const imageInput =
-                document.getElementById('recordImage');
+const imagePreviewContainer =
+    document.getElementById(
+        'imagePreviewContainer'
+    );
 
-            const imagePreviewContainer =
-                document.getElementById(
-                    'imagePreviewContainer'
-                );
+const imagePreview =
+    document.getElementById('imagePreview');
 
-            const imagePreview =
-                document.getElementById('imagePreview');
+const imageName =
+    document.getElementById('imageName');
 
-            const imageName =
-                document.getElementById('imageName');
+const removeImage =
+    document.getElementById('removeImage');
 
-            const removeImage =
-                document.getElementById('removeImage');
+
+if (
+    imageInput &&
+    imagePreviewContainer &&
+    imagePreview &&
+    imageName &&
+    removeImage
+) {
+
+    /* =================================================
+       CUANDO SE AGREGA O TOMA UNA IMAGEN
+    ================================================== */
+
+    imageInput.addEventListener(
+        'change',
+        function () {
+
+            const file = this.files[0];
+
+
+            /* -----------------------------------------
+               NO HAY ARCHIVO
+            ------------------------------------------ */
+
+            if (!file) {
+
+                imagePreview.src = '';
+
+                imageName.textContent = '';
+
+                imagePreviewContainer.style.display =
+                    'none';
+
+                return;
+            }
+
+
+            /* -----------------------------------------
+               TIPOS PERMITIDOS
+            ------------------------------------------ */
+
+            const allowedTypes = [
+                'image/jpeg',
+                'image/png',
+                'image/webp'
+            ];
 
 
             if (
-                imageInput &&
-                imagePreviewContainer &&
-                imagePreview &&
-                imageName &&
-                removeImage
+                !allowedTypes.includes(file.type)
             ) {
 
-
-                imageInput.addEventListener(
-                    'change',
-                    function () {
-
-                        const file =
-                            this.files[0];
-
-
-                        if (!file) {
-                            return;
-                        }
-
-
-                        const allowedTypes = [
-
-                            'image/jpeg',
-                            'image/png',
-                            'image/webp'
-
-                        ];
-
-
-                        if (
-                            !allowedTypes.includes(
-                                file.type
-                            )
-                        ) {
-
-                            alert(
-                                {{ __('records.modal.image_jpg_png_webp') }}
-                            );
-
-                            this.value = '';
-
-                            return;
-                        }
-
-
-                        if (
-                            file.size >
-                            10 * 1024 * 1024
-                        ) {
-
-                            alert(
-                                '{{ __('records.modal.image_mb') }}'
-                            );
-
-                            this.value = '';
-
-                            return;
-                        }
-
-
-                        const reader =
-                            new FileReader();
-
-
-                        reader.onload =
-                            function (event) {
-
-                                imagePreview.src =
-                                    event.target.result;
-
-                                imageName.textContent =
-                                    file.name;
-
-                                imagePreviewContainer
-                                    .style
-                                    .display =
-                                    'block';
-
-                            };
-
-
-                        reader.readAsDataURL(file);
-
-                    }
+                alert(
+                    '{{ __('records.modal.image_jpg_png_webp') }}'
                 );
 
+                this.value = '';
 
-                removeImage.addEventListener(
-                    'click',
-                    function () {
+                imagePreview.src = '';
 
-                        imageInput.value = '';
+                imageName.textContent = '';
 
-                        imagePreview.src = '';
+                imagePreviewContainer.style.display =
+                    'none';
 
-                        imageName.textContent = '';
-
-                        imagePreviewContainer
-                            .style
-                            .display =
-                            'none';
-
-                    }
-                );
-
+                return;
             }
+
+
+            /* -----------------------------------------
+               TAMAÑO MÁXIMO: 10 MB
+            ------------------------------------------ */
+
+            if (
+                file.size >
+                10 * 1024 * 1024
+            ) {
+
+                alert(
+                    '{{ __('records.modal.image_mb') }}'
+                );
+
+                this.value = '';
+
+                imagePreview.src = '';
+
+                imageName.textContent = '';
+
+                imagePreviewContainer.style.display =
+                    'none';
+
+                return;
+            }
+
+
+            /* -----------------------------------------
+               MOSTRAR VISTA PREVIA
+            ------------------------------------------ */
+
+            const reader =
+                new FileReader();
+
+
+            reader.onload =
+                function (event) {
+
+                    imagePreview.src =
+                        event.target.result;
+
+                    imageName.textContent =
+                        file.name;
+
+                    imagePreviewContainer.style.display =
+                        'block';
+
+                };
+
+
+            reader.onerror =
+                function () {
+
+                    alert(
+                        'No se pudo visualizar la imagen.'
+                    );
+
+                    imageInput.value = '';
+
+                    imagePreview.src = '';
+
+                    imageName.textContent = '';
+
+                    imagePreviewContainer.style.display =
+                        'none';
+
+                };
+
+
+            reader.readAsDataURL(file);
+
+        }
+    );
+
+
+    /* =================================================
+       QUITAR IMAGEN
+    ================================================== */
+
+    removeImage.addEventListener(
+        'click',
+        function () {
+
+            imageInput.value = '';
+
+            imagePreview.src = '';
+
+            imageName.textContent = '';
+
+            imagePreviewContainer.style.display =
+                'none';
+
+        }
+    );
+
+}
+
 
 
             /* =====================================================

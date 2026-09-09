@@ -949,24 +949,32 @@
 
                         <div class="form-group">
 
-                            <label class="form-label">
-                                {{ __('companies.colony') }}
-                            </label>
+    <label class="form-label">
+        {{ __('companies.colony') }}
+    </label>
 
-                            <select
-                                name="colony"
-                                id="companyColony"
-                                class="form-select"
-                                disabled
-                            >
+    <select
+        id="companyColony"
+        class="form-select"
+        disabled
+    >
 
-                                <option value="">
-                                    {{ __('companies.enter_postal_code_first') }}
-                                </option>
+        <option value="">
+            {{ __('companies.enter_postal_code_first') }}
+        </option>
 
-                            </select>
+    </select>
 
-                        </div>
+    <input
+        type="text"
+        name="colony"
+        id="companyColonyManual"
+        class="form-input"
+        placeholder="Escribe la colonia"
+        style="display:none; margin-top:8px;"
+    >
+
+</div>
 
 
                         {{-- =====================================
@@ -1171,1002 +1179,1122 @@
     </div>
 
 
-    {{-- =========================================================
-         JAVASCRIPT
-    ========================================================== --}}
+    ```html
+<script>
 
-    <script>
+    document.addEventListener(
+        'DOMContentLoaded',
+        function () {
 
-        document.addEventListener(
-            'DOMContentLoaded',
-            function () {
+            /* =================================================
+               ELEMENTOS
+            ================================================== */
 
-                /* =================================================
-                   ELEMENTOS
-                ================================================== */
+            const modal =
+                document.getElementById(
+                    'companyModal'
+                );
 
-                const modal =
-                    document.getElementById(
-                        'companyModal'
+            const openButton =
+                document.getElementById(
+                    'openCompanyModal'
+                );
+
+            const closeButton =
+                document.getElementById(
+                    'closeCompanyModal'
+                );
+
+            const cancelButton =
+                document.getElementById(
+                    'cancelCompanyModal'
+                );
+
+            const form =
+                document.getElementById(
+                    'companyForm'
+                );
+
+            const modalTitle =
+                document.getElementById(
+                    'modalTitle'
+                );
+
+            const formMethod =
+                document.getElementById(
+                    'formMethod'
+                );
+
+            const postalCode =
+                document.getElementById(
+                    'companyPostalCode'
+                );
+
+            const colony =
+                document.getElementById(
+                    'companyColony'
+                );
+
+            const colonyManual =
+                document.getElementById(
+                    'companyColonyManual'
+                );
+
+            const city =
+                document.getElementById(
+                    'companyCity'
+                );
+
+            const state =
+                document.getElementById(
+                    'companyState'
+                );
+
+            const postalHelp =
+                document.getElementById(
+                    'postalHelp'
+                );
+
+            const activeGroup =
+                document.getElementById(
+                    'activeGroup'
+                );
+
+            const emailsContainer =
+                document.getElementById(
+                    'emailsContainer'
+                );
+
+            const addEmailButton =
+                document.getElementById(
+                    'addEmailButton'
+                );
+
+
+            /* =================================================
+               CONTROL DE MODAL
+            ================================================== */
+
+            function openModal() {
+
+                modal.classList.add('show');
+
+                document.body.style.overflow =
+                    'hidden';
+
+            }
+
+
+            function closeModal() {
+
+                modal.classList.remove('show');
+
+                document.body.style.overflow =
+                    '';
+
+            }
+
+
+            /* =================================================
+               MENSAJE DEL CP
+            ================================================== */
+
+            function showPostalMessage(
+                message,
+                type = ''
+            ) {
+
+                postalHelp.textContent =
+                    message;
+
+                postalHelp.className =
+                    'postal-help show ' + type;
+
+            }
+
+
+            function hidePostalMessage() {
+
+                postalHelp.textContent =
+                    '';
+
+                postalHelp.className =
+                    'postal-help';
+
+            }
+
+
+            /* =================================================
+               COLONIA MANUAL
+            ================================================== */
+
+            function showManualColony(
+                value = ''
+            ) {
+
+                colonyManual.style.display =
+                    'block';
+
+                colonyManual.value =
+                    value;
+
+                colony.disabled =
+                    true;
+
+            }
+
+
+            function hideManualColony() {
+
+                colonyManual.style.display =
+                    'none';
+
+                colonyManual.value =
+                    '';
+
+            }
+
+
+            /* =================================================
+               LIMPIAR COLONIAS
+            ================================================== */
+
+            function resetColonies(
+                placeholder =
+                    @json(__('companies.enter_postal_code_first'))
+            ) {
+
+                hideManualColony();
+
+                colony.innerHTML = '';
+
+                const option =
+                    document.createElement(
+                        'option'
                     );
 
-                const openButton =
-                    document.getElementById(
-                        'openCompanyModal'
+                option.value =
+                    '';
+
+                option.textContent =
+                    placeholder;
+
+                colony.appendChild(
+                    option
+                );
+
+                colony.disabled =
+                    true;
+
+            }
+
+
+            /* =================================================
+               CORREOS
+            ================================================== */
+
+            function addEmailRow(
+                value = ''
+            ) {
+
+                const row =
+                    document.createElement(
+                        'div'
                     );
 
-                const closeButton =
-                    document.getElementById(
-                        'closeCompanyModal'
+                row.className =
+                    'email-row';
+
+
+                const input =
+                    document.createElement(
+                        'input'
                     );
 
-                const cancelButton =
-                    document.getElementById(
-                        'cancelCompanyModal'
+                input.type =
+                    'email';
+
+                input.name =
+                    'emails[]';
+
+                input.className =
+                    'form-input';
+
+                input.placeholder =
+                    @json(__('companies.email_placeholder'));
+
+                input.value =
+                    value;
+
+
+                const removeButton =
+                    document.createElement(
+                        'button'
                     );
 
-                const form =
-                    document.getElementById(
-                        'companyForm'
-                    );
+                removeButton.type =
+                    'button';
 
-                const modalTitle =
-                    document.getElementById(
-                        'modalTitle'
-                    );
+                removeButton.className =
+                    'btn-remove-email';
 
-                const formMethod =
-                    document.getElementById(
-                        'formMethod'
-                    );
+                removeButton.innerHTML =
+                    '×';
 
-                const postalCode =
-                    document.getElementById(
-                        'companyPostalCode'
-                    );
+                removeButton.title =
+                    @json(__('companies.remove_email'));
 
-                const colony =
-                    document.getElementById(
-                        'companyColony'
-                    );
 
-                const city =
-                    document.getElementById(
-                        'companyCity'
-                    );
+                removeButton.addEventListener(
+                    'click',
+                    function () {
 
-                const state =
-                    document.getElementById(
-                        'companyState'
-                    );
+                        row.remove();
 
-                const postalHelp =
-                    document.getElementById(
-                        'postalHelp'
-                    );
+                        if (
+                            emailsContainer
+                                .querySelectorAll(
+                                    '.email-row'
+                                )
+                                .length === 0
+                        ) {
 
-                const activeGroup =
-                    document.getElementById(
-                        'activeGroup'
-                    );
-
-                const emailsContainer =
-                    document.getElementById(
-                        'emailsContainer'
-                    );
-
-                const addEmailButton =
-                    document.getElementById(
-                        'addEmailButton'
-                    );
-
-
-                /* =================================================
-                   CONTROL DE MODAL
-                ================================================== */
-
-                function openModal() {
-
-                    modal.classList.add('show');
-
-                    document.body.style.overflow =
-                        'hidden';
-
-                }
-
-
-                function closeModal() {
-
-                    modal.classList.remove('show');
-
-                    document.body.style.overflow =
-                        '';
-
-                }
-
-
-                /* =================================================
-                   MENSAJE DEL CP
-                ================================================== */
-
-                function showPostalMessage(
-                    message,
-                    type = ''
-                ) {
-
-                    postalHelp.textContent =
-                        message;
-
-                    postalHelp.className =
-                        'postal-help show ' + type;
-
-                }
-
-
-                function hidePostalMessage() {
-
-                    postalHelp.textContent =
-                        '';
-
-                    postalHelp.className =
-                        'postal-help';
-
-                }
-
-
-                /* =================================================
-                   LIMPIAR COLONIAS
-                ================================================== */
-
-                function resetColonies(
-                    placeholder =
-                        @json(__('companies.enter_postal_code_first'))
-                ) {
-
-                    colony.innerHTML = '';
-
-                    const option =
-                        document.createElement(
-                            'option'
-                        );
-
-                    option.value = '';
-
-                    option.textContent =
-                        placeholder;
-
-                    colony.appendChild(option);
-
-                    colony.disabled = true;
-
-                }
-
-
-                /* =================================================
-                   CORREOS
-                ================================================== */
-
-                function addEmailRow(
-                    value = ''
-                ) {
-
-                    const row =
-                        document.createElement(
-                            'div'
-                        );
-
-                    row.className =
-                        'email-row';
-
-
-                    const input =
-                        document.createElement(
-                            'input'
-                        );
-
-                    input.type =
-                        'email';
-
-                    input.name =
-                        'emails[]';
-
-                    input.className =
-                        'form-input';
-
-                    input.placeholder =
-                        @json(__('companies.email_placeholder'));
-
-                    input.value =
-                        value;
-
-
-                    const removeButton =
-                        document.createElement(
-                            'button'
-                        );
-
-                    removeButton.type =
-                        'button';
-
-                    removeButton.className =
-                        'btn-remove-email';
-
-                    removeButton.innerHTML =
-                        '×';
-
-                    removeButton.title =
-                        @json(__('companies.remove_email'));
-
-
-                    removeButton.addEventListener(
-                        'click',
-                        function () {
-
-                            row.remove();
-
-                            /*
-                             * Siempre dejamos
-                             * al menos un campo
-                             * disponible.
-                             */
-
-                            if (
-                                emailsContainer
-                                    .querySelectorAll(
-                                        '.email-row'
-                                    )
-                                    .length === 0
-                            ) {
-
-                                addEmailRow();
-
-                            }
+                            addEmailRow();
 
                         }
-                    );
+
+                    }
+                );
 
 
-                    row.appendChild(input);
+                row.appendChild(
+                    input
+                );
 
-                    row.appendChild(removeButton);
+                row.appendChild(
+                    removeButton
+                );
 
-                    emailsContainer.appendChild(row);
+                emailsContainer.appendChild(
+                    row
+                );
 
-                }
+            }
 
 
-                function resetEmails() {
+            function resetEmails() {
 
-                    emailsContainer.innerHTML = '';
+                emailsContainer.innerHTML =
+                    '';
+
+                addEmailRow();
+
+            }
+
+
+            function loadEmails(
+                emails
+            ) {
+
+                emailsContainer.innerHTML =
+                    '';
+
+
+                if (
+                    !Array.isArray(emails) ||
+                    emails.length === 0
+                ) {
 
                     addEmailRow();
 
-                }
-
-
-                function loadEmails(
-                    emails
-                ) {
-
-                    emailsContainer.innerHTML = '';
-
-
-                    if (
-                        !Array.isArray(emails) ||
-                        emails.length === 0
-                    ) {
-
-                        addEmailRow();
-
-                        return;
-
-                    }
-
-
-                    emails.forEach(
-                        function (email) {
-
-                            addEmailRow(
-                                email
-                            );
-
-                        }
-                    );
+                    return;
 
                 }
 
 
-                addEmailButton.addEventListener(
-                    'click',
-                    function () {
+                emails.forEach(
+                    function (email) {
 
-                        addEmailRow();
-
-                    }
-                );
-
-
-                /* =================================================
-                   BUSCAR CÓDIGO POSTAL
-                ================================================== */
-
-                let postalTimer = null;
-
-
-                async function searchPostalCode() {
-
-                    const cp =
-                        postalCode.value
-                            .replace(/\D/g, '')
-                            .substring(0, 5);
-
-                    postalCode.value = cp;
-
-
-                    if (cp.length === 0) {
-
-                        resetColonies();
-
-                        hidePostalMessage();
-
-                        return;
-
-                    }
-
-
-                    if (cp.length < 5) {
-
-                        resetColonies(
-                            @json(__('companies.enter_five_digits'))
+                        addEmailRow(
+                            email
                         );
-
-                        showPostalMessage(
-                            @json(__('companies.missing_digits')),
-                            'postal-loading'
-                        );
-
-                        return;
-
-                    }
-
-
-                    showPostalMessage(
-                        @json(__('companies.searching_postal_code')),
-                        'postal-loading'
-                    );
-
-
-                    resetColonies(
-                        @json(__('companies.searching_colonies'))
-                    );
-
-
-                    try {
-
-                        /*
-                         * API pública de códigos postales
-                         *
-                         * Devuelve:
-                         * - Estado
-                         * - Municipio
-                         * - Ciudad
-                         * - Colonias / asentamientos
-                         */
-
-                        const response =
-                            await fetch(
-                                'https://postali.app/api/v1/mx/cp/' +
-                                encodeURIComponent(cp)
-                            );
-
-
-                        if (!response.ok) {
-
-                            throw new Error(
-                                @json(__('companies.postal_code_not_found'))
-                            );
-
-                        }
-
-
-                        const data =
-                            await response.json();
-
-
-                        /* ==============================
-                           ESTADO
-                        =============================== */
-
-                        if (data.estado) {
-
-                            state.value =
-                                data.estado;
-
-                        }
-
-
-                        /* ==============================
-                           CIUDAD / MUNICIPIO
-                        =============================== */
-
-                        if (data.municipio) {
-
-                            city.value =
-                                data.municipio;
-
-                        }
-                        else if (data.ciudad) {
-
-                            city.value =
-                                data.ciudad;
-
-                        }
-
-
-                        /* ==============================
-                           COLONIAS
-                        =============================== */
-
-                        const settlements =
-                            Array.isArray(
-                                data.asentamientos
-                            )
-                                ? data.asentamientos
-                                : [];
-
-
-                        if (
-                            settlements.length === 0
-                        ) {
-
-                            resetColonies(
-                                @json(__('companies.no_colonies_found'))
-                            );
-
-                            showPostalMessage(
-                                @json(__('companies.postal_found_no_colonies')),
-                                'postal-error'
-                            );
-
-                            return;
-
-                        }
-
-
-                        colony.innerHTML = '';
-
-
-                        const defaultOption =
-                            document.createElement(
-                                'option'
-                            );
-
-                        defaultOption.value =
-                            '';
-
-                        defaultOption.textContent =
-                            @json(__('companies.select_colony'));
-
-                        colony.appendChild(
-                            defaultOption
-                        );
-
-
-                        settlements.forEach(
-                            function (item) {
-
-                                const option =
-                                    document.createElement(
-                                        'option'
-                                    );
-
-
-                                /*
-                                 * La API utiliza "nombre"
-                                 * para el asentamiento.
-                                 */
-
-                                const colonyName =
-                                    item.nombre ||
-                                    item.asentamiento ||
-                                    '';
-
-
-                                const colonyType =
-                                    item.tipo ||
-                                    item.tipo_asentamiento ||
-                                    '';
-
-
-                                option.value =
-                                    colonyName;
-
-
-                                option.textContent =
-                                    colonyType
-                                        ? colonyName +
-                                          ' (' +
-                                          colonyType +
-                                          ')'
-                                        : colonyName;
-
-
-                                colony.appendChild(
-                                    option
-                                );
-
-                            }
-                        );
-
-
-                        colony.disabled = false;
-
-
-                        if (
-                            settlements.length === 1
-                        ) {
-
-                            colony.value =
-                                settlements[0].nombre ||
-                                settlements[0].asentamiento ||
-                                '';
-
-                        }
-
-
-                        showPostalMessage(
-                            settlements.length === 1
-                                ? @json(__('companies.postal_code_found'))
-                                : settlements.length +
-                                  ' ' +
-                                  @json(__('companies.colonies_found')),
-                            'postal-success'
-                        );
-
-                    }
-                    catch (error) {
-
-                        console.error(
-                            'Error consulting postal code:',
-                            error
-                        );
-
-
-                        resetColonies(
-                            @json(__('companies.no_colonies_found'))
-                        );
-
-
-                        showPostalMessage(
-                            @json(__('companies.postal_information_not_found')),
-                            'postal-error'
-                        );
-
-                    }
-
-                }
-
-
-                /* =================================================
-                   EVENTO CÓDIGO POSTAL
-                ================================================== */
-
-                postalCode.addEventListener(
-                    'input',
-                    function () {
-
-                        clearTimeout(
-                            postalTimer
-                        );
-
-
-                        postalTimer =
-                            setTimeout(
-                                searchPostalCode,
-                                350
-                            );
-
-                    }
-                );
-
-
-                postalCode.addEventListener(
-                    'blur',
-                    function () {
-
-                        if (
-                            postalCode.value.length === 5
-                        ) {
-
-                            searchPostalCode();
-
-                        }
-
-                    }
-                );
-
-
-                /* =================================================
-                   NUEVA COMPAÑÍA
-                ================================================== */
-
-                openButton.addEventListener(
-                    'click',
-                    function () {
-
-                        form.reset();
-
-
-                        form.action =
-                            "{{ route('companies.store') }}";
-
-
-                        formMethod.value =
-                            'POST';
-
-
-                        modalTitle.textContent =
-                            @json(__('companies.new_company'));
-
-
-                        activeGroup.style.display =
-                            'none';
-
-
-                        resetColonies();
-
-                        resetEmails();
-
-                        hidePostalMessage();
-
-
-                        openModal();
-
-                    }
-                );
-
-
-                /* =================================================
-                   EDITAR COMPAÑÍA
-                ================================================== */
-
-                document
-                    .querySelectorAll('.edit-company')
-                    .forEach(
-                        function (button) {
-
-                            button.addEventListener(
-                                'click',
-                                async function () {
-
-                                    const id =
-                                        this.dataset.id;
-
-
-                                    form.action =
-                                        '/companies/' +
-                                        id;
-
-
-                                    formMethod.value =
-                                        'PUT';
-
-
-                                    modalTitle.textContent =
-                                        @json(__('companies.edit_company'));
-
-
-                                    document
-                                        .getElementById(
-                                            'companyName'
-                                        )
-                                        .value =
-                                        this.dataset.name ||
-                                        '';
-
-
-                                    document
-                                        .getElementById(
-                                            'companyCode'
-                                        )
-                                        .value =
-                                        this.dataset.code ||
-                                        '';
-
-
-                                    document
-                                        .getElementById(
-                                            'companyAddress'
-                                        )
-                                        .value =
-                                        this.dataset.address ||
-                                        '';
-
-
-                                    document
-                                        .getElementById(
-                                            'companyCity'
-                                        )
-                                        .value =
-                                        this.dataset.city ||
-                                        '';
-
-
-                                    document
-                                        .getElementById(
-                                            'companyState'
-                                        )
-                                        .value =
-                                        this.dataset.state ||
-                                        '';
-
-
-                                    document
-                                        .getElementById(
-                                            'companyPostalCode'
-                                        )
-                                        .value =
-                                        this.dataset.postalCode ||
-                                        '';
-
-
-                                    document
-                                        .getElementById(
-                                            'companyPhone'
-                                        )
-                                        .value =
-                                        this.dataset.phone ||
-                                        '';
-
-
-                                    document
-                                        .getElementById(
-                                            'companyContact'
-                                        )
-                                        .value =
-                                        this.dataset.contact ||
-                                        '';
-
-
-                                    document
-                                        .getElementById(
-                                            'companyActive'
-                                        )
-                                        .value =
-                                        this.dataset.active ||
-                                        '1';
-
-
-                                    /* ==============================
-                                       CARGAR CORREOS
-                                    =============================== */
-
-                                    let companyEmails = [];
-
-
-                                    try {
-
-                                        companyEmails =
-                                            JSON.parse(
-                                                this.dataset.emails ||
-                                                '[]'
-                                            );
-
-                                    }
-                                    catch (error) {
-
-                                        console.error(
-                                            'Error loading company emails:',
-                                            error
-                                        );
-
-                                        companyEmails = [];
-
-                                    }
-
-
-                                    loadEmails(
-                                        companyEmails
-                                    );
-
-
-                                    /*
-                                     * Al editar necesitamos
-                                     * volver a consultar el CP
-                                     * para reconstruir las colonias.
-                                     */
-
-                                    const savedColony =
-                                        this.dataset.colony ||
-                                        '';
-
-
-                                    resetColonies(
-                                        @json(__('companies.searching_colonies'))
-                                    );
-
-
-                                    openModal();
-
-
-                                    if (
-                                        this.dataset.postalCode &&
-                                        this.dataset.postalCode.length === 5
-                                    ) {
-
-                                        await searchPostalCode();
-
-
-                                        /*
-                                         * Después de consultar,
-                                         * seleccionamos la colonia
-                                         * que estaba guardada.
-                                         */
-
-                                        if (
-                                            savedColony
-                                        ) {
-
-                                            const colonyExists =
-                                                Array.from(
-                                                    colony.options
-                                                ).some(
-                                                    function (
-                                                        option
-                                                    ) {
-
-                                                        return (
-                                                            option.value ===
-                                                            savedColony
-                                                        );
-
-                                                    }
-                                                );
-
-
-                                            if (
-                                                colonyExists
-                                            ) {
-
-                                                colony.value =
-                                                    savedColony;
-
-                                            }
-                                            else {
-
-                                                /*
-                                                 * Si la colonia
-                                                 * guardada ya no aparece
-                                                 * en la API, la agregamos
-                                                 * para no perder el dato.
-                                                 */
-
-                                                const option =
-                                                    document.createElement(
-                                                        'option'
-                                                    );
-
-
-                                                option.value =
-                                                    savedColony;
-
-
-                                                option.textContent =
-                                                    savedColony;
-
-
-                                                colony.appendChild(
-                                                    option
-                                                );
-
-
-                                                colony.value =
-                                                    savedColony;
-
-                                            }
-
-                                        }
-
-                                    }
-                                    else {
-
-                                        colony.innerHTML = '';
-
-
-                                        const option =
-                                            document.createElement(
-                                                'option'
-                                            );
-
-
-                                        option.value =
-                                            savedColony;
-
-
-                                        option.textContent =
-                                            savedColony ||
-                                            @json(__('companies.enter_postal_code_first'));
-
-
-                                        colony.appendChild(
-                                            option
-                                        );
-
-
-                                        colony.disabled =
-                                            !savedColony;
-
-                                    }
-
-
-                                    activeGroup.style.display =
-                                        'block';
-
-                                }
-                            );
-
-                        }
-                    );
-
-
-                /* =================================================
-                   CERRAR MODAL
-                ================================================== */
-
-                closeButton.addEventListener(
-                    'click',
-                    closeModal
-                );
-
-
-                cancelButton.addEventListener(
-                    'click',
-                    closeModal
-                );
-
-
-                /* =================================================
-                   CERRAR HACIENDO CLICK AFUERA
-                ================================================== */
-
-                modal.addEventListener(
-                    'click',
-                    function (event) {
-
-                        if (
-                            event.target === modal
-                        ) {
-
-                            closeModal();
-
-                        }
-
-                    }
-                );
-
-
-                /* =================================================
-                   ESC
-                ================================================== */
-
-                document.addEventListener(
-                    'keydown',
-                    function (event) {
-
-                        if (
-                            event.key === 'Escape'
-                        ) {
-
-                            closeModal();
-
-                        }
 
                     }
                 );
 
             }
-        );
 
-    </script>
+
+            addEmailButton.addEventListener(
+                'click',
+                function () {
+
+                    addEmailRow();
+
+                }
+            );
+
+
+            /* =================================================
+               BUSCAR CÓDIGO POSTAL
+            ================================================== */
+
+            let postalTimer =
+                null;
+
+
+            async function searchPostalCode() {
+
+                const cp =
+                    postalCode.value
+                        .replace(/\D/g, '')
+                        .substring(0, 5);
+
+                postalCode.value =
+                    cp;
+
+
+                if (cp.length === 0) {
+
+                    resetColonies();
+
+                    hidePostalMessage();
+
+                    return;
+
+                }
+
+
+                if (cp.length < 5) {
+
+                    resetColonies(
+                        @json(__('companies.enter_five_digits'))
+                    );
+
+                    showPostalMessage(
+                        @json(__('companies.missing_digits')),
+                        'postal-loading'
+                    );
+
+                    return;
+
+                }
+
+
+                showPostalMessage(
+                    @json(__('companies.searching_postal_code')),
+                    'postal-loading'
+                );
+
+
+                resetColonies(
+                    @json(__('companies.searching_colonies'))
+                );
+
+
+                try {
+
+                    const response =
+                        await fetch(
+                            'https://postali.app/api/v1/mx/cp/' +
+                            encodeURIComponent(cp)
+                        );
+
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            @json(__('companies.postal_code_not_found'))
+                        );
+
+                    }
+
+
+                    const data =
+                        await response.json();
+
+
+                    /* ==============================
+                       ESTADO
+                    =============================== */
+
+                    if (data.estado) {
+
+                        state.value =
+                            data.estado;
+
+                    }
+
+
+                    /* ==============================
+                       CIUDAD / MUNICIPIO
+                    =============================== */
+
+                    if (data.municipio) {
+
+                        city.value =
+                            data.municipio;
+
+                    }
+                    else if (data.ciudad) {
+
+                        city.value =
+                            data.ciudad;
+
+                    }
+
+
+                    /* ==============================
+                       COLONIAS
+                    =============================== */
+
+                    const settlements =
+                        Array.isArray(
+                            data.asentamientos
+                        )
+                            ? data.asentamientos
+                            : [];
+
+
+                    /*
+                     * SI NO HAY COLONIAS
+                     * PERMITIMOS ESCRIBIR MANUALMENTE
+                     */
+
+                    if (
+                        settlements.length === 0
+                    ) {
+
+                        resetColonies(
+                            @json(__('companies.no_colonies_found'))
+                        );
+
+                        showManualColony();
+
+                        showPostalMessage(
+                            'No encontramos colonias para este código postal. Puedes escribirla manualmente.',
+                            'postal-error'
+                        );
+
+                        return;
+
+                    }
+
+
+                    /*
+                     * LIMPIAR SELECT
+                     */
+
+                    colony.innerHTML =
+                        '';
+
+
+                    hideManualColony();
+
+
+                    /*
+                     * OPCIÓN POR DEFECTO
+                     */
+
+                    const defaultOption =
+                        document.createElement(
+                            'option'
+                        );
+
+                    defaultOption.value =
+                        '';
+
+                    defaultOption.textContent =
+                        @json(__('companies.select_colony'));
+
+                    colony.appendChild(
+                        defaultOption
+                    );
+
+
+                    /*
+                     * AGREGAR COLONIAS
+                     */
+
+                    settlements.forEach(
+                        function (item) {
+
+                            const option =
+                                document.createElement(
+                                    'option'
+                                );
+
+
+                            const colonyName =
+                                item.nombre ||
+                                item.asentamiento ||
+                                '';
+
+
+                            const colonyType =
+                                item.tipo ||
+                                item.tipo_asentamiento ||
+                                '';
+
+
+                            option.value =
+                                colonyName;
+
+
+                            option.textContent =
+                                colonyType
+                                    ? colonyName +
+                                      ' (' +
+                                      colonyType +
+                                      ')'
+                                    : colonyName;
+
+
+                            colony.appendChild(
+                                option
+                            );
+
+                        }
+                    );
+
+
+                    /*
+                     * OPCIÓN PARA COLONIA MANUAL
+                     */
+
+                    const manualOption =
+                        document.createElement(
+                            'option'
+                        );
+
+                    manualOption.value =
+                        '__MANUAL__';
+
+                    manualOption.textContent =
+                        '+ Escribir otra colonia...';
+
+                    colony.appendChild(
+                        manualOption
+                    );
+
+
+                    colony.disabled =
+                        false;
+
+
+                    /*
+                     * SI SOLO HAY UNA COLONIA
+                     */
+
+                    if (
+                        settlements.length === 1
+                    ) {
+
+                        colony.value =
+                            settlements[0].nombre ||
+                            settlements[0].asentamiento ||
+                            '';
+
+                    }
+
+
+                    showPostalMessage(
+                        settlements.length === 1
+                            ? @json(__('companies.postal_code_found'))
+                            : settlements.length +
+                              ' ' +
+                              @json(__('companies.colonies_found')),
+                        'postal-success'
+                    );
+
+                }
+                catch (error) {
+
+                    console.error(
+                        'Error consulting postal code:',
+                        error
+                    );
+
+
+                    /*
+                     * SI LA API FALLA TAMBIÉN
+                     * PERMITIMOS COLONIA MANUAL
+                     */
+
+                    resetColonies(
+                        @json(__('companies.no_colonies_found'))
+                    );
+
+                    showManualColony();
+
+                    showPostalMessage(
+                        'No pudimos consultar las colonias. Puedes escribirla manualmente.',
+                        'postal-error'
+                    );
+
+                }
+
+            }
+
+
+            /* =================================================
+               CAMBIAR COLONIA
+            ================================================== */
+
+            colony.addEventListener(
+                'change',
+                function () {
+
+                    if (
+                        this.value === '__MANUAL__'
+                    ) {
+
+                        showManualColony();
+
+                        colonyManual.focus();
+
+                        return;
+
+                    }
+
+
+                    hideManualColony();
+
+                }
+            );
+
+
+            /* =================================================
+               EVENTO CÓDIGO POSTAL
+            ================================================== */
+
+            postalCode.addEventListener(
+                'input',
+                function () {
+
+                    clearTimeout(
+                        postalTimer
+                    );
+
+
+                    postalTimer =
+                        setTimeout(
+                            searchPostalCode,
+                            350
+                        );
+
+                }
+            );
+
+
+            postalCode.addEventListener(
+                'blur',
+                function () {
+
+                    if (
+                        postalCode.value.length === 5
+                    ) {
+
+                        searchPostalCode();
+
+                    }
+
+                }
+            );
+
+
+            /* =================================================
+               NUEVA COMPAÑÍA
+            ================================================== */
+
+            openButton.addEventListener(
+                'click',
+                function () {
+
+                    form.reset();
+
+
+                    form.action =
+                        "{{ route('companies.store') }}";
+
+
+                    formMethod.value =
+                        'POST';
+
+
+                    modalTitle.textContent =
+                        @json(__('companies.new_company'));
+
+
+                    activeGroup.style.display =
+                        'none';
+
+
+                    resetColonies();
+
+                    resetEmails();
+
+                    hidePostalMessage();
+
+
+                    openModal();
+
+                }
+            );
+
+
+            /* =================================================
+               EDITAR COMPAÑÍA
+            ================================================== */
+
+            document
+                .querySelectorAll('.edit-company')
+                .forEach(
+                    function (button) {
+
+                        button.addEventListener(
+                            'click',
+                            async function () {
+
+                                const id =
+                                    this.dataset.id;
+
+
+                                form.action =
+                                    '/companies/' +
+                                    id;
+
+
+                                formMethod.value =
+                                    'PUT';
+
+
+                                modalTitle.textContent =
+                                    @json(__('companies.edit_company'));
+
+
+                                document
+                                    .getElementById(
+                                        'companyName'
+                                    )
+                                    .value =
+                                    this.dataset.name ||
+                                    '';
+
+
+                                document
+                                    .getElementById(
+                                        'companyCode'
+                                    )
+                                    .value =
+                                    this.dataset.code ||
+                                    '';
+
+
+                                document
+                                    .getElementById(
+                                        'companyAddress'
+                                    )
+                                    .value =
+                                    this.dataset.address ||
+                                    '';
+
+
+                                document
+                                    .getElementById(
+                                        'companyCity'
+                                    )
+                                    .value =
+                                    this.dataset.city ||
+                                    '';
+
+
+                                document
+                                    .getElementById(
+                                        'companyState'
+                                    )
+                                    .value =
+                                    this.dataset.state ||
+                                    '';
+
+
+                                document
+                                    .getElementById(
+                                        'companyPostalCode'
+                                    )
+                                    .value =
+                                    this.dataset.postalCode ||
+                                    '';
+
+
+                                document
+                                    .getElementById(
+                                        'companyPhone'
+                                    )
+                                    .value =
+                                    this.dataset.phone ||
+                                    '';
+
+
+                                document
+                                    .getElementById(
+                                        'companyContact'
+                                    )
+                                    .value =
+                                    this.dataset.contact ||
+                                    '';
+
+
+                                document
+                                    .getElementById(
+                                        'companyActive'
+                                    )
+                                    .value =
+                                    this.dataset.active ||
+                                    '1';
+
+
+                                /* ==============================
+                                   CARGAR CORREOS
+                                =============================== */
+
+                                let companyEmails =
+                                    [];
+
+
+                                try {
+
+                                    companyEmails =
+                                        JSON.parse(
+                                            this.dataset.emails ||
+                                            '[]'
+                                        );
+
+                                }
+                                catch (error) {
+
+                                    console.error(
+                                        'Error loading company emails:',
+                                        error
+                                    );
+
+                                    companyEmails =
+                                        [];
+
+                                }
+
+
+                                loadEmails(
+                                    companyEmails
+                                );
+
+
+                                /* ==============================
+                                   COLONIA GUARDADA
+                                =============================== */
+
+                                const savedColony =
+                                    this.dataset.colony ||
+                                    '';
+
+
+                                resetColonies(
+                                    @json(__('companies.searching_colonies'))
+                                );
+
+
+                                openModal();
+
+
+                                /*
+                                 * SI TIENE CP,
+                                 * CONSULTAMOS LA API
+                                 */
+
+                                if (
+                                    this.dataset.postalCode &&
+                                    this.dataset.postalCode.length === 5
+                                ) {
+
+                                    await searchPostalCode();
+
+
+                                    if (
+                                        savedColony
+                                    ) {
+
+                                        /*
+                                         * BUSCAR SI LA COLONIA
+                                         * EXISTE EN EL SELECT
+                                         */
+
+                                        const colonyExists =
+                                            Array.from(
+                                                colony.options
+                                            ).some(
+                                                function (
+                                                    option
+                                                ) {
+
+                                                    return (
+                                                        option.value ===
+                                                        savedColony
+                                                    );
+
+                                                }
+                                            );
+
+
+                                        if (
+                                            colonyExists
+                                        ) {
+
+                                            colony.value =
+                                                savedColony;
+
+                                            hideManualColony();
+
+                                        }
+                                        else {
+
+                                            /*
+                                             * LA COLONIA GUARDADA
+                                             * NO EXISTE EN LA API.
+                                             *
+                                             * LA MOSTRAMOS COMO
+                                             * COLONIA MANUAL.
+                                             */
+
+                                            showManualColony(
+                                                savedColony
+                                            );
+
+                                        }
+
+                                    }
+
+                                }
+                                else {
+
+                                    /*
+                                     * NO HAY CP.
+                                     * SI HAY COLONIA GUARDADA,
+                                     * LA MOSTRAMOS MANUALMENTE.
+                                     */
+
+                                    resetColonies();
+
+                                    if (
+                                        savedColony
+                                    ) {
+
+                                        showManualColony(
+                                            savedColony
+                                        );
+
+                                    }
+
+                                }
+
+
+                                activeGroup.style.display =
+                                    'block';
+
+                            }
+                        );
+
+                    }
+                );
+
+
+            /* =================================================
+               SINCRONIZAR COLONIA ANTES DE GUARDAR
+            ================================================== */
+
+            form.addEventListener(
+                'submit',
+                function () {
+
+                    /*
+                     * SI SE SELECCIONÓ UNA COLONIA
+                     * DE LA LISTA, LA COPIAMOS AL
+                     * INPUT QUE SE ENVÍA AL BACKEND.
+                     */
+
+                    if (
+                        colony.value &&
+                        colony.value !== '__MANUAL__'
+                    ) {
+
+                        colonyManual.value =
+                            colony.value;
+
+                    }
+
+                }
+            );
+
+
+            /* =================================================
+               CERRAR MODAL
+            ================================================== */
+
+            closeButton.addEventListener(
+                'click',
+                closeModal
+            );
+
+
+            cancelButton.addEventListener(
+                'click',
+                closeModal
+            );
+
+
+            /* =================================================
+               CERRAR HACIENDO CLICK AFUERA
+            ================================================== */
+
+            modal.addEventListener(
+                'click',
+                function (event) {
+
+                    if (
+                        event.target === modal
+                    ) {
+
+                        closeModal();
+
+                    }
+
+                }
+            );
+
+
+            /* =================================================
+               ESC
+            ================================================== */
+
+            document.addEventListener(
+                'keydown',
+                function (event) {
+
+                    if (
+                        event.key === 'Escape'
+                    ) {
+
+                        closeModal();
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+</script>
+```
+
 
 </x-app-layout>
