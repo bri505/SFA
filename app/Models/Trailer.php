@@ -1,0 +1,17 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Trailer extends Model
+{
+    protected $fillable = [
+        'number',
+        'active',
+    ];
+
+    protected $casts = [
+        'active' => 'boolean',
+    ];
+}
