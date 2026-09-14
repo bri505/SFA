@@ -219,25 +219,21 @@ class InvoiceController extends Controller
         ]);
 
         $records = Record::with([
-
             'company',
-
             'services.serviceType',
-
-            'invoices',
-
+            'invoices'
         ])
-        ->where(
-            'company_id',
-            $validated['company_id']
-        )
-        ->whereBetween(
-            'date',
-            [
-                $validated['period_start'],
-                $validated['period_end'],
-            ]
-        )
+        ->where('company_id', $request->company_id)
+        ->whereBetween('date', [
+            $request->period_start,
+            $request->period_end
+        ])
+        ->whereDoesntHave('invoices', function ($query) {
+            $query->where(function ($q) {
+                $q->where('payment_status', '!=', 'cancelled')
+                  ->orWhereNull('payment_status');
+            });
+        })
         ->orderBy('date')
         ->get();
 
@@ -428,11 +424,17 @@ class InvoiceController extends Controller
              |--------------------------------------------------------------------------
              */
 
-            $records = Record::with('services')
-                ->whereIn('id', $recordIds)
-                ->whereIn('company_id', $recordCompanyIds)
-                ->whereDoesntHave('invoices')
-                ->get();
+             $records = Record::with('services')
+             ->whereIn('id', $recordIds)
+             ->whereIn('company_id', $recordCompanyIds)
+             ->whereDoesntHave('invoices', function ($query) {
+                 $query->where(function ($q) {
+                     $q->where('payment_status', '!=', 'cancelled')
+                       ->orWhereNull('payment_status');
+                 });
+             })
+             ->lockForUpdate()
+             ->get();
 
 
             /*
@@ -923,37 +925,40 @@ class InvoiceController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function updatePaymentStatus(
-        Request $request,
-        Invoice $invoice
-    ) {
+    public function updatePaymentStatus(Request $request, Invoice $invoice)
+{
+    $validated = $request->validate([
+        'payment_status' => [
+            'required',
+            'in:pending,in_process,paid,cancelled',
+        ],
 
-        $validated = $request->validate([
+        'cancellation_reason' => [
+            'required_if:payment_status,cancelled',
+            'nullable',
+            'string',
+            'max:2000',
+        ],
+    ]);
 
-            'payment_status' => [
-                'required',
-                'in:pending,in_process,paid,cancelled',
-            ],
+    $invoice->update([
+        'payment_status' => $validated['payment_status'],
 
-        ]);
+        'cancellation_reason' =>
+            $validated['payment_status'] === 'cancelled'
+                ? $validated['cancellation_reason']
+                : null,
+    ]);
 
-        $invoice->update([
-
-            'payment_status' =>
-                $validated['payment_status'],
-
-        ]);
-
-        return redirect()
-            ->route(
-                'invoices.show',
-                $invoice
-            )
-            ->with(
-                'success',
-                'Estado de pago actualizado correctamente.'
-            );
-    }
+    return redirect()
+        ->back()
+        ->with(
+            'success',
+            $validated['payment_status'] === 'cancelled'
+                ? 'Factura cancelada correctamente.'
+                : 'Estado de pago actualizado correctamente.'
+        );
+}
 
 
     /*

@@ -825,6 +825,48 @@
     }
 
 }
+/* =========================================================
+   MOTIVO DE CANCELACIÓN
+========================================================= */
+
+.cancellation-reason {
+    display: none;
+    width: 100%;
+    margin-top: 12px;
+}
+
+.cancellation-reason.active {
+    display: block;
+}
+
+.cancellation-reason-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+}
+
+.cancellation-reason textarea {
+    width: 100%;
+    min-height: 90px;
+    padding: 9px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 5px;
+    background: white;
+    color: #374151;
+    font-size: 12px;
+    resize: vertical;
+    outline: none;
+}
+
+.cancellation-reason textarea:focus {
+    border-color: #9ca3af;
+}
+
+.cancellation-reason textarea::placeholder {
+    color: #9ca3af;
 }
 
 </style>
@@ -1114,167 +1156,233 @@
             <div class="panel-body">
 
 
-                <form
-                    method="POST"
-                    action="{{ route(
-                        'invoices.payment-status',
-                        $invoice
-                    ) }}"
+            <form
+    method="POST"
+    action="{{ route(
+        'invoices.payment-status',
+        $invoice
+    ) }}"
+    id="paymentStatusForm"
+>
+
+    @csrf
+
+
+    <div class="payment-box">
+
+
+        <div class="payment-info">
+
+            <span class="payment-label">
+                {{ __('invoices.current_status') }}:
+            </span>
+
+
+            @if(
+                $invoice->payment_status
+                === 'pending'
+            )
+
+                <span
+                    class="
+                        status
+                        status-pending
+                    "
                 >
-
-                    @csrf
-
-
-                    <div class="payment-box">
+                    {{ __('invoices.payment_status.pending') }}
+                </span>
 
 
-                        <div class="payment-info">
+            @elseif(
+                $invoice->payment_status
+                === 'in_process'
+            )
 
-                            <span class="payment-label">
-                                {{ __('invoices.current_status') }}:
-                            </span>
-
-
-                            @if(
-                                $invoice->payment_status
-                                === 'pending'
-                            )
-
-                                <span
-                                    class="
-                                        status
-                                        status-pending
-                                    "
-                                >
-                                    {{ __('invoices.payment_status.pending') }}
-                                </span>
+                <span
+                    class="
+                        status
+                        status-process
+                    "
+                >
+                    {{ __('invoices.payment_status.in_process') }}
+                </span>
 
 
-                            @elseif(
-                                $invoice->payment_status
-                                === 'in_process'
-                            )
+            @elseif(
+                $invoice->payment_status
+                === 'paid'
+            )
 
-                                <span
-                                    class="
-                                        status
-                                        status-process
-                                    "
-                                >
-                                    {{ __('invoices.payment_status.in_process') }}
-                                </span>
-
-
-                            @elseif(
-                                $invoice->payment_status
-                                === 'paid'
-                            )
-
-                                <span
-                                    class="
-                                        status
-                                        status-paid
-                                    "
-                                >
-                                    {{ __('invoices.payment_status.paid') }}
-                                </span>
+                <span
+                    class="
+                        status
+                        status-paid
+                    "
+                >
+                    {{ __('invoices.payment_status.paid') }}
+                </span>
 
 
-                            @elseif(
-                                $invoice->payment_status
-                                === 'cancelled'
-                            )
+            @elseif(
+                $invoice->payment_status
+                === 'cancelled'
+            )
 
-                                <span
-                                    class="
-                                        status
-                                        status-cancelled
-                                    "
-                                >
-                                    {{ __('invoices.payment_status.cancelled') }}
-                                </span>
+                <span
+                    class="
+                        status
+                        status-cancelled
+                    "
+                >
+                    {{ __('invoices.payment_status.cancelled') }}
+                </span>
 
-                            @endif
-
-
-                        </div>
+            @endif
 
 
-                        <select
-                            name="payment_status"
-                            class="payment-select"
-                            required
-                        >
-
-                            <option
-                                value="pending"
-                                {{
-                                    $invoice
-                                        ->payment_status
-                                        === 'pending'
-                                        ? 'selected'
-                                        : ''
-                                }}
-                            >
-                                {{ __('invoices.payment_status.pending') }}
-                            </option>
+        </div>
 
 
-                            <option
-                                value="in_process"
-                                {{
-                                    $invoice
-                                        ->payment_status
-                                        === 'in_process'
-                                        ? 'selected'
-                                        : ''
-                                }}
-                            >
-                                {{ __('invoices.payment_status.in_process') }}
-                            </option>
+        <select
+            name="payment_status"
+            id="paymentStatus"
+            class="payment-select"
+            required
+        >
+
+            <option
+                value="pending"
+                {{
+                    $invoice->payment_status === 'pending'
+                        ? 'selected'
+                        : ''
+                }}
+            >
+                {{ __('invoices.payment_status.pending') }}
+            </option>
 
 
-                            <option
-                                value="paid"
-                                {{
-                                    $invoice
-                                        ->payment_status
-                                        === 'paid'
-                                        ? 'selected'
-                                        : ''
-                                }}
-                            >
-                                {{ __('invoices.payment_status.paid') }}
-                            </option>
+            <option
+                value="in_process"
+                {{
+                    $invoice->payment_status === 'in_process'
+                        ? 'selected'
+                        : ''
+                }}
+            >
+                {{ __('invoices.payment_status.in_process') }}
+            </option>
 
 
-                            <option
-                                value="cancelled"
-                                {{
-                                    $invoice
-                                        ->payment_status
-                                        === 'cancelled'
-                                        ? 'selected'
-                                        : ''
-                                }}
-                            >
-                                {{ __('invoices.payment_status.cancelled') }}
-                            </option>
-
-                        </select>
+            <option
+                value="paid"
+                {{
+                    $invoice->payment_status === 'paid'
+                        ? 'selected'
+                        : ''
+                }}
+            >
+                {{ __('invoices.payment_status.paid') }}
+            </option>
 
 
-                        <button
-                            type="submit"
-                            class="btn btn-save"
-                        >
-                            {{ __('invoices.save_status') }}
-                        </button>
+            <option
+                value="cancelled"
+                {{
+                    $invoice->payment_status === 'cancelled'
+                        ? 'selected'
+                        : ''
+                }}
+            >
+                {{ __('invoices.payment_status.cancelled') }}
+            </option>
+
+        </select>
 
 
-                    </div>
+        <button
+            type="submit"
+            class="btn btn-save"
+        >
+            {{ __('invoices.save_status') }}
+        </button>
 
-                </form>
+
+    </div>
+
+    @if(
+    $invoice->payment_status === 'cancelled'
+    && $invoice->cancellation_reason
+)
+
+    <div class="panel">
+
+        <div class="panel-header">
+
+            <div class="panel-title">
+                Motivo de cancelación
+            </div>
+
+        </div>
+
+        <div class="panel-body">
+
+            <div
+                style="
+                    padding: 11px 13px;
+                    background: #fef2f2;
+                    border: 1px solid #fecaca;
+                    border-radius: 6px;
+                    color: #7f1d1d;
+                    font-size: 12px;
+                    line-height: 1.5;
+                "
+            >
+                {{ $invoice->cancellation_reason }}
+            </div>
+
+        </div>
+
+    </div>
+
+@endif
+
+
+    {{-- =====================================================
+         MOTIVO DE CANCELACIÓN
+    ====================================================== --}}
+
+    <div
+        id="cancellationReason"
+        class="cancellation-reason
+            {{ $invoice->payment_status === 'cancelled'
+                ? 'active'
+                : ''
+            }}"
+    >
+
+        <label
+            for="cancellationReasonInput"
+            class="cancellation-reason-label"
+        >
+            Motivo de cancelación *
+        </label>
+
+
+        <textarea
+            name="cancellation_reason"
+            id="cancellationReasonInput"
+            placeholder="Escriba el motivo por el cual se cancela esta factura..."
+            maxlength="2000"
+            {{ $invoice->payment_status === 'cancelled'
+                ? 'required'
+                : ''
+            }}
+        >{{ $invoice->cancellation_reason }}</textarea>
+
+    </div>
+
+</form>
 
             </div>
 
@@ -2028,6 +2136,55 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const cancelEmailModal =
         document.getElementById('cancelEmailModal');
+    
+        const paymentStatus =
+        document.getElementById('paymentStatus');
+
+    const cancellationReason =
+        document.getElementById('cancellationReason');
+
+    const cancellationReasonInput =
+        document.getElementById('cancellationReasonInput');
+
+
+    function updateCancellationReason() {
+
+        if (!paymentStatus) {
+            return;
+        }
+
+
+        const isCancelled =
+            paymentStatus.value === 'cancelled';
+
+
+        if (isCancelled) {
+
+            cancellationReason.classList.add('active');
+
+            cancellationReasonInput.required = true;
+
+        } else {
+
+            cancellationReason.classList.remove('active');
+
+            cancellationReasonInput.required = false;
+
+        }
+
+    }
+
+
+    if (paymentStatus) {
+
+        paymentStatus.addEventListener(
+            'change',
+            updateCancellationReason
+        );
+
+        updateCancellationReason();
+
+    }
 
 
     function openModal() {

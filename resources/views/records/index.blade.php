@@ -2249,7 +2249,7 @@
                         <div class="form-group">
 
                             <label class="form-label">
-                            {{ __('records.modal_shipper') }}
+                            {{ __('records.modal.shipper') }}
                             </label>
 
                             <div

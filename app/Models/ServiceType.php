@@ -9,7 +9,9 @@ class ServiceType extends Model
 {
     protected $fillable = [
         'name',
+        'name_en',
         'description',
+        'description_en',
         'price',
         'active',
         'weight',
