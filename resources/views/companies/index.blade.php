@@ -1179,7 +1179,6 @@
     </div>
 
 
-    ```html
 <script>
 
     document.addEventListener(
@@ -2294,7 +2293,7 @@
     );
 
 </script>
-```
+
 
 
 </x-app-layout>

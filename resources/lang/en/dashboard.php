@@ -61,6 +61,7 @@ return [
         'cancel' => 'Cancel',
         'close' => 'Close',
         'save_changes' => 'Save changes',
+        'save_record' => 'Save record',
 
         'select' => 'Select',
 

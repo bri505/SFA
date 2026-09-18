@@ -28,5 +28,7 @@ return [
     'record' => 'Records',
     'logout' => 'Log out',
     'administration' => 'ADMINISTRATION',
+    'file' => 'File',
+    'size' => 'Size',
 
 ];

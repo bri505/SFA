@@ -28,5 +28,7 @@ return [
     'records' => 'Registros',
     'logout' => 'Cerrar sesión',
     'administration' => 'ADMINISTRACIÓN',
+    'file' => 'Archivo',
+    'size' => 'Tamaño',
 
 ];
