@@ -424,7 +424,7 @@ class InvoiceController extends Controller
              |--------------------------------------------------------------------------
              */
 
-             $records = Record::with('services')
+             $records = Record::with('services.serviceType')
              ->whereIn('id', $recordIds)
              ->whereIn('company_id', $recordCompanyIds)
              ->whereDoesntHave('invoices', function ($query) {
@@ -453,130 +453,192 @@ class InvoiceController extends Controller
 
 
             /*
-             |--------------------------------------------------------------------------
-             | SUBTOTAL DE SERVICIOS
-             |--------------------------------------------------------------------------
-             */
+ |--------------------------------------------------------------------------
+ | CÁLCULO DE SERVICIOS E IVA POR SERVICIO
+ |--------------------------------------------------------------------------
+ */
 
-            $subtotal = 0;
+$servicesSubtotal = 0;
+$serviceTaxTotal = 0;
 
-            foreach ($records as $record) {
+foreach ($records as $record) {
 
-                foreach ($record->services as $service) {
+    foreach ($record->services as $service) {
 
-                    $subtotal += (float) $service->subtotal;
-                }
-            }
+        /*
+         * SUBTOTAL BASE DEL SERVICIO
+         *
+         * Ejemplo:
+         * cantidad = 2
+         * precio = $100
+         * subtotal = $200
+         */
 
+        $serviceSubtotal = round(
+            (float) $service->subtotal,
+            2
+        );
 
-            /*
-             |--------------------------------------------------------------------------
-             | CARGOS ADICIONALES
-             |--------------------------------------------------------------------------
-             */
-
-            $additionalTotal = 0;
-
-            foreach ($validated['records'] as $billingRecord) {
-
-                $quantity = (float) (
-                    $billingRecord['additional_charge_quantity'] ?? 0
-                );
-
-                $unitPrice = (float) (
-                    $billingRecord['additional_charge_unit_price'] ?? 0
-                );
-
-                $additionalAmount = round(
-                    $quantity * $unitPrice,
-                    2
-                );
-
-                $additionalTotal += $additionalAmount;
-            }
+        $servicesSubtotal += $serviceSubtotal;
 
 
-            /*
-             |--------------------------------------------------------------------------
-             | SUBTOTAL FINAL
-             |--------------------------------------------------------------------------
-             */
+        /*
+         * IVA DEL TIPO DE SERVICIO
+         */
 
-            $subtotal = round(
-                $subtotal + $additionalTotal,
+        $serviceTaxRate = (float) (
+            $service->serviceType?->tax_rate ?? 0
+        );
+
+
+        /*
+         * CALCULAR IVA
+         */
+
+        $serviceTaxAmount = 0;
+
+        if ($serviceTaxRate > 0) {
+
+            $serviceTaxAmount = round(
+                $serviceSubtotal *
+                ($serviceTaxRate / 100),
                 2
             );
+        }
 
 
-            /*
-             |--------------------------------------------------------------------------
-             | IVA
-             |--------------------------------------------------------------------------
-             */
+        /*
+         * ACUMULAR IVA
+         */
 
-            $taxRate = (float) (
-                $validated['tax_rate'] ?? 0
-            );
-
-            $taxEnabled = $taxRate > 0;
+        $serviceTaxTotal += $serviceTaxAmount;
+    }
+}
 
 
-            /*
-             |--------------------------------------------------------------------------
-             | SHIPPING / HANDLING
-             |--------------------------------------------------------------------------
-             */
+/*
+ |--------------------------------------------------------------------------
+ | CARGOS ADICIONALES
+ |--------------------------------------------------------------------------
+ */
 
-            $shippingRate = (float) (
-                $validated['shipping_handling_rate'] ?? 0
-            );
+$additionalTotal = 0;
 
-            $shippingEnabled = $shippingRate > 0;
+foreach ($validated['records'] as $billingRecord) {
 
-            $shippingAmount = 0;
+    $quantity = (float) (
+        $billingRecord['additional_charge_quantity'] ?? 0
+    );
 
-            if ($shippingEnabled) {
+    $unitPrice = (float) (
+        $billingRecord['additional_charge_unit_price'] ?? 0
+    );
 
-                $shippingAmount = round(
-                    $subtotal * ($shippingRate / 100),
-                    2
-                );
-            }
+    $additionalAmount = round(
+        $quantity * $unitPrice,
+        2
+    );
 
-
-            /*
-             |--------------------------------------------------------------------------
-             | IMPUESTO
-             |--------------------------------------------------------------------------
-             */
-
-            $tax = 0;
-
-            if ($taxEnabled) {
-
-                $taxBase =
-                    $subtotal +
-                    $shippingAmount;
-
-                $tax = round(
-                    $taxBase * ($taxRate / 100),
-                    2
-                );
-            }
+    $additionalTotal += $additionalAmount;
+}
 
 
-            /*
-             |--------------------------------------------------------------------------
-             | TOTAL
-             |--------------------------------------------------------------------------
-             */
+/*
+ |--------------------------------------------------------------------------
+ | SUBTOTAL DE FACTURA
+ |--------------------------------------------------------------------------
+ |
+ | El subtotal continúa representando:
+ |
+ | servicios sin IVA
+ | +
+ | cargos adicionales
+ |
+ */
 
-            $total = round(
-                $subtotal +
-                $shippingAmount +
-                $tax,
-                2
-            );
+$subtotal = round(
+    $servicesSubtotal +
+    $additionalTotal,
+    2
+);
+
+
+/*
+ |--------------------------------------------------------------------------
+ | SHIPPING / HANDLING
+ |--------------------------------------------------------------------------
+ */
+
+$shippingRate = (float) (
+    $validated['shipping_handling_rate'] ?? 0
+);
+
+$shippingEnabled = $shippingRate > 0;
+
+$shippingAmount = 0;
+
+if ($shippingEnabled) {
+
+    $shippingAmount = round(
+        $subtotal *
+        ($shippingRate / 100),
+        2
+    );
+}
+
+
+/*
+ |--------------------------------------------------------------------------
+ | SALES TAX DE LA FACTURA
+ |--------------------------------------------------------------------------
+ */
+
+$taxRate = (float) (
+    $validated['tax_rate'] ?? 0
+);
+
+$taxEnabled = $taxRate > 0;
+
+$tax = 0;
+
+if ($taxEnabled) {
+
+    /*
+     * El Sales Tax se calcula sobre:
+     *
+     * subtotal
+     * +
+     * shipping / handling
+     *
+     * El IVA propio de los servicios NO se vuelve
+     * a utilizar como base para el Sales Tax.
+     */
+
+    $taxBase =
+        $subtotal +
+        $shippingAmount;
+
+    $tax = round(
+        $taxBase *
+        ($taxRate / 100),
+        2
+    );
+}
+
+
+/*
+ |--------------------------------------------------------------------------
+ | TOTAL
+ |--------------------------------------------------------------------------
+ */
+
+$total = round(
+    $subtotal +
+    $serviceTaxTotal +
+    $shippingAmount +
+    $tax,
+    2
+);
 
 
             /*
@@ -629,15 +691,18 @@ class InvoiceController extends Controller
                 'period_end' =>
                     $validated['period_end'],
 
-                'subtotal' =>
+                    'subtotal' =>
                     $subtotal,
-
+                
+                'service_tax' =>
+                    $serviceTaxTotal,
+                
                 'tax_enabled' =>
                     $taxEnabled,
-
+                
                 'tax_rate' =>
                     $taxRate,
-
+                
                 'tax' =>
                     $tax,
 
@@ -925,8 +990,16 @@ class InvoiceController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function updatePaymentStatus(Request $request, Invoice $invoice)
-{
+    /*
+|--------------------------------------------------------------------------
+| CAMBIAR ESTADO DE PAGO
+|--------------------------------------------------------------------------
+*/
+
+public function updatePaymentStatus(
+    Request $request,
+    Invoice $invoice
+) {
     $validated = $request->validate([
         'payment_status' => [
             'required',
@@ -941,20 +1014,84 @@ class InvoiceController extends Controller
         ],
     ]);
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | ESTADO ANTERIOR
+    |--------------------------------------------------------------------------
+    */
+
+    $previousStatus = $invoice->payment_status;
+
+    $newStatus = $validated['payment_status'];
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACTUALIZAR FACTURA
+    |--------------------------------------------------------------------------
+    */
+
     $invoice->update([
-        'payment_status' => $validated['payment_status'],
+        'payment_status' => $newStatus,
 
         'cancellation_reason' =>
-            $validated['payment_status'] === 'cancelled'
+            $newStatus === 'cancelled'
                 ? $validated['cancellation_reason']
                 : null,
     ]);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ENVIAR AVISO DE PAGO RECIBIDO
+    |--------------------------------------------------------------------------
+    |
+    | Solamente se envía cuando la factura CAMBIA a paid.
+    |
+    */
+
+    if (
+        $newStatus === 'paid' &&
+        $previousStatus !== 'paid'
+    ) {
+
+        try {
+
+            $this->sendPaymentReceivedEmail(
+                $invoice
+            );
+
+        } catch (\Throwable $e) {
+
+            \Log::error(
+                'Error al enviar correo de pago recibido.',
+                [
+                    'invoice_id' =>
+                        $invoice->id,
+
+                    'invoice_number' =>
+                        $invoice->invoice_number,
+
+                    'error' =>
+                        $e->getMessage(),
+                ]
+            );
+        }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | RESPUESTA
+    |--------------------------------------------------------------------------
+    */
 
     return redirect()
         ->back()
         ->with(
             'success',
-            $validated['payment_status'] === 'cancelled'
+            $newStatus === 'cancelled'
                 ? 'Factura cancelada correctamente.'
                 : 'Estado de pago actualizado correctamente.'
         );
@@ -2084,5 +2221,397 @@ public function sendEmail(
             'success',
             'La factura fue enviada correctamente por correo.'
         );
+}
+
+/*
+|--------------------------------------------------------------------------
+| ENVIAR RECORDATORIO DE PAGO
+|--------------------------------------------------------------------------
+*/
+
+public function sendPaymentReminder(
+    Request $request,
+    Invoice $invoice
+) {
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDAR ESTADO
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+        !in_array(
+            $invoice->payment_status,
+            [
+                'pending',
+                'in_process',
+            ],
+            true
+        )
+    ) {
+
+        return redirect()
+            ->back()
+            ->with(
+                'error',
+                'El recordatorio solo puede enviarse para facturas pendientes o en trámite.'
+            );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CARGAR EMPRESA
+    |--------------------------------------------------------------------------
+    */
+
+    $invoice->load([
+        'company.emails',
+    ]);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | OBTENER CORREOS
+    |--------------------------------------------------------------------------
+    */
+
+    $emails = $invoice->company
+        ?->emails
+        ?->pluck('email')
+        ->map(
+            fn ($email) =>
+                strtolower(trim($email))
+        )
+        ->filter()
+        ->unique()
+        ->values()
+        ->all();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDAR DESTINATARIOS
+    |--------------------------------------------------------------------------
+    */
+
+    if (empty($emails)) {
+
+        return redirect()
+            ->back()
+            ->with(
+                'error',
+                'La empresa no tiene correos registrados.'
+            );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | GENERAR PDF
+    |--------------------------------------------------------------------------
+    */
+
+    $pdfContent =
+        $this->generatePdfContent(
+            $invoice
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DATOS DEL CORREO
+    |--------------------------------------------------------------------------
+    */
+
+    $companyName =
+        $invoice->company?->name
+        ?? 'Cliente';
+
+
+    $invoiceNumber =
+        $invoice->invoice_number;
+
+
+    $total =
+        number_format(
+            (float) $invoice->total,
+            2
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ENVIAR CORREO
+    |--------------------------------------------------------------------------
+    */
+
+    Mail::html(
+
+        '
+        <div style="
+            font-family: Arial, sans-serif;
+            color: #374151;
+            line-height: 1.6;
+        ">
+
+            <h2 style="color:#1f2937;">
+                Recordatorio de pago
+            </h2>
+
+            <p>
+                Estimado/a
+                <strong>' .
+                    e($companyName) .
+                '</strong>,
+            </p>
+
+            <p>
+                Por medio del presente correo le recordamos
+                que la factura
+                <strong>' .
+                    e($invoiceNumber) .
+                '</strong>
+                se encuentra pendiente de pago.
+            </p>
+
+            <p>
+                <strong>Total de la factura:</strong>
+                $' .
+                    e($total) .
+                '
+            </p>
+
+            <p>
+                Adjuntamos nuevamente el PDF de la factura
+                para su referencia.
+            </p>
+
+            <p>
+                Agradecemos su atención y quedamos atentos
+                a cualquier comentario.
+            </p>
+
+            <p>
+                Saludos cordiales.
+            </p>
+
+        </div>
+        ',
+
+        function ($message) use (
+            $emails,
+            $invoice,
+            $pdfContent
+        ) {
+
+            $message
+                ->to($emails)
+                ->subject(
+                    'Recordatorio de pago - ' .
+                    $invoice->invoice_number
+                );
+
+            $message->attachData(
+                $pdfContent,
+                $invoice->invoice_number . '.pdf',
+                [
+                    'mime' =>
+                        'application/pdf',
+                ]
+            );
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | RESPUESTA
+    |--------------------------------------------------------------------------
+    */
+
+    return redirect()
+        ->back()
+        ->with(
+            'success',
+            'El recordatorio de pago fue enviado correctamente.'
+        );
+}
+
+/*
+|--------------------------------------------------------------------------
+| ENVIAR CONFIRMACIÓN DE PAGO RECIBIDO
+|--------------------------------------------------------------------------
+*/
+
+private function sendPaymentReceivedEmail(
+    Invoice $invoice
+): void {
+
+    /*
+    |--------------------------------------------------------------------------
+    | CARGAR EMPRESA Y CORREOS
+    |--------------------------------------------------------------------------
+    */
+
+    $invoice->load([
+        'company.emails',
+    ]);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | OBTENER CORREOS
+    |--------------------------------------------------------------------------
+    */
+
+    $emails = $invoice->company
+        ?->emails
+        ?->pluck('email')
+        ->map(
+            fn ($email) =>
+                strtolower(trim($email))
+        )
+        ->filter()
+        ->unique()
+        ->values()
+        ->all();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SI NO HAY CORREOS
+    |--------------------------------------------------------------------------
+    */
+
+    if (empty($emails)) {
+
+        throw new \RuntimeException(
+            'La empresa no tiene correos registrados.'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | GENERAR PDF
+    |--------------------------------------------------------------------------
+    */
+
+    $pdfContent =
+        $this->generatePdfContent(
+            $invoice
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DATOS
+    |--------------------------------------------------------------------------
+    */
+
+    $companyName =
+        $invoice->company?->name
+        ?? 'Cliente';
+
+
+    $invoiceNumber =
+        $invoice->invoice_number;
+
+
+    $total =
+        number_format(
+            (float) $invoice->total,
+            2
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ENVIAR CORREO
+    |--------------------------------------------------------------------------
+    */
+
+    Mail::html(
+
+        '
+        <div style="
+            font-family: Arial, sans-serif;
+            color: #374151;
+            line-height: 1.6;
+        ">
+
+            <h2 style="color:#166534;">
+                Pago recibido
+            </h2>
+
+            <p>
+                Estimado/a
+                <strong>' .
+                    e($companyName) .
+                '</strong>,
+            </p>
+
+            <p>
+                Le confirmamos que hemos recibido
+                correctamente el pago correspondiente
+                a la factura
+                <strong>' .
+                    e($invoiceNumber) .
+                '</strong>.
+            </p>
+
+            <p>
+                <strong>Total recibido:</strong>
+                $' .
+                    e($total) .
+                '
+            </p>
+
+            <p>
+                El estado de la factura ha sido actualizado
+                a <strong>Pagada</strong>.
+            </p>
+
+            <p>
+                Adjuntamos el documento PDF de la factura
+                para su referencia.
+            </p>
+
+            <p>
+                Gracias por su pago.
+            </p>
+
+            <p>
+                Saludos cordiales.
+            </p>
+
+        </div>
+        ',
+
+        function ($message) use (
+            $emails,
+            $invoice,
+            $pdfContent
+        ) {
+
+            $message
+                ->to($emails)
+                ->subject(
+                    'Pago recibido - ' .
+                    $invoice->invoice_number
+                );
+
+            $message->attachData(
+                $pdfContent,
+                $invoice->invoice_number . '.pdf',
+                [
+                    'mime' =>
+                        'application/pdf',
+                ]
+            );
+        }
+    );
 }
 }

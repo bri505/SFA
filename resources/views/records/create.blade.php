@@ -304,9 +304,123 @@
         background: #e5e7eb;
     }
 
+    /* =========================================================
+   MENU DE ORIGEN DE IMAGEN
+========================================================= */
+
+.image-source-modal {
+
+position: fixed;
+
+inset: 0;
+
+z-index: 99999;
+
+display: flex;
+
+align-items: center;
+
+justify-content: center;
+
+background: rgba(0,0,0,.45);
+
+padding: 20px;
+
+}
+
+.image-source-box {
+
+width: 100%;
+
+max-width: 360px;
+
+background: white;
+
+border-radius: 14px;
+
+padding: 20px;
+
+box-shadow:
+    0 15px 40px rgba(0,0,0,.20);
+
+}
+
+.image-source-title {
+
+font-size: 17px;
+
+font-weight: 700;
+
+color: #111827;
+
+margin-bottom: 15px;
+
+text-align: center;
+
+}
+
+.image-source-option {
+
+width: 100%;
+
+border: 1px solid #e5e7eb;
+
+background: #f9fafb;
+
+color: #374151;
+
+border-radius: 9px;
+
+padding: 13px 15px;
+
+margin-bottom: 10px;
+
+font-size: 14px;
+
+font-weight: 600;
+
+cursor: pointer;
+
+text-align: left;
+
+}
+
+.image-source-option:hover {
+
+background: #f3f4f6;
+
+}
+
+.image-source-cancel {
+
+width: 100%;
+
+border: none;
+
+background: transparent;
+
+color: #6b7280;
+
+padding: 10px;
+
+font-size: 13px;
+
+cursor: pointer;
+
+}
+
+.image-source-cancel:hover {
+
+color: #111827;
+
+}
+
     .image-preview-container {
-        margin-top: 15px;
-    }
+    margin-top: 15px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
+}
 
     .image-preview {
 
@@ -628,22 +742,67 @@
 
                             <div class="image-upload-container">
 
-                                <label
-                                    for="recordImage"
-                                    class="image-upload-button"
-                                >
-                                    📷 {{ __('records.modal.add_image') }}
-                                </label>
+                            <button
+    type="button"
+    id="addImageButton"
+    class="image-upload-button"
+>
+    📷 {{ __('records.modal.add_image') }}
+</button>
 
+<input
+    type="file"
+    name="images[]"
+    id="recordImages"
+    accept="image/jpeg,image/png,image/webp"
+    multiple
+    hidden
+>
 
-                                <input
-                                    type="file"
-                                    name="image"
-                                    id="recordImage"
-                                    accept="image/jpeg,image/png,image/webp"
-                                    capture="environment"
-                                    hidden
-                                >
+<input
+    type="file"
+    id="recordCameraInput"
+    accept="image/jpeg,image/png,image/webp"
+    capture="environment"
+    hidden
+>
+<div
+    id="imageSourceModal"
+    class="image-source-modal"
+    style="display:none;"
+>
+    <div class="image-source-box">
+
+        <div class="image-source-title">
+            {{ __('records.modal.add_image') }}
+        </div>
+
+        <button
+            type="button"
+            id="takePhotoButton"
+            class="image-source-option"
+        >
+            📷 Tomar foto
+        </button>
+
+        <button
+            type="button"
+            id="chooseGalleryButton"
+            class="image-source-option"
+        >
+            🖼️ Seleccionar de galería / archivos
+        </button>
+
+        <button
+            type="button"
+            id="cancelImageSource"
+            class="image-source-cancel"
+        >
+            {{ __('records.modal.cancel') }}
+        </button>
+
+    </div>
+</div>
 
 
                                 <div
@@ -723,9 +882,7 @@
 
                             {{ __('records.table.invoice_number') }}
 
-                                <span class="form-required">
-                                    *
-                                </span>
+                                
 
                             </label>
 
@@ -736,7 +893,7 @@
                                 class="form-input"
                                 value="{{ old('invoice_number') }}"
                                 placeholder="{{ __('records.table.invoice_number') }}"
-                                required
+                                
                             >
 
                         </div>
@@ -925,9 +1082,7 @@
 
                             {{ __('records.modal.company') }}
 
-                                <span class="form-required">
-                                    *
-                                </span>
+                                
 
                             </label>
 
@@ -943,7 +1098,7 @@
                                     placeholder="{{ __('records.modal.search_company') }}"
                                     autocomplete="off"
                                     value="{{ old('company_name') }}"
-                                    required
+                                    
                                 >
 
 
@@ -994,9 +1149,6 @@
 
                             {{ __('records.table.driver') }}
 
-                                <span class="form-required">
-                                    *
-                                </span>
 
                             </label>
 
@@ -1012,7 +1164,7 @@
                                     placeholder="{{ __('records.modal.search_or_write_driver') }}"
                                     autocomplete="off"
                                     value="{{ old('driver_name') }}"
-                                    required
+                                    
                                 >
 
 
@@ -1063,9 +1215,6 @@
 
                             {{ __('records.table.trailer') }}
 
-                                <span class="form-required">
-                                    *
-                                </span>
 
                             </label>
 
@@ -1081,7 +1230,7 @@
                                     placeholder="{{ __('records.modal.search_or_write_trailer') }}"
                                     autocomplete="off"
                                     value="{{ old('trailer_number') }}"
-                                    required
+                                    
                                 >
 
 
@@ -1377,14 +1526,6 @@
    IMAGEN
 ===================================================== */
 
-const imageInput =
-    document.getElementById('recordImage');
-
-const imagePreviewContainer =
-    document.getElementById(
-        'imagePreviewContainer'
-    );
-
 const imagePreview =
     document.getElementById('imagePreview');
 
@@ -1395,77 +1536,230 @@ const removeImage =
     document.getElementById('removeImage');
 
 
+   /* =====================================================
+   IMAGENES
+===================================================== */
+
+const imageInput =
+    document.getElementById('recordImages');
+
+const cameraInput =
+    document.getElementById('recordCameraInput');
+
+const addImageButton =
+    document.getElementById('addImageButton');
+
+const imagePreviewContainer =
+    document.getElementById('imagePreviewContainer');
+
+
 if (
     imageInput &&
-    imagePreviewContainer &&
-    imagePreview &&
-    imageName &&
-    removeImage
+    cameraInput &&
+    addImageButton &&
+    imagePreviewContainer
 ) {
 
-    /* =================================================
-       CUANDO SE AGREGA O TOMA UNA IMAGEN
-    ================================================== */
+    let selectedFiles = [];
+
+
+    /* =====================================================
+       BOTON AGREGAR IMAGEN
+    ===================================================== */
+
+    /* =====================================================
+   MENU PARA ELEGIR ORIGEN DE IMAGEN
+===================================================== */
+
+const imageSourceModal =
+    document.getElementById(
+        'imageSourceModal'
+    );
+
+const takePhotoButton =
+    document.getElementById(
+        'takePhotoButton'
+    );
+
+const chooseGalleryButton =
+    document.getElementById(
+        'chooseGalleryButton'
+    );
+
+const cancelImageSource =
+    document.getElementById(
+        'cancelImageSource'
+    );
+
+
+/* =====================================================
+   ABRIR MENU
+===================================================== */
+
+addImageButton.addEventListener(
+    'click',
+    function () {
+
+        if (!imageSourceModal) {
+            return;
+        }
+
+        imageSourceModal.style.display =
+            'flex';
+
+    }
+);
+
+
+/* =====================================================
+   TOMAR FOTO
+===================================================== */
+
+takePhotoButton.addEventListener(
+    'click',
+    function () {
+
+        imageSourceModal.style.display =
+            'none';
+
+        cameraInput.click();
+
+    }
+);
+
+
+/* =====================================================
+   GALERIA / ARCHIVOS
+===================================================== */
+
+chooseGalleryButton.addEventListener(
+    'click',
+    function () {
+
+        imageSourceModal.style.display =
+            'none';
+
+        imageInput.click();
+
+    }
+);
+
+
+/* =====================================================
+   CANCELAR
+===================================================== */
+
+cancelImageSource.addEventListener(
+    'click',
+    function () {
+
+        imageSourceModal.style.display =
+            'none';
+
+    }
+);
+
+
+/* =====================================================
+   CERRAR TOCANDO FUERA
+===================================================== */
+
+imageSourceModal.addEventListener(
+    'click',
+    function (event) {
+
+        if (
+            event.target ===
+            imageSourceModal
+        ) {
+
+            imageSourceModal.style.display =
+                'none';
+
+        }
+
+    }
+);
+
+
+    /* =====================================================
+       ARCHIVOS / GALERIA
+    ===================================================== */
 
     imageInput.addEventListener(
+    'change',
+    function () {
+
+        const newFiles =
+            Array.from(
+                this.files || []
+            );
+
+        /*
+         * Limpiamos el input ANTES de
+         * reconstruirlo con DataTransfer.
+         */
+        this.value = '';
+
+        addFiles(newFiles);
+
+    }
+);
+
+
+    /* =====================================================
+       CAMARA
+    ===================================================== */
+
+    cameraInput.addEventListener(
         'change',
         function () {
 
-            const file = this.files[0];
+            const newFiles =
+                Array.from(
+                    this.files || []
+                );
+
+            addFiles(newFiles);
+
+            /*
+             * Limpiamos el input de cámara.
+             */
+
+            this.value = '';
+
+        }
+    );
 
 
-            /* -----------------------------------------
-               NO HAY ARCHIVO
-            ------------------------------------------ */
+    /* =====================================================
+       AGREGAR ARCHIVOS
+    ===================================================== */
 
-            if (!file) {
+    function addFiles(files) {
 
-                imagePreview.src = '';
-
-                imageName.textContent = '';
-
-                imagePreviewContainer.style.display =
-                    'none';
-
-                return;
-            }
+        const allowedTypes = [
+            'image/jpeg',
+            'image/png',
+            'image/webp'
+        ];
 
 
-            /* -----------------------------------------
-               TIPOS PERMITIDOS
-            ------------------------------------------ */
-
-            const allowedTypes = [
-                'image/jpeg',
-                'image/png',
-                'image/webp'
-            ];
-
+        for (const file of files) {
 
             if (
-                !allowedTypes.includes(file.type)
+                !allowedTypes.includes(
+                    file.type
+                )
             ) {
 
                 alert(
                     '{{ __('records.modal.image_jpg_png_webp') }}'
                 );
 
-                this.value = '';
-
-                imagePreview.src = '';
-
-                imageName.textContent = '';
-
-                imagePreviewContainer.style.display =
-                    'none';
-
-                return;
+                continue;
             }
 
-
-            /* -----------------------------------------
-               TAMAÑO MÁXIMO: 10 MB
-            ------------------------------------------ */
 
             if (
                 file.size >
@@ -1476,86 +1770,203 @@ if (
                     '{{ __('records.modal.image_mb') }}'
                 );
 
-                this.value = '';
-
-                imagePreview.src = '';
-
-                imageName.textContent = '';
-
-                imagePreviewContainer.style.display =
-                    'none';
-
-                return;
+                continue;
             }
 
 
-            /* -----------------------------------------
-               MOSTRAR VISTA PREVIA
-            ------------------------------------------ */
-
-            const reader =
-                new FileReader();
-
-
-            reader.onload =
-                function (event) {
-
-                    imagePreview.src =
-                        event.target.result;
-
-                    imageName.textContent =
-                        file.name;
-
-                    imagePreviewContainer.style.display =
-                        'block';
-
-                };
-
-
-            reader.onerror =
-                function () {
-
-                    alert(
-                        'No se pudo visualizar la imagen.'
-                    );
-
-                    imageInput.value = '';
-
-                    imagePreview.src = '';
-
-                    imageName.textContent = '';
-
-                    imagePreviewContainer.style.display =
-                        'none';
-
-                };
-
-
-            reader.readAsDataURL(file);
+            selectedFiles.push(file);
 
         }
-    );
 
 
-    /* =================================================
-       QUITAR IMAGEN
-    ================================================== */
+        updateImagePreview();
 
-    removeImage.addEventListener(
-        'click',
-        function () {
+        updateFileInput();
 
-            imageInput.value = '';
+    }
 
-            imagePreview.src = '';
 
-            imageName.textContent = '';
+    /* =====================================================
+       ACTUALIZAR PREVIEW
+    ===================================================== */
+
+    function updateImagePreview() {
+
+        imagePreviewContainer.innerHTML = '';
+
+
+        if (
+            selectedFiles.length === 0
+        ) {
 
             imagePreviewContainer.style.display =
                 'none';
 
+            return;
+
         }
-    );
+
+
+        imagePreviewContainer.style.display =
+            'grid';
+
+
+        selectedFiles.forEach(
+            function (file, index) {
+
+                const wrapper =
+                    document.createElement(
+                        'div'
+                    );
+
+
+                wrapper.style.position =
+                    'relative';
+
+                wrapper.style.width =
+                    '180px';
+
+
+                const image =
+                    document.createElement(
+                        'img'
+                    );
+
+
+                image.className =
+                    'image-preview';
+
+                image.style.width =
+                    '180px';
+
+                image.style.height =
+                    '130px';
+
+                image.style.objectFit =
+                    'cover';
+
+
+                const name =
+                    document.createElement(
+                        'div'
+                    );
+
+
+                name.className =
+                    'image-name';
+
+                name.textContent =
+                    file.name;
+
+                name.style.marginTop =
+                    '5px';
+
+                name.style.wordBreak =
+                    'break-word';
+
+
+                const removeButton =
+                    document.createElement(
+                        'button'
+                    );
+
+
+                removeButton.type =
+                    'button';
+
+                removeButton.className =
+                    'image-remove-button';
+
+                removeButton.textContent =
+                    '{{ __('records.modal.remove_image') }}';
+
+                removeButton.style.marginTop =
+                    '5px';
+
+
+                removeButton.addEventListener(
+                    'click',
+                    function () {
+
+                        selectedFiles.splice(
+                            index,
+                            1
+                        );
+
+                        updateImagePreview();
+
+                        updateFileInput();
+
+                    }
+                );
+
+
+                wrapper.appendChild(
+                    image
+                );
+
+                wrapper.appendChild(
+                    name
+                );
+
+                wrapper.appendChild(
+                    removeButton
+                );
+
+
+                imagePreviewContainer.appendChild(
+                    wrapper
+                );
+
+
+                const reader =
+                    new FileReader();
+
+
+                reader.onload =
+                    function (event) {
+
+                        image.src =
+                            event.target.result;
+
+                    };
+
+
+                reader.readAsDataURL(
+                    file
+                );
+
+            }
+        );
+
+    }
+
+
+    /* =====================================================
+       ACTUALIZAR INPUT PRINCIPAL
+    ===================================================== */
+
+    function updateFileInput() {
+
+        const dataTransfer =
+            new DataTransfer();
+
+
+        selectedFiles.forEach(
+            function (file) {
+
+                dataTransfer.items.add(
+                    file
+                );
+
+            }
+        );
+
+
+        imageInput.files =
+            dataTransfer.files;
+
+    }
 
 }
 

@@ -175,4 +175,18 @@ class Record extends Model
             'invoice_records'
         );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | IMÁGENES
+    |--------------------------------------------------------------------------
+    */
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(
+            RecordImage::class,
+            'record_id'
+        );
+    }
 }

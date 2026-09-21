@@ -49,6 +49,7 @@ class Invoice extends Model
         'broker_id',
     
         'consignee_id',
+        'service_tax',
     ];
 
 
@@ -75,6 +76,7 @@ class Invoice extends Model
         'total' => 'decimal:2',
 
         'generated_at' => 'datetime',
+        'service_tax' => 'decimal:2',
     ];
 
 

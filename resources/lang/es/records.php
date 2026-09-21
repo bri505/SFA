@@ -27,11 +27,13 @@ return [
         'paps' => 'PAPS',
         'shipper' => 'Transportista',
         'consignee' => 'Consignatario',
-        'broker' => 'Broker',
+        'broker' => 'Agente comercial',
         'record' => 'Registro',
         'registered_by' => 'Registrado por',
+        'created_at' => 'Creado',
         'actions' => 'Acciones',
         'services' => 'Servicios',
+        'id' => 'ID',
     ],
 
     'modal' => [
@@ -40,6 +42,7 @@ return [
         'complete_data' => 'Completa los campos necesarios para registrar el embarque',
         'fix_errors' => 'Corrige los siguientes errores',
         'shipment_data' => 'Datos del embarque',
+        'images' => 'Imagenes',
         'image' => 'Imagen',
         'current_image' => 'Imagen actual',
         'new_image' => 'Nueva imagen',

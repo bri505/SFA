@@ -107,6 +107,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         [RecordController::class, 'update']
     )->name('records.update');
 
+    Route::delete(
+        '/record-images/{image}',
+        [RecordController::class, 'destroyImage']
+    )->name('record-images.destroy');
+
 
     /*
     |--------------------------------------------------------------------------
@@ -308,6 +313,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             [ServiceTypeController::class, 'update']
         )->name('service-types.update');
 
+        Route::post(
+            '/service-types/iva',
+            [ServiceTypeController::class, 'saveIva']
+        )->name('service-types.save-iva');
+
 
         /*
         |--------------------------------------------------------------------------
@@ -370,6 +380,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
             '/invoices/{invoice}/payment-status',
             [InvoiceController::class, 'updatePaymentStatus']
         )->name('invoices.payment-status');
+
+        Route::post(
+            '/invoices/{invoice}/send-reminder',
+            [InvoiceController::class, 'sendPaymentReminder']
+        )->name('invoices.send-reminder');
+        
+        Route::post(
+            '/invoices/{invoice}/send-payment-received',
+            [InvoiceController::class, 'sendPaymentReceived']
+        )->name('invoices.send-payment-received');
 
     });
 

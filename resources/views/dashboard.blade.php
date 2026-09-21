@@ -759,6 +759,78 @@
         }
     }
 
+    .record-images-gallery {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fill,
+        minmax(140px, 1fr)
+    );
+    gap: 12px;
+    margin-top: 10px;
+}
+
+
+.record-image-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    min-height: 140px;
+}
+
+
+.record-image-preview {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    display: block;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+
+.record-image-remove {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-size: 20px;
+    line-height: 30px;
+    text-align: center;
+    cursor: pointer;
+    z-index: 2;
+}
+
+
+.record-image-remove:hover {
+    background: rgba(180, 0, 0, 0.9);
+}
+
+
+.new-edit-image {
+    position: relative;
+}
+
+
+@media (max-width: 600px) {
+
+    .record-images-gallery {
+        grid-template-columns: repeat(
+            2,
+            minmax(0, 1fr)
+        );
+    }
+
+    .record-image-preview {
+        height: 150px;
+    }
+
+}
+
 </style>
 
 <div class="sfa-dashboard">
@@ -773,11 +845,11 @@
 
             <div>
                 <h1 class="dashboard-title">
-                    {{__('dashboard.title')}}
+                    {{ __('dashboard.title') }}
                 </h1>
 
                 <p class="dashboard-subtitle">
-                    {{__('dashboard.subtitle')}}
+                    {{ __('dashboard.subtitle') }}
                 </p>
             </div>
 
@@ -801,7 +873,7 @@
                 </svg>
 
                 <span>
-                    {{__('dashboard.new_record')}}
+                    {{ __('dashboard.new_record') }}
                 </span>
             </button>
 
@@ -817,7 +889,7 @@
             <div class="stat-item">
 
                 <div class="stat-label">
-                {{__('dashboard.stats.today_records')}}
+                    {{ __('dashboard.stats.today_records') }}
                 </div>
 
                 <div class="stat-value">
@@ -838,14 +910,14 @@
             <div class="records-header">
 
                 <div class="records-title">
-                {{__('dashboard.recent_records')}}
+                    {{ __('dashboard.recent_records') }}
                 </div>
 
                 <a
                     href="{{ route('records.index') }}"
                     class="records-link"
                 >
-                {{__('dashboard.view_all')}}
+                    {{ __('dashboard.view_all') }}
                 </a>
 
             </div>
@@ -858,11 +930,11 @@
                     <thead>
 
                         <tr>
-                            <th>{{__('dashboard.table.date')}}</th>
-                            <th>{{__('dashboard.table.company')}}</th>
-                            <th>{{__('dashboard.table.driver')}}</th>
-                            <th>{{__('dashboard.table.trailer')}}</th>
-                            <th>{{__('dashboard.table.invoice_number')}}</th>
+                            <th>{{ __('dashboard.table.date') }}</th>
+                            <th>{{ __('dashboard.table.company') }}</th>
+                            <th>{{ __('dashboard.table.driver') }}</th>
+                            <th>{{ __('dashboard.table.trailer') }}</th>
+                            <th>{{ __('dashboard.table.invoice_number') }}</th>
                         </tr>
 
                     </thead>
@@ -911,10 +983,14 @@
 
                                 data-notes="{{ $record->notes ?? '' }}"
 
-                                data-image="{{ $record->image
-                                    ? asset('storage/' . $record->image)
-                                    : ''
-                                }}"
+                                data-images='@json(
+                                    $record->images->map(function ($image) {
+                                        return [
+                                            "id" => $image->id,
+                                            "url" => asset("storage/" . $image->image_path),
+                                        ];
+                                    })->values()
+                                )'
                             >
 
                                 <td>
@@ -949,7 +1025,8 @@
                                 <td colspan="5">
 
                                     <div class="empty-records">
-                                    {{ __('dashboard.no_recent_records') }}                                    </div>
+                                        {{ __('dashboard.no_recent_records') }}
+                                    </div>
 
                                 </td>
 
@@ -994,13 +1071,15 @@
                     id="detailModalTitle"
                     class="modal-title"
                 >
-                {{ __('dashboard.modal.record') }}                </div>
+                    {{ __('dashboard.modal.record') }}
+                </div>
 
                 <div
                     id="detailModalSubtitle"
                     class="modal-subtitle"
                 >
-                {{ __('dashboard.modal.information') }}                </div>
+                    {{ __('dashboard.modal.information') }}
+                </div>
 
             </div>
 
@@ -1029,14 +1108,16 @@
             <div class="detail-section">
 
                 <div class="detail-section-title">
-                {{ __('dashboard.modal.shipment_data') }}                </div>
+                    {{ __('dashboard.modal.shipment_data') }}
+                </div>
 
                 <div class="detail-grid">
 
                     <div class="detail-item">
 
                         <span class="detail-label">
-                        {{ __('dashboard.modal.date') }}                        </span>
+                            {{ __('dashboard.modal.date') }}
+                        </span>
 
                         <span
                             id="detailDate"
@@ -1051,7 +1132,8 @@
                     <div class="detail-item">
 
                         <span class="detail-label">
-                        {{ __('dashboard.modal.invoice_number') }}                        </span>
+                            {{ __('dashboard.modal.invoice_number') }}
+                        </span>
 
                         <span
                             id="detailInvoice"
@@ -1066,7 +1148,8 @@
                     <div class="detail-item">
 
                         <span class="detail-label">
-                        {{ __('dashboard.modal.paps') }}                        </span>
+                            {{ __('dashboard.modal.paps') }}
+                        </span>
 
                         <span
                             id="detailPaps"
@@ -1081,7 +1164,8 @@
                     <div class="detail-item">
 
                         <span class="detail-label">
-                        {{ __('dashboard.modal.record_number') }}                        </span>
+                            {{ __('dashboard.modal.record_number') }}
+                        </span>
 
                         <span
                             id="detailRecordId"
@@ -1097,7 +1181,9 @@
             </div>
 
 
-            {{-- IMAGEN --}}
+            {{-- =================================================
+                 IMAGENES EXISTENTES
+            ================================================== --}}
 
             <div
                 id="detailImageSection"
@@ -1106,30 +1192,13 @@
             >
 
                 <div class="detail-section-title">
-                {{ __('dashboard.modal.image') }}                </div>
+                    {{ __('dashboard.modal.image') }}
+                </div>
 
                 <div
-                    style="
-                        display:flex;
-                        justify-content:center;
-                        align-items:center;
-                        padding:10px;
-                    "
+                    id="detailImagesGallery"
+                    class="record-images-gallery"
                 >
-
-                    <img
-                        id="detailImage"
-                        src=""
-                        alt="Imagen del registro"
-                        style="
-                            max-width:100%;
-                            max-height:300px;
-                            border-radius:10px;
-                            object-fit:contain;
-                            cursor:pointer;
-                        "
-                    >
-
                 </div>
 
             </div>
@@ -1140,14 +1209,16 @@
             <div class="detail-section">
 
                 <div class="detail-section-title">
-                {{ __('dashboard.modal.transport_data') }}                </div>
+                    {{ __('dashboard.modal.transport_data') }}
+                </div>
 
                 <div class="detail-grid">
 
                     <div class="detail-item">
 
                         <span class="detail-label">
-                        {{ __('dashboard.modal.origin') }}                        </span>
+                            {{ __('dashboard.modal.origin') }}
+                        </span>
 
                         <span
                             id="detailOrigin"
@@ -1162,7 +1233,8 @@
                     <div class="detail-item">
 
                         <span class="detail-label">
-                        {{ __('dashboard.modal.destination') }}                        </span>
+                            {{ __('dashboard.modal.destination') }}
+                        </span>
 
                         <span
                             id="detailDestination"
@@ -1177,7 +1249,8 @@
                     <div class="detail-item">
 
                         <span class="detail-label">
-                        {{ __('dashboard.modal.quantity') }}                        </span>
+                            {{ __('dashboard.modal.quantity') }}
+                        </span>
 
                         <span
                             id="detailQuantity"
@@ -1192,7 +1265,8 @@
                     <div class="detail-item">
 
                         <span class="detail-label">
-                        {{ __('dashboard.modal.type') }}                        </span>
+                            {{ __('dashboard.modal.type') }}
+                        </span>
 
                         <span
                             id="detailQuantityType"
@@ -1208,19 +1282,21 @@
             </div>
 
 
-            {{-- TRANSPORTE --}}
+            {{-- PARTICIPANTES --}}
 
             <div class="detail-section">
 
                 <div class="detail-section-title">
-                {{ __('dashboard.modal.participants') }}                </div>
+                    {{ __('dashboard.modal.participants') }}
+                </div>
 
                 <div class="detail-grid">
 
                     <div class="detail-item">
 
                         <span class="detail-label">
-                        {{ __('dashboard.modal.company') }}                        </span>
+                            {{ __('dashboard.modal.company') }}
+                        </span>
 
                         <span
                             id="detailCompany"
@@ -1235,7 +1311,8 @@
                     <div class="detail-item">
 
                         <span class="detail-label">
-                        {{ __('dashboard.modal.driver') }}                        </span>
+                            {{ __('dashboard.modal.driver') }}
+                        </span>
 
                         <span
                             id="detailDriver"
@@ -1250,7 +1327,8 @@
                     <div class="detail-item">
 
                         <span class="detail-label">
-                        {{ __('dashboard.modal.trailer') }}                        </span>
+                            {{ __('dashboard.modal.trailer') }}
+                        </span>
 
                         <span
                             id="detailTrailer"
@@ -1265,7 +1343,8 @@
                     <div class="detail-item">
 
                         <span class="detail-label">
-                        {{ __('dashboard.modal.broker') }}                        </span>
+                            {{ __('dashboard.modal.broker') }}
+                        </span>
 
                         <span
                             id="detailBroker"
@@ -1280,7 +1359,8 @@
                     <div class="detail-item">
 
                         <span class="detail-label">
-                        {{ __('dashboard.modal.shipper') }}                        </span>
+                            {{ __('dashboard.modal.shipper') }}
+                        </span>
 
                         <span
                             id="detailShipper"
@@ -1295,7 +1375,8 @@
                     <div class="detail-item">
 
                         <span class="detail-label">
-                        {{ __('dashboard.modal.consignee') }}                        </span>
+                            {{ __('dashboard.modal.consignee') }}
+                        </span>
 
                         <span
                             id="detailConsignee"
@@ -1316,7 +1397,8 @@
             <div class="detail-section">
 
                 <div class="detail-section-title">
-                {{ __('dashboard.modal.notes') }}                </div>
+                    {{ __('dashboard.modal.notes') }}
+                </div>
 
                 <div
                     id="detailNotes"
@@ -1352,7 +1434,8 @@
                 <div class="detail-section">
 
                     <div class="detail-section-title">
-                    {{ __('dashboard.modal.shipment_data') }}                    </div>
+                        {{ __('dashboard.modal.shipment_data') }}
+                    </div>
 
                     <div class="detail-grid">
 
@@ -1362,7 +1445,8 @@
                                 for="editDate"
                                 class="detail-label"
                             >
-                            {{ __('dashboard.modal.date') }}                            </label>
+                                {{ __('dashboard.modal.date') }}
+                            </label>
 
                             <input
                                 type="date"
@@ -1381,14 +1465,14 @@
                                 for="editInvoice"
                                 class="detail-label"
                             >
-                            {{ __('dashboard.modal.invoice_number') }}                            </label>
+                                {{ __('dashboard.modal.invoice_number') }}
+                            </label>
 
                             <input
                                 type="text"
                                 id="editInvoice"
                                 name="invoice_number"
                                 class="form-input"
-                                required
                             >
 
                         </div>
@@ -1400,7 +1484,8 @@
                                 for="editPaps"
                                 class="detail-label"
                             >
-                            {{ __('dashboard.modal.paps') }}                            </label>
+                                {{ __('dashboard.modal.paps') }}
+                            </label>
 
                             <input
                                 type="text"
@@ -1418,7 +1503,8 @@
                                 for="editRecordId"
                                 class="detail-label"
                             >
-                            {{ __('dashboard.modal.record_number') }}                            </label>
+                                {{ __('dashboard.modal.record_number') }}
+                            </label>
 
                             <input
                                 type="text"
@@ -1434,98 +1520,48 @@
                 </div>
 
 
-                {{-- IMAGEN --}}
+                {{-- =================================================
+                     IMAGENES EDITAR
+                ================================================== --}}
 
                 <div class="detail-section">
 
                     <div class="detail-section-title">
-                    {{ __('dashboard.modal.image') }}                    </div>
-
-                    <div
-                        id="editCurrentImageSection"
-                        style="display:none;padding:10px;"
-                    >
-
-                        <div
-                            style="
-                                text-align:center;
-                                margin-bottom:12px;
-                            "
-                        >
-                            <span class="detail-label">
-                            {{ __('dashboard.modal.current_image') }}                            </span>
-                        </div>
-
-                        <div
-                            style="
-                                display:flex;
-                                justify-content:center;
-                                align-items:center;
-                            "
-                        >
-
-                            <img
-                                id="editCurrentImage"
-                                src=""
-                                alt="Imagen actual"
-                                style="
-                                    max-width:100%;
-                                    max-height:280px;
-                                    border-radius:10px;
-                                    object-fit:contain;
-                                    cursor:pointer;
-                                "
-                            >
-
-                        </div>
-
+                        {{ __('dashboard.modal.image') }}
                     </div>
 
+                    <div
+                        id="editImagesContainer"
+                        class="record-images-gallery"
+                    >
+                    </div>
 
                     <div style="margin-top:15px;">
 
                         <label
-                            for="editImage"
+                            for="editImages"
                             class="detail-label"
                         >
-                        {{ __('dashboard.modal.change_image') }}                        </label>
+                            {{ __('dashboard.modal.change_image') }}
+                        </label>
 
                         <input
                             type="file"
-                            name="image"
-                            id="editImage"
+                            name="images[]"
+                            id="editImages"
                             class="form-input"
                             accept="image/jpeg,image/png,image/webp"
-                            capture="environment"
+                            multiple
+                            hidden
                         >
 
-                    </div>
-
-
-                    <div
-                        id="editImagePreviewSection"
-                        style="
-                            display:none;
-                            margin-top:15px;
-                            text-align:center;
-                        "
-                    >
-
-                        <div class="detail-label">
-                        {{ __('dashboard.modal.new_image') }}                        </div>
-
-                        <img
-                            id="editImagePreview"
-                            src=""
-                            alt="Vista previa"
-                            style="
-                                max-width:100%;
-                                max-height:280px;
-                                margin-top:10px;
-                                border-radius:10px;
-                                object-fit:contain;
-                            "
+                        <label
+                            for="editImages"
+                            class="image-upload-button"
+                            style="display:inline-flex;margin-top:8px;"
                         >
+                            📷 {{ __('dashboard.modal.add_image') }}
+                        </label>
 
                     </div>
 
@@ -1537,7 +1573,8 @@
                 <div class="detail-section">
 
                     <div class="detail-section-title">
-                    {{ __('dashboard.modal.transport_data') }}                    </div>
+                        {{ __('dashboard.modal.transport_data') }}
+                    </div>
 
                     <div class="detail-grid">
 
@@ -1547,7 +1584,8 @@
                                 for="editOrigin"
                                 class="detail-label"
                             >
-                            {{ __('dashboard.modal.origin') }}                            </label>
+                                {{ __('dashboard.modal.origin') }}
+                            </label>
 
                             <input
                                 type="text"
@@ -1565,7 +1603,8 @@
                                 for="editDestination"
                                 class="detail-label"
                             >
-                            {{ __('dashboard.modal.destination') }}                            </label>
+                                {{ __('dashboard.modal.destination') }}
+                            </label>
 
                             <input
                                 type="text"
@@ -1583,7 +1622,8 @@
                                 for="editQuantity"
                                 class="detail-label"
                             >
-                            {{ __('dashboard.modal.quantity') }}                            </label>
+                                {{ __('dashboard.modal.quantity') }}
+                            </label>
 
                             <input
                                 type="number"
@@ -1603,7 +1643,8 @@
                                 for="editQuantityType"
                                 class="detail-label"
                             >
-                            {{ __('dashboard.modal.type') }}                            </label>
+                                {{ __('dashboard.modal.type') }}
+                            </label>
 
                             <select
                                 id="editQuantityType"
@@ -1612,19 +1653,19 @@
                             >
 
                                 <option value="">
-                                {{ __('dashboard.modal.select') }}
+                                    {{ __('dashboard.modal.select') }}
                                 </option>
 
                                 <option value="palets">
-                                {{ __('dashboard.modal.palets') }}
+                                    {{ __('dashboard.modal.palets') }}
                                 </option>
 
                                 <option value="contenedores">
-                                {{ __('dashboard.modal.containers') }}
+                                    {{ __('dashboard.modal.containers') }}
                                 </option>
 
                                 <option value="piezas">
-                                {{ __('dashboard.modal.pieces') }}
+                                    {{ __('dashboard.modal.pieces') }}
                                 </option>
 
                             </select>
@@ -1636,12 +1677,13 @@
                 </div>
 
 
-                {{-- TRANSPORTE Y PARTICIPANTES --}}
+                {{-- PARTICIPANTES --}}
 
                 <div class="detail-section">
 
                     <div class="detail-section-title">
-                    {{ __('dashboard.modal.participants') }}                    </div>
+                        {{ __('dashboard.modal.participants') }}
+                    </div>
 
                     <div class="detail-grid">
 
@@ -1651,8 +1693,8 @@
                         <div class="detail-item">
 
                             <label class="detail-label">
-                            {{ __('dashboard.modal.company') }}                                
-                            <span class="form-required">*</span>
+                                {{ __('dashboard.modal.company') }}
+                                <span class="form-required">*</span>
                             </label>
 
                             <div class="autocomplete">
@@ -1662,7 +1704,6 @@
                                     id="editCompany"
                                     class="form-input"
                                     autocomplete="off"
-                                    required
                                 >
 
                                 <input
@@ -1703,7 +1744,8 @@
                                 for="editDriver"
                                 class="detail-label"
                             >
-                            {{ __('dashboard.modal.driver') }}                            </label>
+                                {{ __('dashboard.modal.driver') }}
+                            </label>
 
                             <div class="autocomplete">
 
@@ -1744,7 +1786,7 @@
                             </div>
 
                             <small class="autocomplete-help">
-                            {{ __('dashboard.modal.autocomplete_edit_help') }}
+                                {{ __('dashboard.modal.autocomplete_edit_help') }}
                             </small>
 
                         </div>
@@ -1758,7 +1800,7 @@
                                 for="editTrailer"
                                 class="detail-label"
                             >
-                            {{ __('dashboard.modal.trailer') }}
+                                {{ __('dashboard.modal.trailer') }}
                             </label>
 
                             <div class="autocomplete">
@@ -1800,7 +1842,8 @@
                             </div>
 
                             <small class="autocomplete-help">
-                            {{ __('dashboard.modal.autocomplete_edit_help') }}                            </small>
+                                {{ __('dashboard.modal.autocomplete_edit_help') }}
+                            </small>
 
                         </div>
 
@@ -1810,7 +1853,8 @@
                         <div class="detail-item">
 
                             <label class="detail-label">
-                            {{ __('dashboard.modal.broker') }}                            </label>
+                                {{ __('dashboard.modal.broker') }}
+                            </label>
 
                             <div class="autocomplete">
 
@@ -1856,7 +1900,8 @@
                         <div class="detail-item">
 
                             <label class="detail-label">
-                            {{ __('dashboard.modal.shipper') }}                            </label>
+                                {{ __('dashboard.modal.shipper') }}
+                            </label>
 
                             <div class="autocomplete">
 
@@ -1902,7 +1947,8 @@
                         <div class="detail-item">
 
                             <label class="detail-label">
-                            {{ __('dashboard.modal.consignee') }}                            </label>
+                                {{ __('dashboard.modal.consignee') }}
+                            </label>
 
                             <div class="autocomplete">
 
@@ -1952,7 +1998,8 @@
                 <div class="detail-section">
 
                     <div class="detail-section-title">
-                    {{ __('dashboard.modal.notes') }}                    </div>
+                        {{ __('dashboard.modal.notes') }}
+                    </div>
 
                     <textarea
                         id="editNotes"
@@ -1973,20 +2020,24 @@
                     id="cancelEditRecord"
                     class="btn-cancel"
                 >
-                {{ __('dashboard.modal.cancel') }}                </button>
+                    {{ __('dashboard.modal.cancel') }}
+                </button>
 
                 <button
                     type="submit"
                     class="btn-save"
                 >
-                {{ __('dashboard.modal.save_changes') }}                </button>
+                    {{ __('dashboard.modal.save_changes') }}
+                </button>
 
             </div>
 
         </form>
 
 
-        {{-- FOOTER MODO VER --}}
+        {{-- =====================================================
+             FOOTER MODO VER
+        ====================================================== --}}
 
         <div
             id="detailModalFooter"
@@ -1998,14 +2049,16 @@
                 id="closeDetailModalFooter"
                 class="btn-cancel"
             >
-            {{ __('dashboard.modal.close') }}            </button>
+                {{ __('dashboard.modal.close') }}
+            </button>
 
             <button
                 type="button"
                 id="editRecordButton"
                 class="btn-save"
             >
-            {{ __('dashboard.modal.edit_record') }}            </button>
+                {{ __('dashboard.modal.edit_record') }}
+            </button>
 
         </div>
 
@@ -2035,10 +2088,12 @@
             <div>
 
                 <div class="modal-title">
-                {{ __('dashboard.new_record') }}                </div>
+                    {{ __('dashboard.new_record') }}
+                </div>
 
                 <div class="modal-subtitle">
-                {{ __('dashboard.register_new_inspection') }}                </div>
+                    {{ __('dashboard.register_new_inspection') }}
+                </div>
 
             </div>
 
@@ -2067,23 +2122,24 @@
                 {{-- EMBARQUE --}}
 
                 <div class="form-section-title">
-                {{ __('dashboard.modal.shipment_data') }}                </div>
+                    {{ __('dashboard.modal.shipment_data') }}
+                </div>
 
                 <div class="form-grid">
 
 
-                    {{-- IMAGEN --}}
+                    {{-- IMAGENES --}}
 
                     <div class="form-group full">
 
                         <label class="form-label">
-                        {{ __('dashboard.modal.image') }}
+                            {{ __('dashboard.modal.image') }}
                         </label>
 
                         <div class="image-upload-container">
 
                             <label
-                                for="recordImage"
+                                for="recordImages"
                                 class="image-upload-button"
                             >
                                 📷 {{ __('dashboard.modal.add_image') }}
@@ -2091,43 +2147,18 @@
 
                             <input
                                 type="file"
-                                name="image"
-                                id="recordImage"
+                                name="images[]"
+                                id="recordImages"
                                 accept="image/jpeg,image/png,image/webp"
+                                multiple
                                 capture="environment"
                                 hidden
                             >
 
                             <div
                                 id="imagePreviewContainer"
-                                class="image-preview-container"
-                                style="display:none;"
+                                class="record-images-gallery"
                             >
-
-                                <img
-                                    id="imagePreview"
-                                    class="image-preview"
-                                    src=""
-                                    alt="Vista previa"
-                                >
-
-                                <div class="image-preview-actions">
-
-                                    <span
-                                        id="imageName"
-                                        class="image-name"
-                                    ></span>
-
-                                    <button
-                                        type="button"
-                                        id="removeImage"
-                                        class="image-remove-button"
-                                    >
-                                    {{ __('dashboard.modal.remove_image') }}
-                                    </button>
-
-                                </div>
-
                             </div>
 
                         </div>
@@ -2140,7 +2171,7 @@
                     <div class="form-group">
 
                         <label class="form-label">
-                        {{ __('dashboard.modal.date') }}
+                            {{ __('dashboard.modal.date') }}
                             <span class="form-required">*</span>
                         </label>
 
@@ -2160,7 +2191,7 @@
                     <div class="form-group">
 
                         <label class="form-label">
-                        {{ __('dashboard.modal.invoice_number') }}
+                            {{ __('dashboard.modal.invoice_number') }}
                             <span class="form-required">*</span>
                         </label>
 
@@ -2169,7 +2200,6 @@
                             name="invoice_number"
                             class="form-input"
                             placeholder="{{ __('dashboard.modal.invoice_number') }}"
-                            required
                         >
 
                     </div>
@@ -2180,7 +2210,7 @@
                     <div class="form-group">
 
                         <label class="form-label">
-                        {{ __('dashboard.modal.paps') }}
+                            {{ __('dashboard.modal.paps') }}
                         </label>
 
                         <input
@@ -2197,18 +2227,18 @@
 
                     <div class="form-group">
 
-<label class="form-label">
-{{ __('dashboard.modal.record') }}
-</label>
+                        <label class="form-label">
+                            {{ __('dashboard.modal.record') }}
+                        </label>
 
-<input
-    type="text"
-    class="form-input"
-    value="{{ ($nextRecordId ?? 1) }}"
-    readonly
->
+                        <input
+                            type="text"
+                            class="form-input"
+                            value="{{ $nextRecordId ?? 1 }}"
+                            readonly
+                        >
 
-</div>
+                    </div>
 
                 </div>
 
@@ -2219,7 +2249,7 @@
                 {{-- TRASLADO --}}
 
                 <div class="form-section-title">
-                {{ __('dashboard.modal.transport_data') }}
+                    {{ __('dashboard.modal.transport_data') }}
                 </div>
 
                 <div class="form-grid">
@@ -2227,7 +2257,7 @@
                     <div class="form-group">
 
                         <label class="form-label">
-                        {{ __('dashboard.modal.origin') }}
+                            {{ __('dashboard.modal.origin') }}
                         </label>
 
                         <input
@@ -2243,7 +2273,7 @@
                     <div class="form-group">
 
                         <label class="form-label">
-                        {{ __('dashboard.modal.destination') }}
+                            {{ __('dashboard.modal.destination') }}
                         </label>
 
                         <input
@@ -2259,7 +2289,7 @@
                     <div class="form-group">
 
                         <label class="form-label">
-                        {{ __('dashboard.modal.quantity') }}
+                            {{ __('dashboard.modal.quantity') }}
                         </label>
 
                         <input
@@ -2277,7 +2307,7 @@
                     <div class="form-group">
 
                         <label class="form-label">
-                        {{ __('dashboard.modal.type') }}
+                            {{ __('dashboard.modal.type') }}
                         </label>
 
                         <select
@@ -2286,19 +2316,19 @@
                         >
 
                             <option value="">
-                            {{ __('dashboard.modal.select') }}
+                                {{ __('dashboard.modal.select') }}
                             </option>
 
                             <option value="palets">
-                            {{ __('dashboard.modal.palets') }}
+                                {{ __('dashboard.modal.palets') }}
                             </option>
 
                             <option value="contenedores">
-                            {{ __('dashboard.modal.containers') }}
+                                {{ __('dashboard.modal.containers') }}
                             </option>
 
                             <option value="piezas">
-                            {{ __('dashboard.modal.pieces') }}
+                                {{ __('dashboard.modal.pieces') }}
                             </option>
 
                         </select>
@@ -2311,10 +2341,10 @@
                 <br>
 
 
-                {{-- TRANSPORTE --}}
+                {{-- PARTICIPANTES --}}
 
                 <div class="form-section-title">
-                {{ __('dashboard.modal.participants') }}
+                    {{ __('dashboard.modal.participants') }}
                 </div>
 
                 <div class="form-grid">
@@ -2325,7 +2355,7 @@
                     <div class="form-group">
 
                         <label class="form-label">
-                        {{ __('dashboard.modal.company') }}
+                            {{ __('dashboard.modal.company') }}
                             <span class="form-required">*</span>
                         </label>
 
@@ -2337,7 +2367,6 @@
                                 class="form-input"
                                 placeholder="{{ __('dashboard.modal.search_company') }}"
                                 autocomplete="off"
-                                required
                             >
 
                             <input
@@ -2378,20 +2407,19 @@
                             for="driverSearch"
                             class="form-label"
                         >
-                        {{ __('dashboard.modal.driver') }}
+                            {{ __('dashboard.modal.driver') }}
                         </label>
 
                         <div class="autocomplete">
 
-                        <input
-    type="text"
-    name="driver_name"
-    id="driverSearch"
-    class="form-input"
-    placeholder="{{ __('dashboard.modal.search_or_write_driver') }}"
-    autocomplete="off"
-    required
->
+                            <input
+                                type="text"
+                                name="driver_name"
+                                id="driverSearch"
+                                class="form-input"
+                                placeholder="{{ __('dashboard.modal.search_or_write_driver') }}"
+                                autocomplete="off"
+                            >
 
                             <input
                                 type="hidden"
@@ -2421,7 +2449,8 @@
                         </div>
 
                         <small class="autocomplete-help">
-                        {{ __('dashboard.modal.autocomplete_new_help') }}                        </small>
+                            {{ __('dashboard.modal.autocomplete_new_help') }}
+                        </small>
 
                     </div>
 
@@ -2434,20 +2463,19 @@
                             for="trailerSearch"
                             class="form-label"
                         >
-                        {{ __('dashboard.modal.trailer') }}
+                            {{ __('dashboard.modal.trailer') }}
                         </label>
 
                         <div class="autocomplete">
 
-                        <input
-    type="text"
-    name="trailer_number"
-    id="trailerSearch"
-    class="form-input"
-    placeholder="{{ __('dashboard.modal.search_or_write_trailer') }}"
-    autocomplete="off"
-    required
->
+                            <input
+                                type="text"
+                                name="trailer_number"
+                                id="trailerSearch"
+                                class="form-input"
+                                placeholder="{{ __('dashboard.modal.search_or_write_trailer') }}"
+                                autocomplete="off"
+                            >
 
                             <input
                                 type="hidden"
@@ -2477,7 +2505,8 @@
                         </div>
 
                         <small class="autocomplete-help">
-                        {{ __('dashboard.modal.autocomplete_new_help') }}                        </small>
+                            {{ __('dashboard.modal.autocomplete_new_help') }}
+                        </small>
 
                     </div>
 
@@ -2487,7 +2516,8 @@
                     <div class="form-group">
 
                         <label class="form-label">
-                        {{ __('dashboard.modal.broker') }}                        </label>
+                            {{ __('dashboard.modal.broker') }}
+                        </label>
 
                         <div class="autocomplete">
 
@@ -2534,7 +2564,7 @@
                     <div class="form-group">
 
                         <label class="form-label">
-                        {{ __('dashboard.modal.shipper') }}
+                            {{ __('dashboard.modal.shipper') }}
                         </label>
 
                         <div class="autocomplete">
@@ -2582,7 +2612,7 @@
                     <div class="form-group">
 
                         <label class="form-label">
-                        {{ __('dashboard.modal.consignee') }}
+                            {{ __('dashboard.modal.consignee') }}
                         </label>
 
                         <div class="autocomplete">
@@ -2630,7 +2660,7 @@
                     <div class="form-group full">
 
                         <label class="form-label">
-                        {{ __('dashboard.modal.notes') }}
+                            {{ __('dashboard.modal.notes') }}
                         </label>
 
                         <textarea
@@ -2654,14 +2684,14 @@
                     id="cancelNewRecordModal"
                     class="btn-cancel"
                 >
-                {{ __('dashboard.modal.cancel') }}
+                    {{ __('dashboard.modal.cancel') }}
                 </button>
 
                 <button
                     type="submit"
                     class="btn-save"
                 >
-                {{ __('dashboard.modal.save_record') }}
+                    {{ __('dashboard.modal.save_record') }}
                 </button>
 
             </div>
@@ -2682,11 +2712,19 @@
 
 document.addEventListener('DOMContentLoaded', function () {
 
+    /* =========================================================
+       VARIABLES
+    ========================================================= */
+
+    let selectedFiles = [];
+    let selectedEditFiles = [];
+    let currentRecordId = null;
+
 
     /* =========================================================
        ELEMENTOS PRINCIPALES
     ========================================================= */
-    
+
     const detailModal =
         document.getElementById('recordDetailModal');
 
@@ -2717,7 +2755,27 @@ document.addEventListener('DOMContentLoaded', function () {
     const cancelNew =
         document.getElementById('cancelNewRecordModal');
 
-    let currentRecordId = null;
+
+    /* =========================================================
+       ELEMENTOS IMAGENES NUEVO
+    ========================================================= */
+
+    const imageInput =
+        document.getElementById('recordImages');
+
+    const imagePreviewContainer =
+        document.getElementById('imagePreviewContainer');
+
+
+    /* =========================================================
+       ELEMENTOS IMAGENES EDITAR
+    ========================================================= */
+
+    const editImagesInput =
+        document.getElementById('editImages');
+
+    const editImagesContainer =
+        document.getElementById('editImagesContainer');
 
 
     /* =========================================================
@@ -2733,6 +2791,7 @@ document.addEventListener('DOMContentLoaded', function () {
         detailModal.classList.add('active');
 
         document.body.style.overflow = 'hidden';
+
     }
 
 
@@ -2745,6 +2804,7 @@ document.addEventListener('DOMContentLoaded', function () {
         detailModal.classList.remove('active');
 
         document.body.style.overflow = '';
+
     }
 
 
@@ -2757,6 +2817,7 @@ document.addEventListener('DOMContentLoaded', function () {
         newModal.classList.add('active');
 
         document.body.style.overflow = 'hidden';
+
     }
 
 
@@ -2769,6 +2830,7 @@ document.addEventListener('DOMContentLoaded', function () {
         newModal.classList.remove('active');
 
         document.body.style.overflow = '';
+
     }
 
 
@@ -2842,6 +2904,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (element) {
             element.value = value ?? '';
         }
+
     }
 
 
@@ -2854,7 +2917,579 @@ document.addEventListener('DOMContentLoaded', function () {
             element.textContent =
                 value || '—';
         }
+
     }
+
+
+    /* =========================================================
+       IMAGENES EXISTENTES
+    ========================================================= */
+
+    function renderExistingImages(
+        images,
+        container,
+        allowDelete = false
+    ) {
+
+        if (!container) {
+            return;
+        }
+
+        container.innerHTML = '';
+
+
+        if (!images || images.length === 0) {
+            return;
+        }
+
+
+        images.forEach(
+            function (imageData) {
+
+                if (
+                    !imageData ||
+                    !imageData.url
+                ) {
+                    return;
+                }
+
+
+                const item =
+                    document.createElement('div');
+
+                item.className =
+                    'record-image-item';
+
+
+                const image =
+                    document.createElement('img');
+
+                image.className =
+                    'record-image-preview';
+
+                image.src =
+                    imageData.url;
+
+                image.alt =
+                    'Imagen del registro';
+
+                image.style.cursor =
+                    'pointer';
+
+
+                image.addEventListener(
+                    'click',
+                    function () {
+
+                        window.open(
+                            imageData.url,
+                            '_blank'
+                        );
+
+                    }
+                );
+
+
+                item.appendChild(image);
+
+
+                if (
+                    allowDelete &&
+                    imageData.id
+                ) {
+
+                    const removeButton =
+                        document.createElement('button');
+
+                    removeButton.type =
+                        'button';
+
+                    removeButton.className =
+                        'record-image-remove';
+
+                    removeButton.innerHTML =
+                        '&times;';
+
+                    removeButton.title =
+                        'Eliminar imagen';
+
+
+                    removeButton.addEventListener(
+                        'click',
+                        async function (event) {
+
+                            event.preventDefault();
+
+                            event.stopPropagation();
+
+
+                            if (
+                                !confirm(
+                                    '¿Deseas eliminar esta imagen?'
+                                )
+                            ) {
+                                return;
+                            }
+
+
+                            try {
+
+                                const response =
+                                    await fetch(
+                                        "{{ url('/record-images') }}/" +
+                                        imageData.id,
+                                        {
+                                            method: 'DELETE',
+
+                                            headers: {
+                                                'X-CSRF-TOKEN':
+                                                    document
+                                                        .querySelector(
+                                                            'meta[name="csrf-token"]'
+                                                        )
+                                                        ?.getAttribute(
+                                                            'content'
+                                                        ),
+
+                                                'Accept':
+                                                    'application/json'
+                                            }
+                                        }
+                                    );
+
+
+                                if (!response.ok) {
+
+                                    throw new Error(
+                                        'Error al eliminar la imagen.'
+                                    );
+
+                                }
+
+
+                                imageData.deleted =
+                                    true;
+
+                                item.remove();
+
+
+                            } catch (error) {
+
+                                console.error(
+                                    'Error al eliminar imagen:',
+                                    error
+                                );
+
+                                alert(
+                                    'No se pudo eliminar la imagen.'
+                                );
+
+                            }
+
+                        }
+                    );
+
+
+                    item.appendChild(
+                        removeButton
+                    );
+
+                }
+
+
+                container.appendChild(item);
+
+            }
+        );
+
+    }
+
+
+    /* =========================================================
+       IMAGENES NUEVO REGISTRO
+    ========================================================= */
+
+    function renderNewImages() {
+
+        if (!imagePreviewContainer) {
+            return;
+        }
+
+        imagePreviewContainer.innerHTML = '';
+
+
+        selectedFiles.forEach(
+            function (file, index) {
+
+                const item =
+                    document.createElement('div');
+
+                item.className =
+                    'record-image-item';
+
+
+                const image =
+                    document.createElement('img');
+
+                image.className =
+                    'record-image-preview';
+
+
+                const reader =
+                    new FileReader();
+
+
+                reader.onload =
+                    function (event) {
+
+                        image.src =
+                            event.target.result;
+
+                    };
+
+
+                reader.readAsDataURL(file);
+
+
+                const removeButton =
+                    document.createElement('button');
+
+                removeButton.type =
+                    'button';
+
+                removeButton.className =
+                    'record-image-remove';
+
+                removeButton.innerHTML =
+                    '&times;';
+
+                removeButton.title =
+                    'Eliminar imagen';
+
+
+                removeButton.addEventListener(
+                    'click',
+                    function (event) {
+
+                        event.preventDefault();
+
+                        event.stopPropagation();
+
+
+                        selectedFiles.splice(
+                            index,
+                            1
+                        );
+
+
+                        syncNewFiles();
+
+                        renderNewImages();
+
+                    }
+                );
+
+
+                item.appendChild(image);
+
+                item.appendChild(removeButton);
+
+                imagePreviewContainer.appendChild(item);
+
+            }
+        );
+
+    }
+
+
+    function syncNewFiles() {
+
+        if (!imageInput) {
+            return;
+        }
+
+
+        const dataTransfer =
+            new DataTransfer();
+
+
+        selectedFiles.forEach(
+            function (file) {
+
+                dataTransfer.items.add(file);
+
+            }
+        );
+
+
+        imageInput.files =
+            dataTransfer.files;
+
+    }
+
+
+    imageInput?.addEventListener(
+        'change',
+        function () {
+
+            const newFiles =
+                Array.from(
+                    this.files || []
+                );
+
+
+            this.value = '';
+
+
+            const allowedTypes = [
+                'image/jpeg',
+                'image/png',
+                'image/webp'
+            ];
+
+
+            newFiles.forEach(
+                function (file) {
+
+                    if (
+                        !allowedTypes.includes(
+                            file.type
+                        )
+                    ) {
+
+                        alert(
+                            'Solo se permiten imágenes JPG, PNG o WEBP.'
+                        );
+
+                        return;
+
+                    }
+
+
+                    if (
+                        file.size >
+                        10 * 1024 * 1024
+                    ) {
+
+                        alert(
+                            'La imagen no puede superar los 10 MB.'
+                        );
+
+                        return;
+
+                    }
+
+
+                    selectedFiles.push(file);
+
+                }
+            );
+
+
+            syncNewFiles();
+
+            renderNewImages();
+
+        }
+    );
+
+
+    /* =========================================================
+       IMAGENES NUEVAS AL EDITAR
+    ========================================================= */
+
+    function renderNewEditImages() {
+
+        if (!editImagesContainer) {
+            return;
+        }
+
+
+        editImagesContainer
+            .querySelectorAll('.new-edit-image')
+            .forEach(
+                function (element) {
+
+                    element.remove();
+
+                }
+            );
+
+
+        selectedEditFiles.forEach(
+            function (file, index) {
+
+                const item =
+                    document.createElement('div');
+
+                item.className =
+                    'record-image-item new-edit-image';
+
+
+                const image =
+                    document.createElement('img');
+
+                image.className =
+                    'record-image-preview';
+
+
+                const reader =
+                    new FileReader();
+
+
+                reader.onload =
+                    function (event) {
+
+                        image.src =
+                            event.target.result;
+
+                    };
+
+
+                reader.readAsDataURL(file);
+
+
+                const removeButton =
+                    document.createElement('button');
+
+                removeButton.type =
+                    'button';
+
+                removeButton.className =
+                    'record-image-remove';
+
+                removeButton.innerHTML =
+                    '&times;';
+
+                removeButton.title =
+                    'Eliminar imagen';
+
+
+                removeButton.addEventListener(
+                    'click',
+                    function (event) {
+
+                        event.preventDefault();
+
+                        event.stopPropagation();
+
+
+                        selectedEditFiles.splice(
+                            index,
+                            1
+                        );
+
+
+                        syncEditFiles();
+
+                        renderNewEditImages();
+
+                    }
+                );
+
+
+                item.appendChild(image);
+
+                item.appendChild(removeButton);
+
+                editImagesContainer.appendChild(item);
+
+            }
+        );
+
+    }
+
+
+    function syncEditFiles() {
+
+        if (!editImagesInput) {
+            return;
+        }
+
+
+        const dataTransfer =
+            new DataTransfer();
+
+
+        selectedEditFiles.forEach(
+            function (file) {
+
+                dataTransfer.items.add(file);
+
+            }
+        );
+
+
+        editImagesInput.files =
+            dataTransfer.files;
+
+    }
+
+
+    editImagesInput?.addEventListener(
+        'change',
+        function () {
+
+            const newFiles =
+                Array.from(
+                    this.files || []
+                );
+
+
+            this.value = '';
+
+
+            const allowedTypes = [
+                'image/jpeg',
+                'image/png',
+                'image/webp'
+            ];
+
+
+            newFiles.forEach(
+                function (file) {
+
+                    if (
+                        !allowedTypes.includes(
+                            file.type
+                        )
+                    ) {
+
+                        alert(
+                            'Solo se permiten imágenes JPG, PNG o WEBP.'
+                        );
+
+                        return;
+
+                    }
+
+
+                    if (
+                        file.size >
+                        10 * 1024 * 1024
+                    ) {
+
+                        alert(
+                            'La imagen no puede superar los 10 MB.'
+                        );
+
+                        return;
+
+                    }
+
+
+                    selectedEditFiles.push(file);
+
+                }
+            );
+
+
+            syncEditFiles();
+
+            renderNewEditImages();
+
+        }
+    );
 
 
     /* =========================================================
@@ -2863,399 +3498,438 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document
         .querySelectorAll('.record-row')
-        .forEach(function (row) {
+        .forEach(
+            function (row) {
 
-            row.addEventListener(
-                'click',
-                function () {
+                row.addEventListener(
+                    'click',
+                    function () {
 
-                    currentRecordId =
-                        row.dataset.recordId || null;
-
-                    setText(
-                        'detailRecordId',
-                        currentRecordId
-                    );
-                    /* =============================================
-                       EMBARQUE
-                    ============================================= */
-                    setValue(
-                        'editRecordId',
-                        row.dataset.recordId
-                    );
-                    setText(
-                        'detailDate',
-                        row.dataset.date
-                    );
-
-                    setText(
-                        'detailInvoice',
-                        row.dataset.invoice
-                    );
-
-                    setText(
-                        'detailPaps',
-                        row.dataset.paps
-                    );
-
-                    setText(
-                        'detailFact',
-                        row.dataset.fact
-                    );
+                        currentRecordId =
+                            row.dataset.recordId || null;
 
 
-                    /* =============================================
-                       TRASLADO
-                    ============================================= */
+                        /* =============================================
+                           ID
+                        ============================================= */
 
-                    setText(
-                        'detailOrigin',
-                        row.dataset.origin
-                    );
-
-                    setText(
-                        'detailDestination',
-                        row.dataset.destination
-                    );
-
-                    setText(
-                        'detailQuantity',
-                        row.dataset.quantity
-                    );
-
-                    setText(
-                        'detailQuantityType',
-                        row.dataset.quantityType
-                    );
-
-
-                    /* =============================================
-                       PARTICIPANTES
-                    ============================================= */
-
-                    setText(
-                        'detailCompany',
-                        row.dataset.company
-                    );
-
-                    setText(
-                        'detailDriver',
-                        row.dataset.driver
-                    );
-
-                    setText(
-                        'detailTrailer',
-                        row.dataset.trailer
-                    );
-
-                    setText(
-                        'detailBroker',
-                        row.dataset.broker
-                    );
-
-                    setText(
-                        'detailShipper',
-                        row.dataset.shipper
-                    );
-
-                    setText(
-                        'detailConsignee',
-                        row.dataset.consignee
-                    );
-
-
-                    /* =============================================
-                       NOTAS
-                    ============================================= */
-
-                    setText(
-                        'detailNotes',
-                        row.dataset.notes
-                    );
-
-
-                    /* =============================================
-                       TITULO
-                    ============================================= */
-
-                    setText(
-                        'detailModalTitle',
-                        row.dataset.invoice
-                            ? 'Invoice ' + row.dataset.invoice
-                            : 'Registro'
-                    );
-
-
-                    /* =============================================
-                       IMAGEN
-                    ============================================= */
-
-                    const imageUrl =
-                        row.dataset.image || '';
-
-                    const detailImage =
-                        document.getElementById(
-                            'detailImage'
-                        );
-
-                    const detailImageSection =
-                        document.getElementById(
-                            'detailImageSection'
+                        setText(
+                            'detailRecordId',
+                            currentRecordId
                         );
 
 
-                    if (
-                        imageUrl &&
-                        detailImage &&
-                        detailImageSection
-                    ) {
+                        setValue(
+                            'editRecordId',
+                            currentRecordId
+                        );
 
-                        detailImage.src =
-                            imageUrl;
 
-                        detailImageSection.style.display =
-                            'block';
+                        /* =============================================
+                           EMBARQUE
+                        ============================================= */
 
-                    } else {
+                        setText(
+                            'detailDate',
+                            row.dataset.date
+                        );
 
-                        if (detailImage) {
-                            detailImage.src = '';
+
+                        setText(
+                            'detailInvoice',
+                            row.dataset.invoice
+                        );
+
+
+                        setText(
+                            'detailPaps',
+                            row.dataset.paps
+                        );
+
+
+                        setText(
+                            'detailFact',
+                            row.dataset.fact
+                        );
+
+
+                        /* =============================================
+                           TRASLADO
+                        ============================================= */
+
+                        setText(
+                            'detailOrigin',
+                            row.dataset.origin
+                        );
+
+
+                        setText(
+                            'detailDestination',
+                            row.dataset.destination
+                        );
+
+
+                        setText(
+                            'detailQuantity',
+                            row.dataset.quantity
+                        );
+
+
+                        setText(
+                            'detailQuantityType',
+                            row.dataset.quantityType
+                        );
+
+
+                        /* =============================================
+                           PARTICIPANTES
+                        ============================================= */
+
+                        setText(
+                            'detailCompany',
+                            row.dataset.company
+                        );
+
+
+                        setText(
+                            'detailDriver',
+                            row.dataset.driver
+                        );
+
+
+                        setText(
+                            'detailTrailer',
+                            row.dataset.trailer
+                        );
+
+
+                        setText(
+                            'detailBroker',
+                            row.dataset.broker
+                        );
+
+
+                        setText(
+                            'detailShipper',
+                            row.dataset.shipper
+                        );
+
+
+                        setText(
+                            'detailConsignee',
+                            row.dataset.consignee
+                        );
+
+
+                        /* =============================================
+                           NOTAS
+                        ============================================= */
+
+                        setText(
+                            'detailNotes',
+                            row.dataset.notes
+                        );
+
+
+                        /* =============================================
+                           TITULO
+                        ============================================= */
+
+                        setText(
+                            'detailModalTitle',
+                            row.dataset.invoice
+                                ? 'Invoice ' +
+                                  row.dataset.invoice
+                                : 'Registro'
+                        );
+
+
+                        /* =============================================
+                           IMAGENES
+                        ============================================= */
+
+                        let recordImages = [];
+
+
+                        try {
+
+                            recordImages =
+                                JSON.parse(
+                                    row.dataset.images || '[]'
+                                );
+
+
+                        } catch (error) {
+
+                            console.error(
+                                'Error al cargar imágenes:',
+                                error
+                            );
+
+                            recordImages = [];
+
                         }
 
-                        if (detailImageSection) {
-                            detailImageSection.style.display =
+
+                        const detailImageSection =
+                            document.getElementById(
+                                'detailImageSection'
+                            );
+
+
+                        const detailImagesGallery =
+                            document.getElementById(
+                                'detailImagesGallery'
+                            );
+
+
+                        if (
+                            detailImagesGallery
+                        ) {
+
+                            if (
+                                recordImages.length > 0
+                            ) {
+
+                                renderExistingImages(
+                                    recordImages,
+                                    detailImagesGallery,
+                                    false
+                                );
+
+
+                                if (
+                                    detailImageSection
+                                ) {
+
+                                    detailImageSection.style.display =
+                                        'block';
+
+                                }
+
+                            } else {
+
+                                detailImagesGallery.innerHTML =
+                                    '';
+
+
+                                if (
+                                    detailImageSection
+                                ) {
+
+                                    detailImageSection.style.display =
+                                        'none';
+
+                                }
+
+                            }
+
+                        }
+
+
+                        /* =============================================
+                           FORM ACTION
+                        ============================================= */
+
+                        if (
+                            editRecordForm &&
+                            currentRecordId
+                        ) {
+
+                            editRecordForm.action =
+                                "{{ url('/records') }}/" +
+                                currentRecordId;
+
+                        }
+
+
+                        /* =============================================
+                           CAMPOS EDICION
+                        ============================================= */
+
+                        setValue(
+                            'editDate',
+                            row.dataset.date
+                        );
+
+
+                        setValue(
+                            'editInvoice',
+                            row.dataset.invoice
+                        );
+
+
+                        setValue(
+                            'editPaps',
+                            row.dataset.paps
+                        );
+
+
+                        setValue(
+                            'editOrigin',
+                            row.dataset.origin
+                        );
+
+
+                        setValue(
+                            'editDestination',
+                            row.dataset.destination
+                        );
+
+
+                        setValue(
+                            'editQuantity',
+                            row.dataset.quantity
+                        );
+
+
+                        setValue(
+                            'editQuantityType',
+                            row.dataset.quantityType
+                        );
+
+
+                        setValue(
+                            'editNotes',
+                            row.dataset.notes
+                        );
+
+
+                        /* =============================================
+                           AUTOCOMPLETE EDITAR
+                        ============================================= */
+
+                        setAutocompleteValue(
+                            'editCompany',
+                            'editCompanyId',
+                            'editCompanyOptions',
+                            row.dataset.companyId,
+                            row.dataset.company
+                        );
+
+
+                        setAutocompleteValue(
+                            'editDriver',
+                            'editDriverId',
+                            'editDriverOptions',
+                            row.dataset.driverId,
+                            row.dataset.driver
+                        );
+
+
+                        setAutocompleteValue(
+                            'editTrailer',
+                            'editTrailerId',
+                            'editTrailerOptions',
+                            row.dataset.trailerId,
+                            row.dataset.trailer
+                        );
+
+
+                        setAutocompleteValue(
+                            'editBroker',
+                            'editBrokerId',
+                            'editBrokerOptions',
+                            row.dataset.brokerId,
+                            row.dataset.broker
+                        );
+
+
+                        setAutocompleteValue(
+                            'editShipper',
+                            'editShipperId',
+                            'editShipperOptions',
+                            row.dataset.shipperId,
+                            row.dataset.shipper
+                        );
+
+
+                        setAutocompleteValue(
+                            'editConsignee',
+                            'editConsigneeId',
+                            'editConsigneeOptions',
+                            row.dataset.consigneeId,
+                            row.dataset.consignee
+                        );
+
+
+                        /* =============================================
+                           IMAGENES EDITAR
+                        ============================================= */
+
+                        selectedEditFiles = [];
+
+
+                        if (editImagesInput) {
+
+                            editImagesInput.value = '';
+
+                        }
+
+
+                        if (editImagesContainer) {
+
+                            renderExistingImages(
+                                recordImages,
+                                editImagesContainer,
+                                true
+                            );
+
+
+                            renderNewEditImages();
+
+                        }
+
+
+                        /* =============================================
+                           MODO VER
+                        ============================================= */
+
+                        if (recordViewMode) {
+
+                            recordViewMode.style.display =
+                                'block';
+
+                        }
+
+
+                        if (editRecordForm) {
+
+                            editRecordForm.style.display =
                                 'none';
+
                         }
 
-                    }
 
+                        if (detailModalFooter) {
 
-                    /* =============================================
-                       FORM ACTION
-                    ============================================= */
+                            detailModalFooter.style.display =
+                                'flex';
 
-                    if (
-                        editRecordForm &&
-                        currentRecordId
-                    ) {
-
-                        editRecordForm.action =
-                            "{{ url('/records') }}/" +
-                            currentRecordId;
-
-                    }
-
-
-                    /* =============================================
-                       CARGAR CAMPOS DE EDICIÓN
-                    ============================================= */
-
-                    setValue(
-                        'editDate',
-                        row.dataset.date
-                    );
-
-                    setValue(
-                        'editInvoice',
-                        row.dataset.invoice
-                    );
-
-                    setValue(
-                        'editPaps',
-                        row.dataset.paps
-                    );
-
-
-                    setValue(
-                        'editOrigin',
-                        row.dataset.origin
-                    );
-
-                    setValue(
-                        'editDestination',
-                        row.dataset.destination
-                    );
-
-                    setValue(
-                        'editQuantity',
-                        row.dataset.quantity
-                    );
-
-                    setValue(
-                        'editQuantityType',
-                        row.dataset.quantityType
-                    );
-
-                    setValue(
-                        'editNotes',
-                        row.dataset.notes
-                    );
-
-
-                    /* =============================================
-                       AUTOCOMPLETE EDITAR
-                    ============================================= */
-
-                    setAutocompleteValue(
-                        'editCompany',
-                        'editCompanyId',
-                        'editCompanyOptions',
-                        row.dataset.companyId,
-                        row.dataset.company
-                    );
-
-
-                    setAutocompleteValue(
-                        'editDriver',
-                        'editDriverId',
-                        'editDriverOptions',
-                        row.dataset.driverId,
-                        row.dataset.driver
-                    );
-
-
-                    setAutocompleteValue(
-                        'editTrailer',
-                        'editTrailerId',
-                        'editTrailerOptions',
-                        row.dataset.trailerId,
-                        row.dataset.trailer
-                    );
-
-
-                    setAutocompleteValue(
-                        'editBroker',
-                        'editBrokerId',
-                        'editBrokerOptions',
-                        row.dataset.brokerId,
-                        row.dataset.broker
-                    );
-
-
-                    setAutocompleteValue(
-                        'editShipper',
-                        'editShipperId',
-                        'editShipperOptions',
-                        row.dataset.shipperId,
-                        row.dataset.shipper
-                    );
-
-
-                    setAutocompleteValue(
-                        'editConsignee',
-                        'editConsigneeId',
-                        'editConsigneeOptions',
-                        row.dataset.consigneeId,
-                        row.dataset.consignee
-                    );
-
-
-                    /* =============================================
-                       IMAGEN EDITAR
-                    ============================================= */
-
-                    const currentImage =
-                        document.getElementById(
-                            'editCurrentImage'
-                        );
-
-                    const currentImageSection =
-                        document.getElementById(
-                            'editCurrentImageSection'
-                        );
-
-                    const editImage =
-                        document.getElementById(
-                            'editImage'
-                        );
-
-                    const preview =
-                        document.getElementById(
-                            'editImagePreview'
-                        );
-
-                    const previewSection =
-                        document.getElementById(
-                            'editImagePreviewSection'
-                        );
-
-
-                    if (
-                        imageUrl &&
-                        currentImage &&
-                        currentImageSection
-                    ) {
-
-                        currentImage.src =
-                            imageUrl;
-
-                        currentImageSection.style.display =
-                            'block';
-
-                    } else {
-
-                        if (currentImage) {
-                            currentImage.src = '';
                         }
 
-                        if (currentImageSection) {
-                            currentImageSection.style.display =
-                                'none';
+
+                        const subtitle =
+                            document.getElementById(
+                                'detailModalSubtitle'
+                            );
+
+
+                        if (subtitle) {
+
+                            subtitle.textContent =
+                                '{{ __('dashboard.modal.information') }}';
+
                         }
 
+
+                        openDetailModal();
+
                     }
+                );
 
-
-                    if (editImage) {
-                        editImage.value = '';
-                    }
-
-                    if (preview) {
-                        preview.src = '';
-                    }
-
-                    if (previewSection) {
-                        previewSection.style.display =
-                            'none';
-                    }
-
-
-                    /* =============================================
-                       MODO VER
-                    ============================================= */
-
-                    if (recordViewMode) {
-                        recordViewMode.style.display =
-                            'block';
-                    }
-
-                    if (editRecordForm) {
-                        editRecordForm.style.display =
-                            'none';
-                    }
-
-                    if (detailModalFooter) {
-                        detailModalFooter.style.display =
-                            'flex';
-                    }
-
-                    const subtitle =
-                        document.getElementById(
-                            'detailModalSubtitle'
-                        );
-
-                    if (subtitle) {
-                        subtitle.textContent =
-                            '{{ __('dashboard.modal.information') }}';
-                    }
-
-
-                    openDetailModal();
-
-                }
-            );
-
-        });
+            }
+        );
 
 
     /* =========================================================
@@ -3267,28 +3941,40 @@ document.addEventListener('DOMContentLoaded', function () {
         function () {
 
             if (recordViewMode) {
+
                 recordViewMode.style.display =
                     'none';
+
             }
+
 
             if (detailModalFooter) {
+
                 detailModalFooter.style.display =
                     'none';
+
             }
 
+
             if (editRecordForm) {
+
                 editRecordForm.style.display =
                     'block';
+
             }
+
 
             const subtitle =
                 document.getElementById(
                     'detailModalSubtitle'
                 );
 
+
             if (subtitle) {
+
                 subtitle.textContent =
                     '{{ __('dashboard.modal.modify_information') }}';
+
             }
 
         }
@@ -3296,7 +3982,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     /* =========================================================
-       CANCELAR EDICIÓN
+       CANCELAR EDICION
     ========================================================= */
 
     cancelEditRecord?.addEventListener(
@@ -3304,28 +3990,40 @@ document.addEventListener('DOMContentLoaded', function () {
         function () {
 
             if (editRecordForm) {
+
                 editRecordForm.style.display =
                     'none';
+
             }
+
 
             if (recordViewMode) {
+
                 recordViewMode.style.display =
                     'block';
+
             }
 
+
             if (detailModalFooter) {
+
                 detailModalFooter.style.display =
                     'flex';
+
             }
+
 
             const subtitle =
                 document.getElementById(
                     'detailModalSubtitle'
                 );
 
+
             if (subtitle) {
+
                 subtitle.textContent =
                     '{{ __('dashboard.modal.information') }}';
+
             }
 
         }
@@ -3345,8 +4043,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const input =
             document.getElementById(inputId);
 
+
         const hidden =
             document.getElementById(hiddenId);
+
 
         const options =
             document.getElementById(optionsId);
@@ -3357,7 +4057,9 @@ document.addEventListener('DOMContentLoaded', function () {
             !hidden ||
             !options
         ) {
+
             return;
+
         }
 
 
@@ -3376,38 +4078,42 @@ document.addEventListener('DOMContentLoaded', function () {
                 .querySelectorAll(
                     '.autocomplete-option'
                 )
-                .forEach(function (option) {
+                .forEach(
+                    function (option) {
 
-                    const name =
-                        (
-                            option.dataset.name || ''
-                        )
-                        .toLowerCase();
+                        const name =
+                            (
+                                option.dataset.name ||
+                                ''
+                            )
+                            .toLowerCase();
 
 
-                    if (
-                        search === '' ||
-                        name.includes(search)
-                    ) {
+                        if (
+                            search === '' ||
+                            name.includes(search)
+                        ) {
 
-                        option.classList.remove(
-                            'hidden'
-                        );
+                            option.classList.remove(
+                                'hidden'
+                            );
 
-                        hasResults = true;
+                            hasResults = true;
 
-                    } else {
+                        } else {
 
-                        option.classList.add(
-                            'hidden'
-                        );
+                            option.classList.add(
+                                'hidden'
+                            );
+
+                        }
 
                     }
-
-                });
+                );
 
 
             return hasResults;
+
         }
 
 
@@ -3431,14 +4137,6 @@ document.addEventListener('DOMContentLoaded', function () {
         input.addEventListener(
             'input',
             function () {
-
-                /*
-                 * Si el usuario modifica el texto,
-                 * dejamos de utilizar el ID anterior.
-                 *
-                 * El backend recibirá el nombre escrito
-                 * y podrá crear el registro si no existe.
-                 */
 
                 hidden.value = '';
 
@@ -3525,20 +4223,28 @@ document.addEventListener('DOMContentLoaded', function () {
         const input =
             document.getElementById(inputId);
 
+
         const hidden =
             document.getElementById(hiddenId);
+
 
         const options =
             document.getElementById(optionsId);
 
 
         if (input) {
-            input.value = name || '';
+
+            input.value =
+                name || '';
+
         }
 
 
         if (hidden) {
-            hidden.value = id || '';
+
+            hidden.value =
+                id || '';
+
         }
 
 
@@ -3548,13 +4254,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 .querySelectorAll(
                     '.autocomplete-option'
                 )
-                .forEach(function (option) {
+                .forEach(
+                    function (option) {
 
-                    option.classList.remove(
-                        'hidden'
-                    );
+                        option.classList.remove(
+                            'hidden'
+                        );
 
-                });
+                    }
+                );
 
 
             options.style.display =
@@ -3658,409 +4366,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     /* =========================================================
-       IMAGEN NUEVO
-    ========================================================= */
-
-    const imageInput =
-        document.getElementById(
-            'recordImage'
-        );
-
-    const imagePreviewContainer =
-        document.getElementById(
-            'imagePreviewContainer'
-        );
-
-    const imagePreview =
-        document.getElementById(
-            'imagePreview'
-        );
-
-    const imageName =
-        document.getElementById(
-            'imageName'
-        );
-
-    const removeImage =
-        document.getElementById(
-            'removeImage'
-        );
-
-
-    function clearImage() {
-
-        if (imageInput) {
-            imageInput.value = '';
-        }
-
-        if (imagePreview) {
-            imagePreview.src = '';
-        }
-
-        if (imageName) {
-            imageName.textContent = '';
-        }
-
-        if (imagePreviewContainer) {
-            imagePreviewContainer.style.display =
-                'none';
-        }
-
-    }
-
-
-    imageInput?.addEventListener(
-        'change',
-        function () {
-
-            const file =
-                this.files[0];
-
-
-            if (!file) {
-                return;
-            }
-
-
-            const allowedTypes = [
-                'image/jpeg',
-                'image/png',
-                'image/webp'
-            ];
-
-
-            if (
-                !allowedTypes.includes(
-                    file.type
-                )
-            ) {
-
-                alert(
-                    'Solo se permiten imágenes JPG, PNG o WEBP.'
-                );
-
-                clearImage();
-
-                return;
-            }
-
-
-            const maxSize =
-                10 * 1024 * 1024;
-
-
-            if (file.size > maxSize) {
-
-                alert(
-                    'La imagen no puede superar los 10 MB.'
-                );
-
-                clearImage();
-
-                return;
-            }
-
-
-            const reader =
-                new FileReader();
-
-
-            reader.onload =
-                function (event) {
-
-                    if (imagePreview) {
-
-                        imagePreview.src =
-                            event.target.result;
-
-                    }
-
-                    if (imageName) {
-
-                        imageName.textContent =
-                            file.name;
-
-                    }
-
-                    if (imagePreviewContainer) {
-
-                        imagePreviewContainer.style.display =
-                            'block';
-
-                    }
-
-                };
-
-
-            reader.readAsDataURL(file);
-
-        }
-    );
-
-
-    removeImage?.addEventListener(
-        'click',
-        clearImage
-    );
-
-
-    /* =========================================================
-       IMAGEN EDICIÓN
-    ========================================================= */
-
-    const editImage =
-        document.getElementById(
-            'editImage'
-        );
-
-    const editImagePreview =
-        document.getElementById(
-            'editImagePreview'
-        );
-
-    const editImagePreviewSection =
-        document.getElementById(
-            'editImagePreviewSection'
-        );
-
-
-    editImage?.addEventListener(
-        'change',
-        function () {
-
-            const file =
-                this.files[0];
-
-
-            if (!file) {
-
-                if (editImagePreviewSection) {
-
-                    editImagePreviewSection.style.display =
-                        'none';
-
-                }
-
-                return;
-            }
-
-
-            const allowedTypes = [
-                'image/jpeg',
-                'image/png',
-                'image/webp'
-            ];
-
-
-            if (
-                !allowedTypes.includes(
-                    file.type
-                )
-            ) {
-
-                alert(
-                    'Solo se permiten imágenes JPG, PNG o WEBP.'
-                );
-
-                this.value = '';
-
-
-                if (editImagePreviewSection) {
-
-                    editImagePreviewSection.style.display =
-                        'none';
-
-                }
-
-                return;
-            }
-
-
-            const maxSize =
-                10 * 1024 * 1024;
-
-
-            if (file.size > maxSize) {
-
-                alert(
-                    'La imagen no puede superar los 10 MB.'
-                );
-
-                this.value = '';
-
-
-                if (editImagePreviewSection) {
-
-                    editImagePreviewSection.style.display =
-                        'none';
-
-                }
-
-                return;
-            }
-
-
-            const reader =
-                new FileReader();
-
-
-            reader.onload =
-                function (event) {
-
-                    if (editImagePreview) {
-
-                        editImagePreview.src =
-                            event.target.result;
-
-                    }
-
-                    if (editImagePreviewSection) {
-
-                        editImagePreviewSection.style.display =
-                            'block';
-
-                    }
-
-                };
-
-
-            reader.readAsDataURL(file);
-
-        }
-    );
-
-
-    /* =========================================================
-       ABRIR IMAGEN EN GRANDE
-    ========================================================= */
-
-    document
-        .getElementById('detailImage')
-        ?.addEventListener(
-            'click',
-            function () {
-
-                if (this.src) {
-
-                    window.open(
-                        this.src,
-                        '_blank'
-                    );
-
-                }
-
-            }
-        );
-
-
-    document
-        .getElementById('editCurrentImage')
-        ?.addEventListener(
-            'click',
-            function () {
-
-                if (this.src) {
-
-                    window.open(
-                        this.src,
-                        '_blank'
-                    );
-
-                }
-
-            }
-        );
-
-
-    /* =========================================================
-       VALIDAR EDICIÓN
-    ========================================================= */
-
-    if (editRecordForm) {
-
-        editRecordForm.addEventListener(
-            'submit',
-            function (event) {
-
-                const companyId =
-                    document.getElementById(
-                        'editCompanyId'
-                    )?.value;
-
-
-                if (!companyId) {
-
-                    event.preventDefault();
-
-                    alert(
-                        'Selecciona un cliente de la lista.'
-                    );
-
-                    return;
-                }
-
-
-                /*
-                 * DRIVER Y TRAILER NO SE VALIDAN
-                 * CONTRA LA BASE DE DATOS.
-                 *
-                 * Pueden ser nuevos.
-                 */
-
-            }
-        );
-
-    }
-
-
-    /* =========================================================
-       VALIDAR NUEVO REGISTRO
-    ========================================================= */
-
-    const newRecordForm =
-        document.getElementById(
-            'newRecordForm'
-        );
-
-
-    if (newRecordForm) {
-
-        newRecordForm.addEventListener(
-            'submit',
-            function (event) {
-
-                const companyId =
-                    document.getElementById(
-                        'companyId'
-                    )?.value;
-
-
-                if (!companyId) {
-
-                    event.preventDefault();
-
-                    alert(
-                        'Selecciona un cliente de la lista.'
-                    );
-
-                    return;
-                }
-
-
-                /*
-                 * DRIVER Y TRAILER PUEDEN SER NUEVOS.
-                 *
-                 * No exigimos que tengan driver_id
-                 * o trailer_id.
-                 */
-
-            }
-        );
-
-    }
-
-
-    /* =========================================================
        ESC
     ========================================================= */
 
@@ -4098,5 +4403,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 </script>
+
 
 </x-app-layout>

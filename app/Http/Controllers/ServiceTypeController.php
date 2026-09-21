@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AppSetting;
 use App\Models\ServiceType;
 use Illuminate\Http\Request;
 
@@ -17,7 +18,57 @@ class ServiceTypeController extends Controller
     {
         $services = ServiceType::orderBy('id')->get();
 
-        return view('service-types.index', compact('services'));
+        $ivaSetting = AppSetting::where(
+            'key',
+            'iva_general'
+        )->first();
+
+        $ivaGeneral = $ivaSetting
+            ? (float) $ivaSetting->value
+            : 0;
+
+        return view(
+            'service-types.index',
+            compact(
+                'services',
+                'ivaGeneral'
+            )
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | GUARDAR IVA GENERAL
+    |--------------------------------------------------------------------------
+    */
+
+    public function saveIva(Request $request)
+    {
+        $validated = $request->validate([
+            'iva_general' => [
+                'required',
+                'numeric',
+                'min:0',
+                'max:100',
+            ],
+        ]);
+
+        AppSetting::updateOrCreate(
+            [
+                'key' => 'iva_general',
+            ],
+            [
+                'value' => $validated['iva_general'],
+            ]
+        );
+
+        return redirect()
+            ->route('service-types.index')
+            ->with(
+                'success',
+                'IVA general actualizado correctamente.'
+            );
     }
 
 
@@ -47,6 +98,7 @@ class ServiceTypeController extends Controller
                 'numeric',
                 'min:0',
             ],
+
             'weight' => [
                 'nullable',
                 'numeric',
@@ -54,10 +106,8 @@ class ServiceTypeController extends Controller
             ],
         ]);
 
-
         ServiceType::create([
-            'name' =>
-                $validated['name'],
+            'name' => $validated['name'],
 
             'description' =>
                 $validated['description'] ?? null,
@@ -65,12 +115,25 @@ class ServiceTypeController extends Controller
             'price' =>
                 $validated['price'],
 
-            'weight' => $validated['weight'] ?? null,
+            /*
+             * El checkbox envía 1 cuando está marcado
+             * y no envía nada cuando está desmarcado.
+             *
+             * boolean() convierte ambos casos correctamente.
+             */
+            'tax_enabled' =>
+                $request->boolean('tax_enabled'),
 
-            'active' =>
-                true,
+            'weight' =>
+                $validated['weight'] ?? null,
+
+            /*
+             * Los servicios nuevos se crean activos.
+             * El control Activo/Inactivo existente
+             * seguirá funcionando desde la edición.
+             */
+            'active' => true,
         ]);
-
 
         return redirect()
             ->route('service-types.index')
@@ -87,8 +150,10 @@ class ServiceTypeController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function update(Request $request, ServiceType $serviceType)
-    {
+    public function update(
+        Request $request,
+        ServiceType $serviceType
+    ) {
         $validated = $request->validate([
             'name' => [
                 'required',
@@ -112,6 +177,7 @@ class ServiceTypeController extends Controller
                 'nullable',
                 'boolean',
             ],
+
             'weight' => [
                 'nullable',
                 'numeric',
@@ -119,7 +185,17 @@ class ServiceTypeController extends Controller
             ],
         ]);
 
-
+        /*
+         * IMPORTANTE:
+         *
+         * tax_enabled NO necesita estar en $validated,
+         * porque el checkbox puede no mandar ningún valor
+         * cuando está desmarcado.
+         *
+         * boolean() convierte:
+         *   checkbox marcado   -> true
+         *   checkbox desmarcado -> false
+         */
         $serviceType->update([
             'name' =>
                 $validated['name'],
@@ -129,12 +205,20 @@ class ServiceTypeController extends Controller
 
             'price' =>
                 $validated['price'],
-            'weight' => $validated['weight'] ?? null,
 
+            'tax_enabled' =>
+                $request->boolean('tax_enabled'),
+
+            'weight' =>
+                $validated['weight'] ?? null,
+
+            /*
+             * Conservamos el control existente
+             * Activo / Inactivo.
+             */
             'active' =>
                 $request->boolean('active'),
         ]);
-
 
         return redirect()
             ->route('service-types.index')

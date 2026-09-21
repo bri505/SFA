@@ -451,23 +451,31 @@
     margin-bottom: 20px;
 }
 
-.detail-image-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.detail-images-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
     padding: 10px;
     background: #f9fafb;
     border: 1px solid #e5e7eb;
     border-radius: 7px;
 }
 
+.detail-image-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
 .detail-image {
     display: block;
-    max-width: 100%;
-    max-height: 350px;
-    margin: 0 auto;
+    width: 100%;
+    height: 180px;
     border-radius: 7px;
     object-fit: contain;
+    background: white;
+    border: 1px solid #e5e7eb;
     cursor: pointer;
 }
 
@@ -932,6 +940,33 @@
     }
 }
 
+.edit-images-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.edit-image-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 7px;
+}
+
+.edit-image-gallery {
+    display: block;
+    width: 100%;
+    height: 180px;
+    object-fit: contain;
+    border-radius: 7px;
+    background: white;
+    cursor: pointer;
+}
+
 </style>
 
 
@@ -940,6 +975,12 @@
 ============================================================ --}}
 
 @php
+
+    /*
+    |--------------------------------------------------------------------------
+    | DATOS PARA AUTOCOMPLETE
+    |--------------------------------------------------------------------------
+    */
 
     $autocompleteData = [
 
@@ -988,21 +1029,66 @@
     ];
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | IVA GENERAL
+    |--------------------------------------------------------------------------
+    |
+    | El porcentaje se obtiene desde:
+    |
+    | app_settings
+    | key = iva_general
+    |
+    | Este valor es el IVA que se utilizará para todos los servicios
+    | que tengan tax_enabled = true.
+    |
+    */
+
+    $ivaGeneral = \App\Models\AppSetting::where(
+        'key',
+        'iva_general'
+    )->value('value');
+
+    $ivaGeneral = $ivaGeneral !== null
+        ? (float) $ivaGeneral
+        : 0;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | TIPOS DE SERVICIO
+    |--------------------------------------------------------------------------
+    |
+    | tax_enabled:
+    |   true  = el servicio causa IVA
+    |   false = el servicio no causa IVA
+    |
+    | IMPORTANTE:
+    | Ya NO utilizamos service_types.tax_rate para determinar
+    | el porcentaje del IVA.
+    |
+    | El porcentaje siempre viene de iva_general.
+    |
+    */
+
     $serviceTypesData = $serviceTypes->map(function ($serviceType) {
+
         return [
             'id' => $serviceType->id,
             'name' => $serviceType->name,
-            'price' => $serviceType->price,
+            'price' => (float) $serviceType->price,
+            'tax_enabled' => (bool) $serviceType->tax_enabled,
         ];
+
     })->values()->all();
 
 @endphp
 
 
+
 <div class="sfa-records">
 
     <div class="sfa-container">
-
 
         {{-- =====================================================
              HEADER
@@ -1013,11 +1099,11 @@
             <div>
 
                 <h1 class="records-page-title">
-                {{ __('records.title') }}
+                    {{ __('records.title') }}
                 </h1>
 
                 <div class="records-page-subtitle">
-                {{ __('records.subtitle') }}
+                    {{ __('records.subtitle') }}
                 </div>
 
             </div>
@@ -1079,69 +1165,176 @@
                     </tr>
 
                 </thead>
+<tbody>
+
+    @forelse($records as $record)
+
+        @php
+
+            /*
+            |--------------------------------------------------------------------------
+            | IMÁGENES DEL REGISTRO
+            |--------------------------------------------------------------------------
+            */
+
+            $imageUrls = $record->images->map(function ($image) {
+
+                return [
+                    'id' => $image->id,
+                    'url' => \Illuminate\Support\Facades\Storage::disk('public')->url(
+                        $image->image_path
+                    ),
+                ];
+
+            })->values();
 
 
-                <tbody>
+            /*
+            |--------------------------------------------------------------------------
+            | SERVICIOS DEL REGISTRO
+            |--------------------------------------------------------------------------
+            */
 
-                @forelse($records as $record)
-
-                    @php
-
-                        $imageUrl = $record->image
-                            ? \Illuminate\Support\Facades\Storage::disk('public')->url($record->image)
-                            : null;
+            $services = $record->services ?? collect();
 
 
-                        $services = $record->services ?? collect();
+            /*
+            |--------------------------------------------------------------------------
+            | DATOS DE SERVICIOS PARA JAVASCRIPT
+            |--------------------------------------------------------------------------
+            |
+            | El IVA se determina mediante:
+            |
+            | 1. service_types.tax_enabled
+            | 2. app_settings.iva_general
+            |
+            | Ya NO se utiliza service_types.tax_rate.
+            |
+            */
+
+            $servicesData = $services->map(function ($service) use ($ivaGeneral) {
+
+                $serviceType = $service->serviceType;
 
 
-                        $servicesData = $services->map(function ($service) {
+                /*
+                |--------------------------------------------------------------------------
+                | ¿EL SERVICIO CAUSA IVA?
+                |--------------------------------------------------------------------------
+                */
 
-                            return [
-                                'id' => $service->id,
-                                'service_type_id' => $service->service_type_id,
-                                'name' => $service->serviceType->name ?? 'Servicio',
-                                'quantity' => $service->quantity,
-                                'unit_price' => $service->unit_price,
-                                'subtotal' => $service->subtotal,
-                                'notes' => $service->notes,
-                            ];
-
-                        })->values();
-
-                    @endphp
+                $taxEnabled = $serviceType
+                    ? (bool) $serviceType->tax_enabled
+                    : false;
 
 
-                    <tr
-                        onclick="openRecordDetailModal(
-                            {{ $record->id }},
-                            @js(optional($record->date)->format('d/m/Y')),
-                            @js($record->invoice_number),
-                            @js($record->company_id),
-                            @js($record->company->name ?? ''),
-                            @js($record->driver_id),
-                            @js($record->driver->name ?? ''),
-                            @js($record->trailer_id),
-                            @js($record->trailer->number ?? ''),
-                            @js($record->paps_number),
-                            @js($record->shipper_id),
-                            @js($record->shipper->name ?? ''),
-                            @js($record->consignee_id),
-                            @js($record->consignee->name ?? ''),
-                            @js($record->broker_id),
-                            @js($record->broker->name ?? ''),
-                            @js($record->registeredBy->name ?? ''),
-                            @js(optional($record->created_at)->format('d/m/Y H:i')),
-                            @js($record->origin),
-                            @js($record->destination),
-                            @js($record->quantity),
-                            @js($record->quantity_type),
-                            @js($imageUrl),
-                            @js($record->notes),
-                            @js($servicesData)
-                        )"
-                    >
+                /*
+                |--------------------------------------------------------------------------
+                | IVA EFECTIVO
+                |--------------------------------------------------------------------------
+                */
 
+                $taxRate = $taxEnabled
+                    ? (float) $ivaGeneral
+                    : 0;
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | SUBTOTAL
+                |--------------------------------------------------------------------------
+                */
+
+                $subtotal = round(
+                    (float) $service->subtotal,
+                    2
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | IVA
+                |--------------------------------------------------------------------------
+                */
+
+                $taxAmount = round(
+                    $subtotal * ($taxRate / 100),
+                    2
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | TOTAL
+                |--------------------------------------------------------------------------
+                */
+
+                $total = round(
+                    $subtotal + $taxAmount,
+                    2
+                );
+
+
+                return [
+
+                    'id' => $service->id,
+
+                    'service_type_id' => $service->service_type_id,
+
+                    'name' => $serviceType?->name ?? 'Servicio',
+
+                    'quantity' => (float) $service->quantity,
+
+                    'unit_price' => (float) $service->unit_price,
+
+                    'subtotal' => $subtotal,
+
+                    'tax_enabled' => $taxEnabled,
+
+                    'tax_rate' => $taxRate,
+
+                    'tax_amount' => $taxAmount,
+
+                    'total' => $total,
+
+                    'notes' => $service->notes,
+
+                ];
+
+            })->values();
+
+        @endphp
+
+
+        <tr
+            onclick="openRecordDetailModal(
+                {{ $record->id }},
+                @js(optional($record->date)->format('d/m/Y')),
+                @js($record->invoice_number),
+                @js($record->company_id),
+                @js($record->company->name ?? ''),
+                @js($record->driver_id),
+                @js($record->driver->name ?? ''),
+                @js($record->trailer_id),
+                @js($record->trailer->number ?? ''),
+                @js($record->paps_number),
+                @js($record->shipper_id),
+                @js($record->shipper->name ?? ''),
+                @js($record->consignee_id),
+                @js($record->consignee->name ?? ''),
+                @js($record->broker_id),
+                @js($record->broker->name ?? ''),
+                @js($record->registeredBy->name ?? ''),
+                @js(optional($record->created_at)->format('d/m/Y H:i')),
+                @js($record->origin),
+                @js($record->destination),
+                @js($record->quantity),
+                @js($record->quantity_type),
+                @js($imageUrls),
+                @js($record->notes),
+                @js($servicesData)
+            )"
+        >
 
                         <td>
                             {{ optional($record->date)->format('d/m/Y') }}
@@ -1210,7 +1403,6 @@
 
                             <div class="action-buttons">
 
-
                                 {{-- VER --}}
 
                                 <button
@@ -1239,12 +1431,12 @@
                                         @js($record->destination),
                                         @js($record->quantity),
                                         @js($record->quantity_type),
-                                        @js($imageUrl),
+                                        @js($imageUrls),
                                         @js($record->notes),
                                         @js($servicesData)
                                     )"
                                 >
-                                {{ __('records.view_records') }}
+                                    {{ __('records.view_records') }}
                                 </button>
 
 
@@ -1278,10 +1470,10 @@
                                         @js($servicesData),
                                         @js($record->registeredBy->name ?? ''),
                                         @js(optional($record->created_at)->format('d/m/Y H:i')),
-                                        @js($imageUrl)
+                                        @js($imageUrls)
                                     )"
                                 >
-                                {{ __('records.modal.edit_record') }}
+                                    {{ __('records.modal.edit_record') }}
                                 </button>
 
                             </div>
@@ -1320,11 +1512,11 @@
                         >
 
                             <div class="empty-state-title">
-                            {{ __('records.no_records') }}
+                                {{ __('records.no_records') }}
                             </div>
 
                             <div class="empty-state-text">
-                            {{ __('records.records.create') }}
+                                {{ __('records.records.create') }}
                             </div>
 
                         </td>
@@ -1360,7 +1552,6 @@
         aria-modal="true"
     >
 
-
         {{-- HEADER --}}
 
         <div class="modal-header">
@@ -1371,14 +1562,14 @@
                     id="detailModalTitle"
                     class="modal-title"
                 >
-                {{ __('records.table.record') }}
+                    {{ __('records.table.record') }}
                 </div>
 
                 <div
                     id="detailModalSubtitle"
                     class="modal-subtitle"
                 >
-                {{ __('records.modal.information') }}
+                    {{ __('records.modal.information') }}
                 </div>
 
             </div>
@@ -1405,22 +1596,20 @@
             class="modal-body"
         >
 
-
             {{-- DATOS EMBARQUE --}}
 
             <div class="form-section">
 
                 <div class="form-section-title">
-                {{ __('records.modal.shipment_data') }}
+                    {{ __('records.modal.shipment_data') }}
                 </div>
 
                 <div class="detail-grid">
 
-
                     <div class="detail-item">
 
                         <div class="detail-label">
-                        {{ __('records.modal.date') }}
+                            {{ __('records.modal.date') }}
                         </div>
 
                         <div
@@ -1436,7 +1625,7 @@
                     <div class="detail-item">
 
                         <div class="detail-label">
-                        {{ __('records.modal.record') }}
+                            {{ __('records.modal.record') }}
                         </div>
 
                         <div
@@ -1452,7 +1641,7 @@
                     <div class="detail-item">
 
                         <div class="detail-label">
-                        {{ __('records.modal.invoice_number') }}
+                            {{ __('records.modal.invoice_number') }}
                         </div>
 
                         <div
@@ -1468,7 +1657,7 @@
                     <div class="detail-item">
 
                         <div class="detail-label">
-                        {{ __('records.modal.paps') }} #
+                            {{ __('records.modal.paps') }} #
                         </div>
 
                         <div
@@ -1488,27 +1677,15 @@
 
             {{-- IMAGEN --}}
 
-            <div
-                id="detailImageSection"
-                class="detail-image-section"
-                style="display:none;"
-            >
-
+            <div id="detailImageSection" class="detail-image-section" style="display:none;">
                 <div class="form-section-title">
-                {{ __('records.modal.image') }}
+                    {{ __('records.modal.image') }}
                 </div>
 
-                <div class="detail-image-container">
-
-                    <img
-                        id="detailImage"
-                        class="detail-image"
-                        src=""
-                        alt="{{ __('records.modal.current_image') }}"
-                    >
-
-                </div>
-
+                <div
+                    id="detailImagesContainer"
+                    class="detail-images-container"
+                ></div>
             </div>
 
 
@@ -1518,16 +1695,15 @@
             <div class="form-section">
 
                 <div class="form-section-title">
-                {{ __('records.modal.transport_data') }}
+                    {{ __('records.modal.transport_data') }}
                 </div>
 
                 <div class="detail-grid">
 
-
                     <div class="detail-item">
 
                         <div class="detail-label">
-                        {{ __('records.modal.origin') }}
+                            {{ __('records.modal.origin') }}
                         </div>
 
                         <div
@@ -1543,7 +1719,7 @@
                     <div class="detail-item">
 
                         <div class="detail-label">
-                        {{ __('records.modal.destination') }}
+                            {{ __('records.modal.destination') }}
                         </div>
 
                         <div
@@ -1559,7 +1735,7 @@
                     <div class="detail-item">
 
                         <div class="detail-label">
-                        {{ __('records.modal.quantity') }}
+                            {{ __('records.modal.quantity') }}
                         </div>
 
                         <div
@@ -1575,7 +1751,7 @@
                     <div class="detail-item">
 
                         <div class="detail-label">
-                        {{ __('records.modal.type') }}
+                            {{ __('records.modal.type') }}
                         </div>
 
                         <div
@@ -1598,16 +1774,15 @@
             <div class="form-section">
 
                 <div class="form-section-title">
-                {{ __('records.modal.participants') }}
+                    {{ __('records.modal.participants') }}
                 </div>
 
                 <div class="detail-grid">
 
-
                     <div class="detail-item">
 
                         <div class="detail-label">
-                        {{ __('records.modal.company') }}
+                            {{ __('records.modal.company') }}
                         </div>
 
                         <div
@@ -1623,7 +1798,7 @@
                     <div class="detail-item">
 
                         <div class="detail-label">
-                        {{ __('records.modal.driver') }}
+                            {{ __('records.modal.driver') }}
                         </div>
 
                         <div
@@ -1639,7 +1814,7 @@
                     <div class="detail-item">
 
                         <div class="detail-label">
-                        {{ __('records.modal.trailer') }}
+                            {{ __('records.modal.trailer') }}
                         </div>
 
                         <div
@@ -1655,7 +1830,7 @@
                     <div class="detail-item">
 
                         <div class="detail-label">
-                        {{ __('records.modal.broker') }}
+                            {{ __('records.modal.broker') }}
                         </div>
 
                         <div
@@ -1671,7 +1846,7 @@
                     <div class="detail-item">
 
                         <div class="detail-label">
-                        {{ __('records.modal.shipper') }}
+                            {{ __('records.modal.shipper') }}
                         </div>
 
                         <div
@@ -1687,7 +1862,7 @@
                     <div class="detail-item">
 
                         <div class="detail-label">
-                        {{ __('records.modal.consignee') }}
+                            {{ __('records.modal.consignee') }}
                         </div>
 
                         <div
@@ -1710,7 +1885,7 @@
             <div class="form-section">
 
                 <div class="form-section-title">
-                {{ __('records.table.services') }}
+                    {{ __('records.table.services') }}
                 </div>
 
                 <div
@@ -1727,16 +1902,15 @@
             <div class="form-section">
 
                 <div class="form-section-title">
-                {{ __('records.modal.control') }}
+                    {{ __('records.modal.control') }}
                 </div>
 
                 <div class="detail-grid">
 
-
                     <div class="detail-item">
 
                         <div class="detail-label">
-                        {{ __('records.table.registered_by') }}
+                            {{ __('records.table.registered_by') }}
                         </div>
 
                         <div
@@ -1752,7 +1926,7 @@
                     <div class="detail-item">
 
                         <div class="detail-label">
-                        {{ __('records.modal.date_record') }}
+                            {{ __('records.modal.date_record') }}
                         </div>
 
                         <div
@@ -1775,7 +1949,7 @@
             <div class="form-section">
 
                 <div class="form-section-title">
-                {{ __('records.modal.notes') }}
+                    {{ __('records.modal.notes') }}
                 </div>
 
                 <div class="detail-item">
@@ -1830,22 +2004,20 @@
 
             <div class="modal-body">
 
-
                 {{-- DATOS EMBARQUE --}}
 
                 <div class="form-section">
 
                     <div class="form-section-title">
-                    {{ __('records.modal.shipment_data') }}
+                        {{ __('records.modal.shipment_data') }}
                     </div>
 
                     <div class="form-grid three">
 
-
                         <div class="form-group">
 
                             <label class="form-label">
-                            {{ __('records.modal.date') }}
+                                {{ __('records.modal.date') }}
                                 <span class="form-required">*</span>
                             </label>
 
@@ -1863,7 +2035,7 @@
                         <div class="form-group">
 
                             <label class="form-label">
-                            {{ __('records.modal.record') }}
+                                {{ __('records.modal.record') }}
                             </label>
 
                             <input
@@ -1879,7 +2051,7 @@
                         <div class="form-group">
 
                             <label class="form-label">
-                            {{ __('records.modal.invoice_number') }}
+                                {{ __('records.modal.invoice_number') }}
                                 <span class="form-required">*</span>
                             </label>
 
@@ -1888,7 +2060,7 @@
                                 id="editInvoice"
                                 name="invoice_number"
                                 class="form-input"
-                                required
+                                
                             >
 
                         </div>
@@ -1897,7 +2069,7 @@
                         <div class="form-group">
 
                             <label class="form-label">
-                            {{ __('records.modal.paps') }}#
+                                {{ __('records.modal.paps') }}#
                             </label>
 
                             <input
@@ -1909,8 +2081,6 @@
 
                         </div>
 
-
-
                     </div>
 
                 </div>
@@ -1920,41 +2090,31 @@
                 {{-- IMAGEN --}}
 
                 <div class="form-section">
-
                     <div class="form-section-title">
-                    {{ __('records.modal.image') }}
+                        {{ __('records.modal.image') }}
                     </div>
 
                     <div class="form-group">
 
                         <label class="form-label">
-                        {{ __('records.modal.replace_image') }}
+                            {{ __('records.modal.replace_image') }}
                         </label>
 
                         <input
                             type="file"
-                            id="editImage"
-                            name="image"
+                            id="editImages"
+                            name="images[]"
                             class="form-input"
                             accept="image/jpeg,image/png,image/webp"
-                            capture="environment"
+                            multiple
                         >
 
                         <div
-                            id="editImagePreview"
-                            class="edit-image-preview"
-                        >
-
-                            <img
-                                id="editImagePreviewImg"
-                                src=""
-                                alt="{{ __('records.modal.preview_alt') }}"
-                            >
-
-                        </div>
+                            id="editImagesContainer"
+                            class="edit-images-container"
+                        ></div>
 
                     </div>
-
                 </div>
 
 
@@ -1964,16 +2124,15 @@
                 <div class="form-section">
 
                     <div class="form-section-title">
-                    {{ __('records.modal.transport_data') }}
+                        {{ __('records.modal.transport_data') }}
                     </div>
 
                     <div class="form-grid">
 
-
                         <div class="form-group">
 
                             <label class="form-label">
-                            {{ __('records.modal.origin') }}
+                                {{ __('records.modal.origin') }}
                             </label>
 
                             <input
@@ -1989,7 +2148,7 @@
                         <div class="form-group">
 
                             <label class="form-label">
-                            {{ __('records.modal.destination') }}
+                                {{ __('records.modal.destination') }}
                             </label>
 
                             <input
@@ -2005,7 +2164,7 @@
                         <div class="form-group">
 
                             <label class="form-label">
-                            {{ __('records.modal.quantity') }}
+                                {{ __('records.modal.quantity') }}
                             </label>
 
                             <input
@@ -2022,7 +2181,7 @@
                         <div class="form-group">
 
                             <label class="form-label">
-                            {{ __('records.modal.type') }}
+                                {{ __('records.modal.type') }}
                             </label>
 
                             <select
@@ -2032,19 +2191,19 @@
                             >
 
                                 <option value="">
-                                {{ __('records.modal.select') }}
+                                    {{ __('records.modal.select') }}
                                 </option>
 
                                 <option value="palets">
-                                {{ __('records.modal.palets') }}
+                                    {{ __('records.modal.palets') }}
                                 </option>
 
                                 <option value="contenedores">
-                                {{ __('records.modal.containers') }}
+                                    {{ __('records.modal.containers') }}
                                 </option>
 
                                 <option value="piezas">
-                                {{ __('records.modal.pieces') }}
+                                    {{ __('records.modal.pieces') }}
                                 </option>
 
                             </select>
@@ -2062,18 +2221,17 @@
                 <div class="form-section">
 
                     <div class="form-section-title">
-                    {{ __('records.modal.participants') }}
+                        {{ __('records.modal.participants') }}
                     </div>
 
                     <div class="form-grid">
-
 
                         {{-- CLIENTE --}}
 
                         <div class="form-group">
 
                             <label class="form-label">
-                            {{ __('records.modal.company') }}
+                                {{ __('records.modal.company') }}
                             </label>
 
                             <div
@@ -2111,13 +2269,12 @@
                         </div>
 
 
-
                         {{-- CHOFER --}}
 
                         <div class="form-group">
 
                             <label class="form-label">
-                            {{ __('records.modal.driver') }}
+                                {{ __('records.modal.driver') }}
                             </label>
 
                             <div
@@ -2155,13 +2312,12 @@
                         </div>
 
 
-
                         {{-- TRAILER --}}
 
                         <div class="form-group">
 
                             <label class="form-label">
-                            {{ __('records.modal.trailer') }}
+                                {{ __('records.modal.trailer') }}
                             </label>
 
                             <div
@@ -2199,13 +2355,12 @@
                         </div>
 
 
-
                         {{-- AGENTE --}}
 
                         <div class="form-group">
 
                             <label class="form-label">
-                            {{ __('records.modal.broker') }}
+                                {{ __('records.modal.broker') }}
                             </label>
 
                             <div
@@ -2243,13 +2398,12 @@
                         </div>
 
 
-
                         {{-- TRANSPORTISTA --}}
 
                         <div class="form-group">
 
                             <label class="form-label">
-                            {{ __('records.modal.shipper') }}
+                                {{ __('records.modal.shipper') }}
                             </label>
 
                             <div
@@ -2287,13 +2441,12 @@
                         </div>
 
 
-
                         {{-- CONSIGNATARIO --}}
 
                         <div class="form-group">
 
                             <label class="form-label">
-                            {{ __('records.modal.consignee') }}
+                                {{ __('records.modal.consignee') }}
                             </label>
 
                             <div
@@ -2343,7 +2496,7 @@
                     <div class="form-section">
 
                         <div class="form-section-title">
-                        {{ __('records.table.services') }}
+                            {{ __('records.table.services') }}
                         </div>
 
                         <div
@@ -2377,16 +2530,15 @@
                 <div class="form-section">
 
                     <div class="form-section-title">
-                    {{ __('records.modal.control') }}
+                        {{ __('records.modal.control') }}
                     </div>
 
                     <div class="form-grid">
 
-
                         <div class="form-group">
 
                             <label class="form-label">
-                            {{ __('records.table.registered_by') }}
+                                {{ __('records.table.registered_by') }}
                             </label>
 
                             <input
@@ -2402,7 +2554,7 @@
                         <div class="form-group">
 
                             <label class="form-label">
-                            {{ __('records.modal.date_record') }}
+                                {{ __('records.modal.date_record') }}
                             </label>
 
                             <input
@@ -2425,7 +2577,7 @@
                 <div class="form-section">
 
                     <div class="form-section-title">
-                    {{ __('records.modal.notes') }}
+                        {{ __('records.modal.notes') }}
                     </div>
 
                     <textarea
@@ -2450,16 +2602,14 @@
                     id="cancelEditButton"
                     class="action-button"
                 >
-                {{ __('records.modal.cancel') }}
-
+                    {{ __('records.modal.cancel') }}
                 </button>
 
                 <button
                     type="submit"
                     class="action-button primary"
                 >
-                {{ __('records.modal.save_changes') }}
-
+                    {{ __('records.modal.save_changes') }}
                 </button>
 
             </div>
@@ -2480,8 +2630,7 @@
                 id="closeDetailButton"
                 class="action-button"
             >
-            {{ __('records.modal.close') }}
-
+                {{ __('records.modal.close') }}
             </button>
 
 
@@ -2490,8 +2639,7 @@
                 id="editDetailButton"
                 class="action-button primary"
             >
-            {{ __('records.modal.edit_record') }}
-
+                {{ __('records.modal.edit_record') }}
             </button>
 
         </div>
@@ -2515,19 +2663,16 @@
 
     <div class="record-modal-box small">
 
-
         <div class="modal-header">
 
             <div>
 
                 <div class="modal-title">
-                {{ __('records.modal.add_service') }}
-
+                    {{ __('records.modal.add_service') }}
                 </div>
 
                 <div class="modal-subtitle">
-                {{ __('records.modal.add_service_record') }}
-
+                    {{ __('records.modal.add_service_record') }}
                 </div>
 
             </div>
@@ -2558,25 +2703,48 @@
                 <div class="form-group">
 
                     <label class="form-label">
-                    {{ __('records.service') }}
-
+                        {{ __('records.service') }}
                     </label>
 
                     <select
                         name="service_type_id"
                         class="form-select"
-                        required
+                        
                     >
 
                         <option value="">
-                        {{ __('records.modal.select_service') }}
+                            {{ __('records.modal.select_service') }}
                         </option>
 
                         @foreach($serviceTypes as $serviceType)
 
+                            @php
+                                $serviceTaxRate = $serviceType->tax_rate !== null
+                                    ? (float) $serviceType->tax_rate
+                                    : 0;
+
+                                $servicePrice = (float) $serviceType->price;
+
+                                $serviceTaxAmount = round(
+                                    $servicePrice * ($serviceTaxRate / 100),
+                                    2
+                                );
+
+                                $serviceTotal = round(
+                                    $servicePrice + $serviceTaxAmount,
+                                    2
+                                );
+                            @endphp
+
                             <option value="{{ $serviceType->id }}">
                                 {{ $serviceType->name }}
-                                — ${{ number_format($serviceType->price, 2) }}
+                                — ${{ number_format($servicePrice, 2) }}
+
+                                @if($serviceTaxRate > 0)
+                                    + IVA {{ number_format($serviceTaxRate, 2) }}%
+                                    = ${{ number_format($serviceTotal, 2) }}
+                                @endif
+
                             </option>
 
                         @endforeach
@@ -2592,7 +2760,7 @@
                 >
 
                     <label class="form-label">
-                    {{ __('records.modal.notes') }}
+                        {{ __('records.modal.notes') }}
                     </label>
 
                     <textarea
@@ -2612,14 +2780,14 @@
                     id="cancelServiceButton"
                     class="action-button"
                 >
-                {{ __('records.modal.cancel') }}
+                    {{ __('records.modal.cancel') }}
                 </button>
 
                 <button
                     type="submit"
                     class="action-button primary"
                 >
-                {{ __('records.modal.add_service') }}
+                    {{ __('records.modal.add_service') }}
                 </button>
 
             </div>
@@ -2658,7 +2826,14 @@ let currentRecordConsigneeName = '';
 
 let currentRecordServices = [];
 
-let currentRecordImageUrl = null;
+let currentRecordImageUrls = [];
+
+
+/* ============================================================
+   ARCHIVOS NUEVOS PARA EDITAR
+============================================================ */
+
+let selectedEditFiles = [];
 
 
 /* ============================================================
@@ -2673,6 +2848,14 @@ const autocompleteData = @json($autocompleteData);
 ============================================================ */
 
 const serviceTypesData = @json($serviceTypesData);
+
+
+/* ============================================================
+   IVA GENERAL
+============================================================ */
+
+const ivaGeneral =
+    Number(@json($ivaGeneral ?? 0));
 
 
 /* ============================================================
@@ -2732,7 +2915,10 @@ const autocompleteConfig = {
 
 function escapeHtml(value) {
 
-    if (value === null || value === undefined) {
+    if (
+        value === null ||
+        value === undefined
+    ) {
         return '';
     }
 
@@ -2747,12 +2933,27 @@ function escapeHtml(value) {
 
 
 /* ============================================================
+   FORMATO DINERO
+============================================================ */
+
+function formatMoney(value) {
+
+    const number =
+        Number(value || 0);
+
+    return `$${number.toFixed(2)}`;
+
+}
+
+
+/* ============================================================
    AUTOCOMPLETE
 ============================================================ */
 
 function setupAutocomplete(type) {
 
-    const config = autocompleteConfig[type];
+    const config =
+        autocompleteConfig[type];
 
     if (!config) {
         return;
@@ -2785,15 +2986,10 @@ function setupAutocomplete(type) {
     function renderList() {
 
         const search =
-            input.value.trim().toLowerCase();
+            input.value
+                .trim()
+                .toLowerCase();
 
-
-        /*
-         * Si el usuario escribe algo,
-         * se considera que puede ser un nuevo valor.
-         *
-         * Por eso se limpia el ID.
-         */
 
         hiddenId.value = '';
 
@@ -2849,7 +3045,7 @@ function setupAutocomplete(type) {
 
             html += `
                 <div class="autocomplete-empty">
-                {{ __('records.modal.not_found') }}
+                    {{ __('records.modal.not_found') }}
                 </div>
             `;
 
@@ -3020,6 +3216,45 @@ function setAutocompleteValue(
 
 
 /* ============================================================
+   CALCULAR IVA DE SERVICIO
+============================================================ */
+
+function calculateServiceTax(
+    subtotal,
+    taxRate
+) {
+
+    const base =
+        Number(subtotal || 0);
+
+    const rate =
+        Number(taxRate || 0);
+
+    return base *
+        (rate / 100);
+
+}
+
+
+/* ============================================================
+   OBTENER TIPO DE SERVICIO
+============================================================ */
+
+function getServiceType(
+    serviceTypeId
+) {
+
+    return serviceTypesData.find(function(serviceType) {
+
+        return Number(serviceType.id) ===
+            Number(serviceTypeId);
+
+    }) || null;
+
+}
+
+
+/* ============================================================
    MODAL DETALLE
 ============================================================ */
 
@@ -3046,7 +3281,7 @@ function openRecordDetailModal(
     destination,
     quantity,
     quantityType,
-    imageUrl,
+    imageUrls,
     notes,
     services
 ) {
@@ -3099,8 +3334,10 @@ function openRecordDetailModal(
             : [];
 
 
-    currentRecordImageUrl =
-        imageUrl || null;
+    currentRecordImageUrls =
+        Array.isArray(imageUrls)
+            ? imageUrls
+            : [];
 
 
     document.getElementById(
@@ -3219,35 +3456,108 @@ function openRecordDetailModal(
         cleanDetailValue(notes);
 
 
+    /* ========================================================
+       IMÁGENES
+    ======================================================== */
+
     const imageSection =
         document.getElementById(
             'detailImageSection'
         );
 
-    const image =
+
+    const detailImagesContainer =
         document.getElementById(
-            'detailImage'
+            'detailImagesContainer'
         );
 
 
-    if (imageUrl) {
+    if (
+        detailImagesContainer &&
+        currentRecordImageUrls.length > 0
+    ) {
 
-        image.src =
-            imageUrl;
-
-        imageSection.style.display =
-            'block';
-
-    } else {
-
-        image.src =
+        detailImagesContainer.innerHTML =
             '';
 
-        imageSection.style.display =
-            'none';
+
+        currentRecordImageUrls.forEach(
+            function(imageData) {
+
+                const item =
+                    document.createElement('div');
+
+                item.className =
+                    'detail-image-item';
+
+
+                const image =
+                    document.createElement('img');
+
+                image.className =
+                    'detail-image';
+
+
+                image.src =
+                    imageData.url;
+
+
+                image.alt =
+                    '{{ __('records.modal.current_image') }}';
+
+
+                image.addEventListener(
+                    'click',
+                    function() {
+
+                        window.open(
+                            imageData.url,
+                            '_blank'
+                        );
+
+                    }
+                );
+
+
+                item.appendChild(
+                    image
+                );
+
+
+                detailImagesContainer.appendChild(
+                    item
+                );
+
+            }
+        );
+
+
+        if (imageSection) {
+
+            imageSection.style.display =
+                'block';
+
+        }
+
+    } else if (detailImagesContainer) {
+
+        detailImagesContainer.innerHTML =
+            '';
+
+
+        if (imageSection) {
+
+            imageSection.style.display =
+                'none';
+
+        }
 
     }
 
+
+    /* ========================================================
+       SERVICIOS
+    ======================================================== */
 
     renderServices(
         currentRecordServices
@@ -3318,7 +3628,7 @@ function openEditRecordModal(
     services,
     registeredBy,
     createdAt,
-    imageUrl
+    imageUrls
 ) {
 
     currentRecordId =
@@ -3369,8 +3679,31 @@ function openEditRecordModal(
             : [];
 
 
-    currentRecordImageUrl =
-        imageUrl || null;
+    currentRecordImageUrls =
+        Array.isArray(imageUrls)
+            ? imageUrls
+            : [];
+
+
+    /* ========================================================
+       LIMPIAR ARCHIVOS NUEVOS ANTERIORES
+    ======================================================== */
+
+    selectedEditFiles = [];
+
+
+    const editImagesInput =
+        document.getElementById(
+            'editImages'
+        );
+
+
+    if (editImagesInput) {
+
+        editImagesInput.value =
+            '';
+
+    }
 
 
     document.getElementById(
@@ -3486,35 +3819,183 @@ function openEditRecordModal(
 
 
     /* ========================================================
-       IMAGEN
+       IMÁGENES EXISTENTES
     ======================================================== */
 
-    const preview =
+    const editImagesContainer =
         document.getElementById(
-            'editImagePreview'
-        );
-
-    const previewImg =
-        document.getElementById(
-            'editImagePreviewImg'
+            'editImagesContainer'
         );
 
 
-    if (imageUrl) {
+    if (editImagesContainer) {
 
-        previewImg.src =
-            imageUrl;
-
-        preview.style.display =
-            'block';
-
-    } else {
-
-        previewImg.src =
+        editImagesContainer.innerHTML =
             '';
 
-        preview.style.display =
-            'none';
+
+        if (
+            currentRecordImageUrls.length > 0
+        ) {
+
+            currentRecordImageUrls.forEach(
+                function(imageData) {
+
+                    const item =
+                        document.createElement('div');
+
+                    item.className =
+                        'edit-image-item';
+
+                    item.style.position =
+                        'relative';
+
+
+                    const image =
+                        document.createElement('img');
+
+                    image.className =
+                        'edit-image-gallery';
+
+                    image.src =
+                        imageData.url;
+
+                    image.alt =
+                        '{{ __('records.modal.current_image') }}';
+
+
+                    image.addEventListener(
+                        'click',
+                        function() {
+
+                            window.open(
+                                imageData.url,
+                                '_blank'
+                            );
+
+                        }
+                    );
+
+
+                    const deleteButton =
+                        document.createElement('button');
+
+                    deleteButton.type =
+                        'button';
+
+                    deleteButton.textContent =
+                        '🗑️';
+
+                    deleteButton.title =
+                        'Eliminar imagen';
+
+                    deleteButton.style.position =
+                        'absolute';
+
+                    deleteButton.style.top =
+                        '8px';
+
+                    deleteButton.style.right =
+                        '8px';
+
+                    deleteButton.style.zIndex =
+                        '10';
+
+                    deleteButton.style.cursor =
+                        'pointer';
+
+
+                    deleteButton.addEventListener(
+                        'click',
+                        async function(event) {
+
+                            event.stopPropagation();
+
+
+                            const confirmed =
+                                confirm(
+                                    '¿Deseas eliminar esta imagen?'
+                                );
+
+
+                            if (!confirmed) {
+                                return;
+                            }
+
+
+                            try {
+
+                                const response =
+                                    await fetch(
+                                        `/record-images/${imageData.id}`,
+                                        {
+                                            method: 'DELETE',
+
+                                            headers: {
+                                                'X-CSRF-TOKEN':
+                                                    '{{ csrf_token() }}',
+
+                                                'Accept':
+                                                    'application/json'
+                                            }
+                                        }
+                                    );
+
+
+                                if (!response.ok) {
+
+                                    throw new Error(
+                                        'No se pudo eliminar la imagen.'
+                                    );
+
+                                }
+
+
+                                currentRecordImageUrls =
+                                    currentRecordImageUrls.filter(
+                                        function(image) {
+
+                                            return image.id !==
+                                                imageData.id;
+
+                                        }
+                                    );
+
+
+                                item.remove();
+
+
+                            } catch (error) {
+
+                                console.error(error);
+
+                                alert(
+                                    'No se pudo eliminar la imagen.'
+                                );
+
+                            }
+
+                        }
+                    );
+
+
+                    item.appendChild(
+                        image
+                    );
+
+                    item.appendChild(
+                        deleteButton
+                    );
+
+
+                    editImagesContainer.appendChild(
+                        item
+                    );
+
+                }
+            );
+
+        }
 
     }
 
@@ -3538,6 +4019,17 @@ function openEditRecordModal(
         );
 
 
+    if (!form) {
+
+        console.error(
+            'No se encontró editRecordForm'
+        );
+
+        return;
+
+    }
+
+
     form.action =
         `/records/${recordId}`;
 
@@ -3546,31 +4038,252 @@ function openEditRecordModal(
        MOSTRAR EDITAR
     ======================================================== */
 
-    document.getElementById(
-        'recordViewMode'
-    ).style.display =
-        'none';
+    const recordViewMode =
+        document.getElementById(
+            'recordViewMode'
+        );
 
 
-    document.getElementById(
-        'detailModalFooter'
-    ).style.display =
-        'none';
+    const detailModalFooter =
+        document.getElementById(
+            'detailModalFooter'
+        );
+
+
+    const modal =
+        document.getElementById(
+            'recordDetailModal'
+        );
+
+
+    if (recordViewMode) {
+
+        recordViewMode.style.display =
+            'none';
+
+    }
+
+
+    if (detailModalFooter) {
+
+        detailModalFooter.style.display =
+            'none';
+
+    }
 
 
     form.style.display =
         'block';
 
 
-    document.getElementById(
-        'recordDetailModal'
-    ).classList.add(
-        'active'
-    );
+    if (modal) {
+
+        modal.classList.add(
+            'active'
+        );
+
+    }
 
 
     document.body.style.overflow =
         'hidden';
+
+}
+
+
+/* ============================================================
+   NUEVAS IMÁGENES PARA EDITAR
+============================================================ */
+
+function initializeEditImages() {
+
+    const editImagesInput =
+        document.getElementById(
+            'editImages'
+        );
+
+
+    const editImagesContainer =
+        document.getElementById(
+            'editImagesContainer'
+        );
+
+
+    if (!editImagesInput) {
+        return;
+    }
+
+
+    editImagesInput.addEventListener(
+        'change',
+        function() {
+
+            const newFiles =
+                Array.from(
+                    this.files || []
+                );
+
+
+            /*
+            |--------------------------------------------------
+            | GUARDAMOS LOS ARCHIVOS ANTES DE LIMPIAR INPUT
+            |--------------------------------------------------
+            */
+
+            this.value = '';
+
+
+            const allowedTypes = [
+                'image/jpeg',
+                'image/png',
+                'image/webp'
+            ];
+
+
+            newFiles.forEach(
+                function(file) {
+
+                    if (
+                        !allowedTypes.includes(
+                            file.type
+                        )
+                    ) {
+
+                        alert(
+                            '{{ __('records.modal.image_jpg_png_webp') }}'
+                        );
+
+                        return;
+
+                    }
+
+
+                    if (
+                        file.size >
+                        10 * 1024 * 1024
+                    ) {
+
+                        alert(
+                            '{{ __('records.modal.image_mb') }}'
+                        );
+
+                        return;
+
+                    }
+
+
+                    selectedEditFiles.push(
+                        file
+                    );
+
+                }
+            );
+
+
+            /*
+            |--------------------------------------------------
+            | RECONSTRUIR FILELIST
+            |--------------------------------------------------
+            */
+
+            const dataTransfer =
+                new DataTransfer();
+
+
+            selectedEditFiles.forEach(
+                function(file) {
+
+                    dataTransfer.items.add(
+                        file
+                    );
+
+                }
+            );
+
+
+            editImagesInput.files =
+                dataTransfer.files;
+
+
+            /*
+            |--------------------------------------------------
+            | MOSTRAR PREVISUALIZACIONES
+            |--------------------------------------------------
+            */
+
+            if (!editImagesContainer) {
+                return;
+            }
+
+
+            editImagesContainer
+                .querySelectorAll(
+                    '.new-edit-image'
+                )
+                .forEach(
+                    function(element) {
+
+                        element.remove();
+
+                    }
+                );
+
+
+            selectedEditFiles.forEach(
+                function(file) {
+
+                    const item =
+                        document.createElement(
+                            'div'
+                        );
+
+
+                    item.className =
+                        'edit-image-item new-edit-image';
+
+
+                    const image =
+                        document.createElement(
+                            'img'
+                        );
+
+
+                    image.className =
+                        'edit-image-gallery';
+
+
+                    const reader =
+                        new FileReader();
+
+
+                    reader.onload =
+                        function(event) {
+
+                            image.src =
+                                event.target.result;
+
+                        };
+
+
+                    reader.readAsDataURL(
+                        file
+                    );
+
+
+                    item.appendChild(
+                        image
+                    );
+
+
+                    editImagesContainer.appendChild(
+                        item
+                    );
+
+                }
+            );
+
+        }
+    );
 
 }
 
@@ -3671,17 +4384,56 @@ function addEditServiceRow(
         );
 
 
+    const selectedServiceType =
+        getServiceType(
+            serviceTypeId
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | IVA
+    |--------------------------------------------------------------------------
+    | tax_enabled determina si se aplica el IVA general.
+    */
+
+    const taxEnabled =
+        service.tax_enabled !== undefined
+            ? Boolean(service.tax_enabled)
+            : Boolean(
+                selectedServiceType?.tax_enabled
+            );
+
+
+    const taxRate =
+        taxEnabled
+            ? ivaGeneral
+            : 0;
+
+
+    const taxAmount =
+        calculateServiceTax(
+            subtotal,
+            taxRate
+        );
+
+
+    const total =
+        Number(subtotal) +
+        taxAmount;
+
+
     const notes =
         service.notes ?? '';
 
 
     /* ========================================================
-       OPCIONES DE SERVICIO
+       OPCIONES DE SERVICIOS
     ======================================================== */
 
     let serviceOptions = `
         <option value="">
-        {{ __('records.modal.select') }}
+            {{ __('records.modal.select') }}
         </option>
     `;
 
@@ -3695,12 +4447,30 @@ function addEditServiceRow(
                 : '';
 
 
+        const serviceTaxEnabled =
+            Boolean(
+                serviceType.tax_enabled
+            );
+
+
+        const serviceTaxRate =
+            serviceTaxEnabled
+                ? ivaGeneral
+                : 0;
+
+
         serviceOptions += `
             <option
                 value="${escapeHtml(serviceType.id)}"
                 ${selected}
             >
                 ${escapeHtml(serviceType.name)}
+                — $${Number(serviceType.price || 0).toFixed(2)}
+                ${
+                    serviceTaxEnabled
+                        ? ` + IVA ${serviceTaxRate.toFixed(2)}%`
+                        : ''
+                }
             </option>
         `;
 
@@ -3733,15 +4503,17 @@ function addEditServiceRow(
         <div class="service-row-field">
 
             <label>
-            {{ __('records.service') }}
+                {{ __('records.service') }}
             </label>
+
 
             <select
                 name="services[${index}][service_type_id]"
                 class="service-type-select"
-                required
             >
+
                 ${serviceOptions}
+
             </select>
 
         </div>
@@ -3750,8 +4522,9 @@ function addEditServiceRow(
         <div class="service-row-field">
 
             <label>
-            {{ __('records.modal.quantity') }}
+                {{ __('records.modal.quantity') }}
             </label>
+
 
             <input
                 type="number"
@@ -3759,7 +4532,7 @@ function addEditServiceRow(
                 class="service-quantity"
                 value="${escapeHtml(quantity)}"
                 min="1"
-                required
+                step="1"
             >
 
         </div>
@@ -3768,8 +4541,9 @@ function addEditServiceRow(
         <div class="service-row-field">
 
             <label>
-            {{ __('records.modal.unit_price') }}
+                {{ __('records.modal.unit_price') }}
             </label>
+
 
             <input
                 type="number"
@@ -3778,28 +4552,17 @@ function addEditServiceRow(
                 value="${escapeHtml(unitPrice)}"
                 min="0"
                 step="0.01"
-                required
             >
 
         </div>
 
 
-        <div class="service-row-field">
-
-            <label>
-                Subtotal
-            </label>
-
-            <input
-                type="text"
-                class="service-subtotal"
-                value="${Number(subtotal).toFixed(2)}"
-                readonly
-            >
-
-        </div>
+        
+        
 
 
+
+        
         <button
             type="button"
             class="service-remove-button"
@@ -3815,8 +4578,9 @@ function addEditServiceRow(
         >
 
             <label>
-            {{ __('records.modal.notes') }}
+                {{ __('records.modal.notes') }}
             </label>
+
 
             <input
                 type="text"
@@ -3832,6 +4596,16 @@ function addEditServiceRow(
     container.appendChild(
         row
     );
+
+
+    /* ========================================================
+       ELEMENTOS
+    ======================================================== */
+
+    const serviceTypeSelect =
+        row.querySelector(
+            '.service-type-select'
+        );
 
 
     const quantityInput =
@@ -3852,6 +4626,42 @@ function addEditServiceRow(
         );
 
 
+    /* ========================================================
+       CAMBIO DE SERVICIO
+    ======================================================== */
+
+    serviceTypeSelect.addEventListener(
+        'change',
+        function() {
+
+            const serviceType =
+                getServiceType(
+                    this.value
+                );
+
+
+            if (serviceType) {
+
+                priceInput.value =
+                    Number(
+                        serviceType.price || 0
+                    ).toFixed(2);
+
+            }
+
+
+            updateServiceRowSubtotal(
+                row
+            );
+
+        }
+    );
+
+
+    /* ========================================================
+       CAMBIO CANTIDAD
+    ======================================================== */
+
     quantityInput.addEventListener(
         'input',
         function() {
@@ -3864,6 +4674,10 @@ function addEditServiceRow(
     );
 
 
+    /* ========================================================
+       CAMBIO PRECIO
+    ======================================================== */
+
     priceInput.addEventListener(
         'input',
         function() {
@@ -3875,6 +4689,10 @@ function addEditServiceRow(
         }
     );
 
+
+    /* ========================================================
+       ELIMINAR SERVICIO
+    ======================================================== */
 
     removeButton.addEventListener(
         'click',
@@ -3898,12 +4716,17 @@ function addEditServiceRow(
 
 
 /* ============================================================
-   SUBTOTAL
+   ACTUALIZAR FILA DE SERVICIO
 ============================================================ */
 
 function updateServiceRowSubtotal(
     row
 ) {
+
+    if (!row) {
+        return;
+    }
+
 
     const quantity =
         Number(
@@ -3921,9 +4744,51 @@ function updateServiceRowSubtotal(
         );
 
 
+    const serviceTypeId =
+        row.querySelector(
+            '.service-type-select'
+        )?.value || '';
+
+
+    const serviceType =
+        getServiceType(
+            serviceTypeId
+        );
+
+
     const subtotal =
         quantity *
         unitPrice;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | IVA GENERAL
+    |--------------------------------------------------------------------------
+    */
+
+    const taxEnabled =
+        Boolean(
+            serviceType?.tax_enabled
+        );
+
+
+    const taxRate =
+        taxEnabled
+            ? ivaGeneral
+            : 0;
+
+
+    const taxAmount =
+        calculateServiceTax(
+            subtotal,
+            taxRate
+        );
+
+
+    const total =
+        subtotal +
+        taxAmount;
 
 
     const subtotalInput =
@@ -3932,10 +4797,52 @@ function updateServiceRowSubtotal(
         );
 
 
+    const taxRateInput =
+        row.querySelector(
+            '.service-tax-rate'
+        );
+
+
+    const taxAmountInput =
+        row.querySelector(
+            '.service-tax-amount'
+        );
+
+
+    const totalInput =
+        row.querySelector(
+            '.service-total'
+        );
+
+
     if (subtotalInput) {
 
         subtotalInput.value =
             subtotal.toFixed(2);
+
+    }
+
+
+    if (taxRateInput) {
+
+        taxRateInput.value =
+            `${taxRate.toFixed(2)}%`;
+
+    }
+
+
+    if (taxAmountInput) {
+
+        taxAmountInput.value =
+            taxAmount.toFixed(2);
+
+    }
+
+
+    if (totalInput) {
+
+        totalInput.value =
+            total.toFixed(2);
 
     }
 
@@ -3971,7 +4878,15 @@ function updateEditServicesTotal() {
     }
 
 
-    let total =
+    let subtotalTotal =
+        0;
+
+
+    let serviceTaxTotal =
+        0;
+
+
+    let grandTotal =
         0;
 
 
@@ -3995,15 +4910,62 @@ function updateEditServicesTotal() {
             );
 
 
-        total +=
+        const serviceTypeId =
+            row.querySelector(
+                '.service-type-select'
+            )?.value || '';
+
+
+        const serviceType =
+            getServiceType(
+                serviceTypeId
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | IVA GENERAL
+        |--------------------------------------------------------------------------
+        */
+
+        const taxEnabled =
+            Boolean(
+                serviceType?.tax_enabled
+            );
+
+
+        const taxRate =
+            taxEnabled
+                ? ivaGeneral
+                : 0;
+
+
+        const subtotal =
             quantity *
             unitPrice;
+
+
+        const tax =
+            calculateServiceTax(
+                subtotal,
+                taxRate
+            );
+
+
+        subtotalTotal +=
+            subtotal;
+
+
+        serviceTaxTotal +=
+            tax;
+
+
+        grandTotal +=
+            subtotal + tax;
 
     });
 
 
-    totalElement.textContent =
-        `Total: $${total.toFixed(2)}`;
 
 }
 
@@ -4091,7 +5053,7 @@ function renderServices(
             <div class="detail-item">
 
                 <div class="detail-value">
-                {{ __('records.modal.no_registered_service') }}
+                    {{ __('records.modal.no_registered_service') }}
                 </div>
 
             </div>
@@ -4100,6 +5062,18 @@ function renderServices(
         return;
 
     }
+
+
+    let serviceSubtotalTotal =
+        0;
+
+
+    let serviceTaxTotal =
+        0;
+
+
+    let serviceGrandTotal =
+        0;
 
 
     services.forEach(function(service) {
@@ -4136,6 +5110,63 @@ function renderServices(
             );
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | IVA GENERAL
+        |--------------------------------------------------------------------------
+        */
+
+        const serviceType =
+            getServiceType(
+                service.service_type_id
+            );
+
+
+        const taxEnabled =
+            service.tax_enabled !== undefined
+                ? Boolean(service.tax_enabled)
+                : Boolean(
+                    serviceType?.tax_enabled
+                );
+
+
+        const taxRate =
+            taxEnabled
+                ? ivaGeneral
+                : 0;
+
+
+        const taxAmount =
+            service.tax_amount !== undefined
+                ? Number(
+                    service.tax_amount || 0
+                )
+                : calculateServiceTax(
+                    subtotal,
+                    taxRate
+                );
+
+
+        const total =
+            service.total !== undefined
+                ? Number(
+                    service.total || 0
+                )
+                : subtotal + taxAmount;
+
+
+        serviceSubtotalTotal +=
+            subtotal;
+
+
+        serviceTaxTotal +=
+            taxAmount;
+
+
+        serviceGrandTotal +=
+            total;
+
+
         item.innerHTML = `
 
             <div>
@@ -4147,6 +5178,7 @@ function renderServices(
                     )}
                 </div>
 
+
                 ${
                     service.notes
                         ? `
@@ -4154,6 +5186,24 @@ function renderServices(
                                 ${escapeHtml(
                                     service.notes
                                 )}
+                            </div>
+                        `
+                        : ''
+                }
+
+
+                <div class="table-secondary">
+                    Base:
+                    $${subtotal.toFixed(2)}
+                </div>
+
+
+                ${
+                    taxEnabled
+                        ? `
+                            <div class="table-secondary">
+                                IVA ${taxRate.toFixed(2)}%:
+                                +$${taxAmount.toFixed(2)}
                             </div>
                         `
                         : ''
@@ -4170,7 +5220,11 @@ function renderServices(
 
 
             <div class="service-view-price">
-                $${subtotal.toFixed(2)}
+
+                <strong>
+                    $${total.toFixed(2)}
+                </strong>
+
             </div>
 
         `;
@@ -4181,6 +5235,27 @@ function renderServices(
         );
 
     });
+
+
+    /* ========================================================
+       TOTALES
+    ======================================================== */
+
+    const totals =
+        document.createElement(
+            'div'
+        );
+
+
+    totals.className =
+        'service-view-totals';
+
+
+    
+
+    container.appendChild(
+        totals
+    );
 
 }
 
@@ -4350,6 +5425,32 @@ function cancelEditRecord() {
 
     }
 
+
+    selectedEditFiles = [];
+
+
+    const editImagesInput =
+        document.getElementById(
+            'editImages'
+        );
+
+
+    if (editImagesInput) {
+
+        editImagesInput.value =
+            '';
+
+    }
+
+
+    document.querySelectorAll(
+        '.new-edit-image'
+    ).forEach(function(element) {
+
+        element.remove();
+
+    });
+
 }
 
 
@@ -4446,6 +5547,12 @@ document.addEventListener(
     'DOMContentLoaded',
     function() {
 
+        /* ====================================================
+           IMÁGENES NUEVAS DE EDICIÓN
+        ==================================================== */
+
+        initializeEditImages();
+
 
         /* ====================================================
            CERRAR MODAL
@@ -4481,18 +5588,15 @@ document.addEventListener(
 
                     currentRecordId,
 
-
                     convertDateToInput(
                         document.getElementById(
                             'detailDate'
                         ).textContent
                     ),
 
-
                     getDetailValue(
                         'detailInvoice'
                     ),
-
 
                     getDetailValue(
                         'detailPaps'
@@ -4502,22 +5606,17 @@ document.addEventListener(
                     currentRecordCompanyId,
                     currentRecordCompanyName,
 
-
                     currentRecordDriverId,
                     currentRecordDriverName,
-
 
                     currentRecordTrailerId,
                     currentRecordTrailerNumber,
 
-
                     currentRecordBrokerId,
                     currentRecordBrokerName,
 
-
                     currentRecordShipperId,
                     currentRecordShipperName,
-
 
                     currentRecordConsigneeId,
                     currentRecordConsigneeName,
@@ -4527,21 +5626,17 @@ document.addEventListener(
                         'detailOrigin'
                     ),
 
-
                     getDetailValue(
                         'detailDestination'
                     ),
-
 
                     getDetailValue(
                         'detailQuantity'
                     ),
 
-
                     getDetailValue(
                         'detailQuantityType'
                     ),
-
 
                     getDetailValue(
                         'detailNotes'
@@ -4555,13 +5650,12 @@ document.addEventListener(
                         'detailRegisteredBy'
                     ),
 
-
                     getDetailValue(
                         'detailCreatedAt'
                     ),
 
 
-                    currentRecordImageUrl
+                    currentRecordImageUrls
 
                 );
 
@@ -4614,109 +5708,6 @@ document.addEventListener(
                     );
 
                 }
-
-            }
-        );
-
-
-        /* ====================================================
-           PREVIEW IMAGEN
-        ==================================================== */
-
-        document.getElementById(
-            'editImage'
-        )?.addEventListener(
-            'change',
-            function() {
-
-                const file =
-                    this.files?.[0];
-
-
-                const preview =
-                    document.getElementById(
-                        'editImagePreview'
-                    );
-
-
-                const image =
-                    document.getElementById(
-                        'editImagePreviewImg'
-                    );
-
-
-                if (!file) {
-
-                    preview.style.display =
-                        'none';
-
-                    image.src =
-                        '';
-
-                    return;
-
-                }
-
-
-                if (
-                    !file.type.startsWith(
-                        'image/'
-                    )
-                ) {
-
-                    alert(
-                        '{{ __('records.modal.valid_image') }}'
-                    );
-
-
-                    this.value =
-                        '';
-
-
-                    return;
-
-                }
-
-
-                if (
-                    file.size >
-                    10 * 1024 * 1024
-                ) {
-
-                    alert(
-                        '{{ __('records.modal.image_mb') }}'
-                    );
-
-
-                    this.value =
-                        '';
-
-
-                    return;
-
-                }
-
-
-                const reader =
-                    new FileReader();
-
-
-                reader.onload =
-                    function(event) {
-
-                        image.src =
-                            event.target.result;
-
-
-                        preview.style.display =
-                            'block';
-
-                    };
-
-
-                reader.readAsDataURL(
-                    file
-                );
 
             }
         );
@@ -4845,5 +5836,4 @@ document.addEventListener(
 );
 
 </script>
-
 </x-app-layout>

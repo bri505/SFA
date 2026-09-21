@@ -13,6 +13,7 @@ use App\Models\Consignee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Models\RecordImage;
 
 class RecordController extends Controller
 {
@@ -32,6 +33,7 @@ class RecordController extends Controller
             'consignee',
             'broker',
             'services.serviceType',
+            'images',
         ])
         ->latest()
         ->get();
@@ -121,7 +123,7 @@ class RecordController extends Controller
     /*
     |--------------------------------------------------------------------------
     | GUARDAR NUEVO REGISTRO
-    |--------------------------------------------------------------------------
+    |--stor------------------------------------------------------------------------
     */
 
     public function store(Request $request)
@@ -131,9 +133,8 @@ class RecordController extends Controller
             'date' =>
                 'required|date',
         
-            'invoice_number' =>
-                'required|string|max:255',
-        
+                'invoice_number' => 'nullable|string|max:255',
+                    
         
             /*
             |--------------------------------------------------------------------------
@@ -261,8 +262,11 @@ class RecordController extends Controller
             |--------------------------------------------------------------------------
             */
         
-            'image' =>
-                'nullable|image|mimes:jpeg,png,jpg,webp|max:10240',
+            'images' =>
+            'required|array|min:1',
+
+            'images.*' =>
+                'image|mimes:jpeg,png,jpg,webp|max:10240',
         
         
             /*
@@ -297,15 +301,7 @@ class RecordController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $imagePath = null;
-
-        if ($request->hasFile('image')) {
-
-            $imagePath = $request->file('image')->store(
-                'records',
-                'public'
-            );
-        }
+        
 
 
         /*
@@ -315,8 +311,9 @@ class RecordController extends Controller
         */
 
         $record = DB::transaction(function () use (
+            $request,
             $validated,
-            $imagePath
+            
         ) {
 
             /*
@@ -526,56 +523,70 @@ if (!$consigneeId && $consigneeName !== '') {
 
                 'date' =>
                     $validated['date'],
-
+            
                 'company_id' =>
                     $companyId,
-
+            
                 'driver_id' =>
                     $driverId,
-
+            
                 'trailer_id' =>
                     $trailerId,
-
+            
                 'broker_id' =>
                     $brokerId,
-
+            
                 'shipper_id' =>
                     $shipperId,
-
+            
                 'consignee_id' =>
                     $consigneeId,
-
-                'invoice_number' =>
-                    $validated['invoice_number'],
-
+            
+                'invoice_number' => $validated['invoice_number'] ?? null,
+            
                 'paps_number' =>
                     $validated['paps_number'] ?? null,
-
+            
                 'fact_number' =>
                     $validated['fact_number'] ?? null,
-
+            
                 'origin' =>
                     $validated['origin'] ?? null,
-
+            
                 'destination' =>
                     $validated['destination'] ?? null,
-
+            
                 'quantity' =>
                     $validated['quantity'] ?? null,
-
+            
                 'quantity_type' =>
                     $validated['quantity_type'] ?? null,
-
+            
                 'notes' =>
                     $validated['notes'] ?? null,
-
-                'image' =>
-                    $imagePath,
-
+            
                 'registered_by' =>
                     auth()->id(),
             ]);
 
+            /*
+            |--------------------------------------------------------------------------
+            | GUARDAR IMÁGENES
+            |--------------------------------------------------------------------------
+            */
+
+            foreach ($request->file('images', []) as $image) {
+
+                $imagePath = $image->store(
+                    'records',
+                    'public'
+                );
+
+                RecordImage::create([
+                    'record_id' => $record->id,
+                    'image_path' => $imagePath,
+                ]);
+            }
 
             return $record;
         });
@@ -745,8 +756,11 @@ public function update(Request $request, Record $record)
         |--------------------------------------------------------------------------
         */
 
-        'image' =>
-            'nullable|image|mimes:jpeg,png,jpg,webp|max:10240',
+        'images' =>
+            'nullable|array',
+
+        'images.*' =>
+            'image|mimes:jpeg,png,jpg,webp|max:10240',
 
         /*
         |--------------------------------------------------------------------------
@@ -1043,29 +1057,29 @@ public function update(Request $request, Record $record)
 
         /*
         |--------------------------------------------------------------------------
-        | IMAGEN
+        | IMÁGENES
         |--------------------------------------------------------------------------
         */
 
-        if ($request->hasFile('image')) {
+        foreach (
+            $request->file('images', [])
+            as $image
+        ) {
 
-            if (
-                $record->image &&
-                Storage::disk('public')->exists(
-                    $record->image
-                )
-            ) {
-
-                Storage::disk('public')->delete(
-                    $record->image
-                );
-            }
-
-            $data['image'] =
-                $request->file('image')->store(
+            $imagePath =
+                $image->store(
                     'records',
                     'public'
                 );
+
+            RecordImage::create([
+
+                'record_id' =>
+                    $record->id,
+
+                'image_path' =>
+                    $imagePath,
+            ]);
         }
 
 
@@ -1245,6 +1259,47 @@ public function update(Request $request, Record $record)
             'success',
             'Registro actualizado correctamente.'
         );
+}
+
+public function destroyImage(RecordImage $image)
+{
+    if (!auth()->check()) {
+        abort(403);
+    }
+
+    $record = $image->record;
+
+    /*
+    |--------------------------------------------------------------------------
+    | ELIMINAR ARCHIVO FÍSICO
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+        $image->image_path &&
+        Storage::disk('public')->exists(
+            $image->image_path
+        )
+    ) {
+        Storage::disk('public')->delete(
+            $image->image_path
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ELIMINAR REGISTRO DE LA BASE DE DATOS
+    |--------------------------------------------------------------------------
+    */
+
+    $image->delete();
+
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Imagen eliminada correctamente.',
+    ]);
 }
 
 

@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 
-<html
-    lang="{{ app()->getLocale() }}"
->
+<html lang="en">
 
 <head>
 
@@ -31,8 +29,9 @@
             padding: 28px 35px;
         }
 
+
         /* =========================================================
-           ENCABEZADO
+           HEADER
         ========================================================= */
 
         .header {
@@ -93,8 +92,9 @@
             font-weight: bold;
         }
 
+
         /* =========================================================
-           INFORMACIÓN DEL CLIENTE
+           BILLING INFORMATION
         ========================================================= */
 
         .info-table {
@@ -135,8 +135,9 @@
             color: #222;
         }
 
+
         /* =========================================================
-           PERIODO
+           PERIOD
         ========================================================= */
 
         .period {
@@ -150,8 +151,9 @@
             color: #222;
         }
 
+
         /* =========================================================
-           TABLA DE REGISTROS
+           RECORDS TABLE
         ========================================================= */
 
         .records-table {
@@ -180,12 +182,19 @@
             background: #fafafa;
         }
 
+
         /* =========================================================
-           SERVICIOS
+           SERVICES
         ========================================================= */
 
         .service {
-            margin-bottom: 4px;
+            margin-bottom: 7px;
+            padding-bottom: 5px;
+            border-bottom: 1px dotted #ddd;
+        }
+
+        .service:last-child {
+            border-bottom: none;
         }
 
         .service-name {
@@ -198,10 +207,33 @@
             color: #666;
         }
 
+        .service-detail {
+            margin-top: 2px;
+            font-size: 7px;
+            line-height: 1.45;
+            color: #666;
+        }
+
+        .service-tax {
+            color: #444;
+        }
+
+        .service-total {
+            margin-top: 2px;
+            font-size: 7px;
+            font-weight: bold;
+            color: #222;
+        }
+
+
+        /* =========================================================
+           ADDITIONAL CHARGE
+        ========================================================= */
+
         .additional-charge {
-            margin-top: 5px;
-            padding-top: 5px;
-            border-top: 1px solid #ddd;
+            margin-top: 7px;
+            padding-top: 6px;
+            border-top: 1px solid #bbb;
         }
 
         .additional-charge-name {
@@ -213,7 +245,31 @@
             margin-top: 2px;
             font-size: 7px;
             color: #666;
+            line-height: 1.45;
         }
+
+
+        /* =========================================================
+           RECORD BREAKDOWN
+        ========================================================= */
+
+        .record-breakdown {
+            margin-top: 5px;
+            padding-top: 4px;
+            border-top: 1px dotted #ddd;
+            font-size: 7px;
+            line-height: 1.5;
+            color: #666;
+        }
+
+        .record-breakdown strong {
+            color: #333;
+        }
+
+
+        /* =========================================================
+           GENERAL
+        ========================================================= */
 
         .no-data {
             color: #999;
@@ -224,8 +280,9 @@
             white-space: nowrap;
         }
 
+
         /* =========================================================
-           COMENTARIOS
+           COMMENTS
         ========================================================= */
 
         .invoice-comments {
@@ -250,8 +307,9 @@
             white-space: pre-line;
         }
 
+
         /* =========================================================
-           TOTALES
+           TOTALS
         ========================================================= */
 
         .totals-wrapper {
@@ -260,7 +318,7 @@
         }
 
         .totals-table {
-            width: 280px;
+            width: 330px;
             margin-left: auto;
             border-collapse: collapse;
         }
@@ -281,6 +339,21 @@
             color: #222;
         }
 
+        .totals-rate {
+            text-align: right;
+            color: #777;
+            font-size: 7px;
+            white-space: nowrap;
+        }
+
+        .subtotal-section td {
+            font-weight: bold;
+        }
+
+        .tax-section td {
+            background: #fafafa;
+        }
+
         .total-row td {
             padding-top: 9px;
             border-top: 2px solid #222;
@@ -289,6 +362,7 @@
             font-weight: bold;
             color: #222;
         }
+
 
         /* =========================================================
            FOOTER
@@ -322,7 +396,287 @@
 
 
     {{-- =========================================================
-         ENCABEZADO
+         PREPARE TOTALS
+    ========================================================== --}}
+
+    @php
+
+        /*
+        |--------------------------------------------------------------------------
+        | SERVICES
+        |--------------------------------------------------------------------------
+        */
+
+        $servicesBaseTotal = 0;
+
+        $serviceTaxTotalCalculated = 0;
+
+        $serviceTaxRates = [];
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ADDITIONAL CHARGES
+        |--------------------------------------------------------------------------
+        */
+
+        $additionalChargesTotal = 0;
+
+
+        foreach ($invoice->records as $record) {
+
+            foreach ($record->services as $service) {
+
+                $serviceBase =
+                    round(
+                        (float) $service->subtotal,
+                        2
+                    );
+
+
+                $serviceTaxRate =
+                    (float) (
+                        $service->serviceType?->tax_rate
+                        ?? 0
+                    );
+
+
+                $serviceTaxAmount =
+                    round(
+                        $serviceBase *
+                        ($serviceTaxRate / 100),
+                        2
+                    );
+
+
+                $servicesBaseTotal +=
+                    $serviceBase;
+
+
+                $serviceTaxTotalCalculated +=
+                    $serviceTaxAmount;
+
+
+                if ($serviceTaxRate >= 0) {
+
+                    $rateKey =
+                        number_format(
+                            $serviceTaxRate,
+                            2,
+                            '.',
+                            ''
+                        );
+
+                    $serviceTaxRates[$rateKey] =
+                        $serviceTaxRate;
+
+                }
+
+            }
+
+
+            $additionalQuantity =
+                (float) (
+                    $record->pivot
+                        ->additional_charge_quantity
+                    ?? 0
+                );
+
+
+            $additionalUnitPrice =
+                (float) (
+                    $record->pivot
+                        ->additional_charge_unit_price
+                    ?? 0
+                );
+
+
+            $additionalAmount =
+                $record->pivot
+                    ->additional_charge_amount;
+
+
+            if ($additionalAmount === null) {
+
+                $additionalAmount =
+                    $additionalQuantity *
+                    $additionalUnitPrice;
+
+            }
+
+
+            $additionalChargesTotal +=
+                (float) $additionalAmount;
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SERVICE TAX
+        |--------------------------------------------------------------------------
+        |
+        | If the invoice has a stored service_tax value, use it.
+        | Otherwise use the calculated amount from the services.
+        |
+        */
+
+        $serviceTaxTotal =
+            $invoice->service_tax !== null
+                ? (float) $invoice->service_tax
+                : $serviceTaxTotalCalculated;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SERVICE TAX RATE LABEL
+        |--------------------------------------------------------------------------
+        */
+
+        ksort($serviceTaxRates);
+
+
+        $serviceTaxRateLabel =
+            count($serviceTaxRates) > 0
+                ? collect($serviceTaxRates)
+                    ->map(
+                        fn ($rate) =>
+                            number_format(
+                                (float) $rate,
+                                2
+                            ) . '%'
+                    )
+                    ->implode(', ')
+                : '0.00%';
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | INVOICE LEVEL TAXES
+        |--------------------------------------------------------------------------
+        */
+
+        $shippingEnabled =
+            (bool) (
+                $invoice->shipping_handling_enabled
+                ?? false
+            );
+
+
+        $shippingRate =
+            $shippingEnabled
+                ? (float) (
+                    $invoice->shipping_handling_rate
+                    ?? 0
+                )
+                : 0;
+
+
+        $shippingAmount =
+            (float) (
+                $invoice->shipping_handling_amount
+                ?? 0
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | HANDLING
+        |--------------------------------------------------------------------------
+        |
+        | Currently the system stores Shipping/Handling as one percentage.
+        | Handling amount is therefore shown separately as 0.00.
+        |
+        */
+
+        $handlingRate =
+            $shippingEnabled
+                ? $shippingRate
+                : 0;
+
+
+        $handlingAmount = 0;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SALES TAX
+        |--------------------------------------------------------------------------
+        */
+
+        $taxEnabled =
+            (bool) (
+                $invoice->tax_enabled
+                ?? false
+            );
+
+
+        $taxRate =
+            $taxEnabled
+                ? (float) (
+                    $invoice->tax_rate
+                    ?? 0
+                )
+                : 0;
+
+
+        $taxAmount =
+            (float) (
+                $invoice->tax
+                ?? 0
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | INVOICE SUBTOTAL
+        |--------------------------------------------------------------------------
+        */
+
+        $invoiceSubtotal =
+            (float) (
+                $invoice->subtotal
+                ?? (
+                    $servicesBaseTotal +
+                    $additionalChargesTotal
+                )
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SALES TAX BASE
+        |--------------------------------------------------------------------------
+        */
+
+        $salesTaxBase =
+            $invoiceSubtotal +
+            $shippingAmount;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | TOTAL
+        |--------------------------------------------------------------------------
+        */
+
+        $invoiceTotal =
+            (float) (
+                $invoice->total
+                ?? (
+                    $invoiceSubtotal +
+                    $serviceTaxTotal +
+                    $shippingAmount +
+                    $taxAmount
+                )
+            );
+
+    @endphp
+
+
+
+    {{-- =========================================================
+         HEADER
     ========================================================== --}}
 
     <div class="header">
@@ -338,9 +692,11 @@
                         class="logo"
                     >
 
+
                     <div class="company-name">
                         Alfonso's Warehouse
                     </div>
+
 
                     <div class="company-info">
 
@@ -360,35 +716,38 @@
                 <td class="invoice-title-cell">
 
                     <div class="invoice-title">
-                        {{ __('invoices.pdf.invoice') }}
+                        INVOICE
                     </div>
+
 
                     <div class="invoice-info">
 
                         <strong>
-                            {{ __('invoices.pdf.invoice_date') }}
+                            Invoice Date:
                         </strong>
 
                         {{
                             $invoice->generated_at
-                                ? $invoice->generated_at->format(
-                                    'F d, Y'
-                                )
-                                : now()->format('F d, Y')
+                                ? $invoice->generated_at
+                                    ->locale('en')
+                                    ->translatedFormat('F d, Y')
+                                : now()
+                                    ->locale('en')
+                                    ->translatedFormat('F d, Y')
                         }}
 
                         <br>
 
 
                         <strong>
-                            {{ __('invoices.pdf.receiving_date') }}
+                            Receiving Date:
                         </strong>
 
                         {{
                             $invoice->period_end
-                                ? $invoice->period_end->format(
-                                    'F d, Y'
-                                )
+                                ? $invoice->period_end
+                                    ->locale('en')
+                                    ->translatedFormat('F d, Y')
                                 : '—'
                         }}
 
@@ -396,7 +755,7 @@
 
 
                         <strong>
-                            {{ __('invoices.pdf.invoice_number') }}
+                            Invoice Number:
                         </strong>
 
                         {{ $invoice->invoice_number }}
@@ -412,8 +771,9 @@
     </div>
 
 
+
     {{-- =========================================================
-         INFORMACIÓN DE FACTURACIÓN
+         BILL TO / INVOICE INFORMATION
     ========================================================== --}}
 
     <table class="info-table">
@@ -421,14 +781,12 @@
         <tr>
 
 
-            {{-- =================================================
-                 BILL TO
-            ================================================== --}}
+            {{-- BILL TO --}}
 
             <td class="info-box">
 
                 <div class="info-title">
-                    {{ __('invoices.pdf.bill_to') }}
+                    BILL TO
                 </div>
 
 
@@ -461,9 +819,7 @@
                         <div class="info-text">
 
                             @if(!empty($invoice->company->city))
-
                                 {{ $invoice->company->city }}
-
                             @endif
 
 
@@ -493,8 +849,7 @@
 
                         <div class="info-text">
 
-                            {{ __('invoices.pdf.phone') }}
-
+                            Phone:
                             {{ $invoice->company->phone }}
 
                         </div>
@@ -506,8 +861,7 @@
 
                         <div class="info-text">
 
-                            {{ __('invoices.pdf.tax_id') }}
-
+                            Tax ID:
                             {{ $invoice->company->tax_id }}
 
                         </div>
@@ -517,7 +871,7 @@
                 @else
 
                     <div class="no-data">
-                        {{ __('invoices.no_billing_company') }}
+                        No billing company
                     </div>
 
                 @endif
@@ -525,23 +879,20 @@
             </td>
 
 
-            {{-- =================================================
-                 INFORMACIÓN DE LA FACTURA
-            ================================================== --}}
+
+            {{-- INVOICE INFORMATION --}}
 
             <td class="info-box">
 
                 <div class="info-title">
-
-                    {{ __('invoices.pdf.invoice_information') }}
-
+                    INVOICE INFORMATION
                 </div>
 
 
                 <div class="info-text">
 
                     <strong>
-                        {{ __('invoices.pdf.invoice') }}:
+                        Invoice:
                     </strong>
 
                     {{ $invoice->invoice_number }}
@@ -552,42 +903,97 @@
                 <div class="info-text">
 
                     <strong>
-                        {{ __('invoices.pdf.period') }}
+                        Period:
                     </strong>
 
                     {{
                         $invoice->period_start
-                            ?->format(
-                                app()->getLocale() === 'en'
-                                    ? 'm/d/Y'
-                                    : 'd/m/Y'
-                            )
+                            ?->format('m/d/Y')
                     }}
 
                     -
 
                     {{
                         $invoice->period_end
-                            ?->format(
-                                app()->getLocale() === 'en'
-                                    ? 'm/d/Y'
-                                    : 'd/m/Y'
-                            )
+                            ?->format('m/d/Y')
                     }}
 
                 </div>
 
 
+                @if(!empty($invoice->billing_type))
+
+                    <div class="info-text">
+
+                        <strong>
+                            Billing Type:
+                        </strong>
+
+                        {{ $invoice->billing_type }}
+
+                    </div>
+
+                @endif
+
+
+                @if($invoice->broker)
+
+                    <div class="info-text">
+
+                        <strong>
+                            Broker:
+                        </strong>
+
+                        {{ $invoice->broker->name ?? '—' }}
+
+                    </div>
+
+                @endif
+
+
+                @if($invoice->consignee)
+
+                    <div class="info-text">
+
+                        <strong>
+                            Consignee:
+                        </strong>
+
+                        {{ $invoice->consignee->name ?? '—' }}
+
+                    </div>
+
+                @endif
+
+
                 <div class="info-text">
 
                     <strong>
-                        {{ __('invoices.pdf.generated_by') }}
+                        Generated By:
                     </strong>
 
                     {{ $invoice->generatedBy->name ?? '—' }}
 
                 </div>
 
+
+                @if($invoice->generated_at)
+
+                    <div class="info-text">
+
+                        <strong>
+                            Generated:
+                        </strong>
+
+                        {{
+                            $invoice->generated_at
+                                ->locale('en')
+                                ->translatedFormat('F d, Y h:i A')
+                        }}
+
+                    </div>
+
+                @endif
 
             </td>
 
@@ -596,33 +1002,44 @@
     </table>
 
 
+
     {{-- =========================================================
-         PERIODO
+         BILLING PERIOD
     ========================================================== --}}
 
     <div class="period">
 
         <strong>
-            {{ __('invoices.pdf.billing_period') }}
+            Billing Period:
         </strong>
+
 
         {{
             $invoice->period_start
-                ?->format('F d, Y')
+                ? $invoice->period_start
+                    ->locale('en')
+                    ->translatedFormat('F d, Y')
+                : '—'
         }}
+
 
         &nbsp; - &nbsp;
 
+
         {{
             $invoice->period_end
-                ?->format('F d, Y')
+                ? $invoice->period_end
+                    ->locale('en')
+                    ->translatedFormat('F d, Y')
+                : '—'
         }}
 
     </div>
 
 
+
     {{-- =========================================================
-         REGISTROS
+         RECORDS
     ========================================================== --}}
 
     <table class="records-table">
@@ -631,28 +1048,28 @@
 
             <tr>
 
-                <th style="width:9%;">
-                    {{ __('invoices.pdf.date') }}
-                </th>
-
-                <th style="width:13%;">
-                    {{ __('invoices.pdf.company') }}
-                </th>
-
-                <th style="width:15%;">
-                    {{ __('invoices.pdf.invoice') }}
+                <th style="width:8%;">
+                    DATE
                 </th>
 
                 <th style="width:12%;">
-                    {{ __('invoices.pdf.paps') }}
+                    COMPANY
                 </th>
 
-                <th style="width:25%;">
-                    {{ __('invoices.pdf.services') }}
+                <th style="width:13%;">
+                    INVOICE
                 </th>
 
-                <th style="width:14%;">
-                    {{ __('invoices.pdf.comments') }}
+                <th style="width:10%;">
+                    PAPS
+                </th>
+
+                <th style="width:29%;">
+                    SERVICES / CHARGES
+                </th>
+
+                <th style="width:16%;">
+                    COMMENTS
                 </th>
 
                 <th
@@ -661,7 +1078,7 @@
                         text-align:right;
                     "
                 >
-                    {{ __('invoices.pdf.amount') }}
+                    AMOUNT
                 </th>
 
             </tr>
@@ -671,26 +1088,64 @@
 
         <tbody>
 
+
             @forelse($invoice->records as $record)
+
 
                 @php
 
                     /*
                     |--------------------------------------------------------------------------
-                    | TOTAL DE SERVICIOS DEL REGISTRO
+                    | RECORD TOTALS
                     |--------------------------------------------------------------------------
                     */
 
-                    $servicesTotal =
-                        $record->services->sum(
-                            fn ($service) =>
-                                (float) $service->subtotal
-                        );
+                    $recordServicesBase =
+                        0;
+
+                    $recordServiceTax =
+                        0;
+
+
+                    foreach ($record->services as $service) {
+
+                        $base =
+                            round(
+                                (float) $service->subtotal,
+                                2
+                            );
+
+
+                        $rate =
+                            (float) (
+                                $service
+                                    ->serviceType
+                                    ?->tax_rate
+                                ?? 0
+                            );
+
+
+                        $tax =
+                            round(
+                                $base *
+                                ($rate / 100),
+                                2
+                            );
+
+
+                        $recordServicesBase +=
+                            $base;
+
+
+                        $recordServiceTax +=
+                            $tax;
+
+                    }
 
 
                     /*
                     |--------------------------------------------------------------------------
-                    | CARGO ADICIONAL
+                    | ADDITIONAL CHARGE
                     |--------------------------------------------------------------------------
                     */
 
@@ -711,31 +1166,48 @@
 
 
                     $additionalAmount =
-                        (float) (
-                            $record->pivot
-                                ->additional_charge_amount
-                            ??
-                            (
-                                $additionalQuantity *
-                                $additionalUnitPrice
-                            )
-                        );
+                        $record->pivot
+                            ->additional_charge_amount;
+
+
+                    if ($additionalAmount === null) {
+
+                        $additionalAmount =
+                            $additionalQuantity *
+                            $additionalUnitPrice;
+
+                    }
+
+
+                    $additionalAmount =
+                        (float) $additionalAmount;
 
 
                     /*
                     |--------------------------------------------------------------------------
-                    | TOTAL DEL REGISTRO
+                    | RECORD SUBTOTAL
                     |--------------------------------------------------------------------------
                     */
 
-                    $recordTotal =
-                        $servicesTotal +
+                    $recordSubtotal =
+                        $recordServicesBase +
                         $additionalAmount;
 
 
                     /*
                     |--------------------------------------------------------------------------
-                    | DATOS DE FACTURACIÓN
+                    | RECORD TOTAL
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $recordTotal =
+                        $recordSubtotal +
+                        $recordServiceTax;
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | BILLING DATA
                     |--------------------------------------------------------------------------
                     */
 
@@ -766,24 +1238,22 @@
                 @endphp
 
 
+
                 <tr>
 
 
-                    {{-- FECHA --}}
+                    {{-- DATE --}}
 
                     <td>
 
                         {{
                             $record->date
-                                ? $record->date->format(
-                                    app()->getLocale() === 'en'
-                                        ? 'm/d/Y'
-                                        : 'd/m/Y'
-                                )
+                                ? $record->date->format('m/d/Y')
                                 : '—'
                         }}
 
                     </td>
+
 
 
                     {{-- COMPANY --}}
@@ -828,6 +1298,7 @@
                     </td>
 
 
+
                     {{-- INVOICE --}}
 
                     <td>
@@ -835,6 +1306,7 @@
                         {{ $billingInvoice }}
 
                     </td>
+
 
 
                     {{-- PAPS --}}
@@ -846,76 +1318,224 @@
                     </td>
 
 
-                    {{-- SERVICIOS --}}
+
+                    {{-- SERVICES --}}
 
                     <td>
+
 
                         @forelse(
                             $record->services
                             as $service
                         )
 
+
+                            @php
+
+                                $serviceBase =
+                                    round(
+                                        (float)
+                                        $service->subtotal,
+                                        2
+                                    );
+
+
+                                $serviceRate =
+                                    (float) (
+                                        $service
+                                            ->serviceType
+                                            ?->tax_rate
+                                        ?? 0
+                                    );
+
+
+                                $serviceTax =
+                                    round(
+                                        $serviceBase *
+                                        ($serviceRate / 100),
+                                        2
+                                    );
+
+
+                                $serviceTotal =
+                                    $serviceBase +
+                                    $serviceTax;
+
+                            @endphp
+
+
                             <div class="service">
+
+
+                                {{-- SERVICE NAME --}}
 
                                 <span class="service-name">
 
                                     {{
                                         $service
                                             ->serviceType
-                                            ->name
+                                            ?->name
                                         ??
-                                        __('invoices.pdf.service')
+                                        'Service'
                                     }}
 
                                 </span>
 
-                                <br>
 
-                                <span class="service-price">
+                                {{-- QUANTITY / UNIT PRICE --}}
+
+                                @if(
+                                    $service->quantity !== null ||
+                                    $service->unit_price !== null
+                                )
+
+                                    <div class="service-detail">
+
+                                        @if($service->quantity !== null)
+
+                                            Qty:
+                                            {{
+                                                number_format(
+                                                    (float)
+                                                    $service->quantity,
+                                                    2
+                                                )
+                                            }}
+
+                                        @endif
+
+
+                                        @if(
+                                            $service->quantity !== null &&
+                                            $service->unit_price !== null
+                                        )
+
+                                            ×
+
+                                        @endif
+
+
+                                        @if($service->unit_price !== null)
+
+                                            Unit:
+                                            $
+
+                                            {{
+                                                number_format(
+                                                    (float)
+                                                    $service->unit_price,
+                                                    2
+                                                )
+                                            }}
+
+                                        @endif
+
+                                    </div>
+
+                                @endif
+
+
+                                {{-- BASE --}}
+
+                                <div class="service-detail">
+
+                                    Base:
 
                                     $
 
                                     {{
                                         number_format(
-                                            (float)
-                                            $service->subtotal,
+                                            $serviceBase,
                                             2
                                         )
                                     }}
 
-                                </span>
+                                </div>
+
+
+                                {{-- SERVICE IVA --}}
+
+                                <div class="service-detail service-tax">
+
+                                    Service Tax / IVA:
+
+                                    {{
+                                        number_format(
+                                            $serviceRate,
+                                            2
+                                        )
+                                    }}%
+
+                                    &nbsp;
+
+                                    $
+
+                                    {{
+                                        number_format(
+                                            $serviceTax,
+                                            2
+                                        )
+                                    }}
+
+                                </div>
+
+
+                                {{-- SERVICE TOTAL --}}
+
+                                <div class="service-total">
+
+                                    Service Total:
+
+                                    $
+
+                                    {{
+                                        number_format(
+                                            $serviceTotal,
+                                            2
+                                        )
+                                    }}
+
+                                </div>
+
 
                             </div>
+
 
                         @empty
 
                             <span class="no-data">
 
-                                {{ __('invoices.pdf.no_service') }}
+                                No service
 
                             </span>
 
                         @endforelse
 
 
-                        {{-- CARGO ADICIONAL --}}
+
+                        {{-- =================================================
+                             ADDITIONAL CHARGE
+                        ================================================== --}}
 
                         @if($additionalAmount > 0)
 
                             <div class="additional-charge">
+
 
                                 <div class="additional-charge-name">
 
                                     {{
                                         $additionalType
                                         ?:
-                                        __('invoices.pdf.additional_charge')
+                                        'Additional Charge'
                                     }}
 
                                 </div>
 
 
                                 <div class="additional-charge-detail">
+
+                                    Quantity:
 
                                     {{
                                         number_format(
@@ -924,7 +1544,11 @@
                                         )
                                     }}
 
-                                    ×
+
+                                    <br>
+
+
+                                    Unit Price:
 
                                     $
 
@@ -935,16 +1559,108 @@
                                         )
                                     }}
 
+
+                                    <br>
+
+
+                                    Amount:
+
+                                    $
+
+                                    {{
+                                        number_format(
+                                            $additionalAmount,
+                                            2
+                                        )
+                                    }}
+
                                 </div>
+
 
                             </div>
 
                         @endif
 
+
+
+                        {{-- =================================================
+                             RECORD BREAKDOWN
+                        ================================================== --}}
+
+                        <div class="record-breakdown">
+
+                            <strong>
+                                Services Base:
+                            </strong>
+
+                            $
+
+                            {{
+                                number_format(
+                                    $recordServicesBase,
+                                    2
+                                )
+                            }}
+
+
+                            <br>
+
+
+                            <strong>
+                                Service Tax:
+                            </strong>
+
+                            $
+
+                            {{
+                                number_format(
+                                    $recordServiceTax,
+                                    2
+                                )
+                            }}
+
+
+                            <br>
+
+
+                            <strong>
+                                Additional Charges:
+                            </strong>
+
+                            $
+
+                            {{
+                                number_format(
+                                    $additionalAmount,
+                                    2
+                                )
+                            }}
+
+
+                            <br>
+
+
+                            <strong>
+                                Record Total:
+                            </strong>
+
+                            $
+
+                            {{
+                                number_format(
+                                    $recordTotal,
+                                    2
+                                )
+                            }}
+
+                        </div>
+
+
                     </td>
 
 
-                    {{-- NOTAS DEL REGISTRO --}}
+
+                    {{-- RECORD NOTES --}}
 
                     <td>
 
@@ -963,7 +1679,8 @@
                     </td>
 
 
-                    {{-- TOTAL DEL REGISTRO --}}
+
+                    {{-- RECORD TOTAL --}}
 
                     <td class="money">
 
@@ -983,6 +1700,7 @@
 
             @empty
 
+
                 <tr>
 
                     <td
@@ -990,21 +1708,24 @@
                         style="text-align:center;"
                     >
 
-                        {{ __('invoices.pdf.no_records') }}
+                        No records
 
                     </td>
 
                 </tr>
 
+
             @endforelse
+
 
         </tbody>
 
     </table>
 
 
+
     {{-- =========================================================
-         NOTAS GENERALES DE LA FACTURA
+         GENERAL INVOICE NOTES
     ========================================================== --}}
 
     @if(!empty($invoice->comments))
@@ -1013,9 +1734,10 @@
 
             <div class="invoice-comments-title">
 
-                {{ __('invoices.pdf.notes') }}
+                NOTES
 
             </div>
+
 
             <div class="invoice-comments-text">
 
@@ -1028,8 +1750,9 @@
     @endif
 
 
+
     {{-- =========================================================
-         TOTALES
+         TOTALS
     ========================================================== --}}
 
     <div class="totals-wrapper">
@@ -1037,13 +1760,15 @@
         <table class="totals-table">
 
 
-            {{-- SUBTOTAL --}}
+            {{-- =================================================
+                 SERVICES BASE
+            ================================================== --}}
 
             <tr>
 
                 <td class="totals-label">
 
-                    {{ __('invoices.pdf.records_subtotal') }}
+                    Services Subtotal
 
                 </td>
 
@@ -1053,7 +1778,7 @@
 
                     {{
                         number_format(
-                            (float) $invoice->subtotal,
+                            $servicesBaseTotal,
                             2
                         )
                     }}
@@ -1063,32 +1788,130 @@
             </tr>
 
 
-            {{-- SHIPPING --}}
+
+            {{-- =================================================
+                 SERVICE TAX
+            ================================================== --}}
+
+            <tr class="tax-section">
+
+                <td class="totals-label">
+
+                    Service Tax / IVA
+
+                    <br>
+
+                    <span style="font-size:7px;color:#777;">
+
+                        Rates:
+                        {{ $serviceTaxRateLabel }}
+
+                    </span>
+
+                </td>
+
+
+                <td class="totals-value">
+
+                    $
+
+                    {{
+                        number_format(
+                            $serviceTaxTotal,
+                            2
+                        )
+                    }}
+
+                </td>
+
+            </tr>
+
+
+
+            {{-- =================================================
+                 ADDITIONAL CHARGES
+            ================================================== --}}
 
             <tr>
 
                 <td class="totals-label">
 
-                    {{ __('invoices.pdf.shipping') }}
+                    Additional Charges
 
-                    @if(
-                        $invoice->shipping_handling_enabled &&
-                        (float) $invoice->shipping_handling_rate > 0
-                    )
+                </td>
+
+
+                <td class="totals-value">
+
+                    $
+
+                    {{
+                        number_format(
+                            $additionalChargesTotal,
+                            2
+                        )
+                    }}
+
+                </td>
+
+            </tr>
+
+
+
+            {{-- =================================================
+                 RECORDS SUBTOTAL
+            ================================================== --}}
+
+            <tr class="subtotal-section">
+
+                <td class="totals-label">
+
+                    Records Subtotal
+
+                </td>
+
+
+                <td class="totals-value">
+
+                    $
+
+                    {{
+                        number_format(
+                            $invoiceSubtotal,
+                            2
+                        )
+                    }}
+
+                </td>
+
+            </tr>
+
+
+
+            {{-- =================================================
+                 SHIPPING
+            ================================================== --}}
+
+            <tr>
+
+                <td class="totals-label">
+
+                    Shipping
+
+                    <br>
+
+                    <span style="font-size:7px;color:#777;">
+
+                        Rate:
 
                         {{
                             number_format(
-                                (float)
-                                $invoice->shipping_handling_rate,
+                                $shippingRate,
                                 2
                             )
                         }}%
 
-                    @else
-
-                        0.00%
-
-                    @endif
+                    </span>
 
                 </td>
 
@@ -1099,8 +1922,7 @@
 
                     {{
                         number_format(
-                            (float)
-                            $invoice->shipping_handling_amount,
+                            $shippingAmount,
                             2
                         )
                     }}
@@ -1110,32 +1932,31 @@
             </tr>
 
 
-            {{-- HANDLING --}}
+
+            {{-- =================================================
+                 HANDLING
+            ================================================== --}}
 
             <tr>
 
                 <td class="totals-label">
 
-                    {{ __('invoices.pdf.handling') }}
+                    Handling
 
-                    @if(
-                        $invoice->shipping_handling_enabled &&
-                        (float) $invoice->shipping_handling_rate > 0
-                    )
+                    <br>
+
+                    <span style="font-size:7px;color:#777;">
+
+                        Rate:
 
                         {{
                             number_format(
-                                (float)
-                                $invoice->shipping_handling_rate,
+                                $handlingRate,
                                 2
                             )
                         }}%
 
-                    @else
-
-                        0.00%
-
-                    @endif
+                    </span>
 
                 </td>
 
@@ -1146,7 +1967,7 @@
 
                     {{
                         number_format(
-                            0,
+                            $handlingAmount,
                             2
                         )
                     }}
@@ -1156,32 +1977,16 @@
             </tr>
 
 
-            {{-- TAX --}}
+
+            {{-- =================================================
+                 SALES TAX BASE
+            ================================================== --}}
 
             <tr>
 
                 <td class="totals-label">
 
-                    {{ __('invoices.pdf.tax_rate') }}
-
-                    @if(
-                        $invoice->tax_enabled &&
-                        (float) $invoice->tax_rate > 0
-                    )
-
-                        {{
-                            number_format(
-                                (float)
-                                $invoice->tax_rate,
-                                2
-                            )
-                        }}%
-
-                    @else
-
-                        0.00%
-
-                    @endif
+                    Sales Taxable Base
 
                 </td>
 
@@ -1192,8 +1997,7 @@
 
                     {{
                         number_format(
-                            (float)
-                            $invoice->tax,
+                            $salesTaxBase,
                             2
                         )
                     }}
@@ -1203,13 +2007,62 @@
             </tr>
 
 
-            {{-- TOTAL --}}
+
+            {{-- =================================================
+                 SALES TAX
+            ================================================== --}}
+
+            <tr class="tax-section">
+
+                <td class="totals-label">
+
+                    Sales Tax
+
+                    <br>
+
+                    <span style="font-size:7px;color:#777;">
+
+                        Rate:
+
+                        {{
+                            number_format(
+                                $taxRate,
+                                2
+                            )
+                        }}%
+
+                    </span>
+
+                </td>
+
+
+                <td class="totals-value">
+
+                    $
+
+                    {{
+                        number_format(
+                            $taxAmount,
+                            2
+                        )
+                    }}
+
+                </td>
+
+            </tr>
+
+
+
+            {{-- =================================================
+                 TOTAL
+            ================================================== --}}
 
             <tr class="total-row">
 
                 <td>
-                    {{ __('invoices.pdf.total') }}
+                    TOTAL
                 </td>
+
 
                 <td class="money">
 
@@ -1217,8 +2070,7 @@
 
                     {{
                         number_format(
-                            (float)
-                            $invoice->total,
+                            $invoiceTotal,
                             2
                         )
                     }}
@@ -1233,6 +2085,7 @@
     </div>
 
 
+
     {{-- =========================================================
          FOOTER
     ========================================================== --}}
@@ -1244,13 +2097,15 @@
             <tr>
 
                 <td>
+
                     Alfonso's Warehouse
+
                 </td>
+
 
                 <td class="footer-right">
 
-                    {{ __('invoices.pdf.invoice_footer') }}
-
+                    Invoice
                     {{ $invoice->invoice_number }}
 
                 </td>

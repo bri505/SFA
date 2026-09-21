@@ -30,8 +30,10 @@ return [
         'broker' => 'Broker',
         'record' => 'Record',
         'registered_by' => 'Registered by',
+        'created_at' => 'Created at',
         'actions' => 'Actions',
         'services' => 'Services',
+        'id' => 'ID',
     ],
 
     'modal' => [
@@ -41,6 +43,7 @@ return [
         'fix_errors' => 'Please correct the following errors',
 
         'shipment_data' => 'Shipment data',
+        'images' => 'Images',
         'image' => 'Image',
         'current_image' => 'Current image',
         'new_image' => 'New image',

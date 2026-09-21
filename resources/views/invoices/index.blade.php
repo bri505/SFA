@@ -1061,21 +1061,64 @@
 
                                 <td>
 
-                                    <div class="actions">
+    <div class="actions">
 
-                                        <a
-                                            href="{{ route(
-                                                'invoices.show',
-                                                $invoice
-                                            ) }}"
-                                            class="btn-action"
-                                        >
-                                            {{ __('invoices.actions.view') }}
-                                        </a>
+        <a
+            href="{{ route(
+                'invoices.show',
+                $invoice
+            ) }}"
+            class="btn-action"
+        >
+            {{ __('invoices.actions.view') }}
+        </a>
 
-                                    </div>
 
-                                </td>
+        {{-- =====================================================
+             RECORDATORIO DE PAGO
+        ====================================================== --}}
+
+        @if(
+            in_array(
+                $invoice->payment_status,
+                [
+                    'pending',
+                    'in_process',
+                ],
+                true
+            )
+        )
+
+            <form
+                method="POST"
+                action="{{ route(
+                    'invoices.send-reminder',
+                    $invoice
+                ) }}"
+                onsubmit="
+                    return confirm(
+                        '¿Deseas enviar un recordatorio de pago a todos los correos registrados de esta compañía?'
+                    );
+                "
+            >
+
+                @csrf
+
+                <button
+                    type="submit"
+                    class="btn-action"
+                    title="Enviar recordatorio de pago"
+                >
+                    🔔 Recordatorio
+                </button>
+
+            </form>
+
+        @endif
+
+    </div>
+
+</td>
 
 
                             </tr>

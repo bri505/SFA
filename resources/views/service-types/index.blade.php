@@ -1,354 +1,435 @@
 <x-app-layout>
 
-    <style>
-
-        .sfa-page {
-            min-height: calc(100vh - 64px);
-            background: #f5f6f8;
-        }
-
-        .sfa-container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 24px 28px;
-        }
-
-
-        /* HEADER */
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .page-title {
-            margin: 0;
-            font-size: 23px;
-            font-weight: 600;
-            color: #1f2937;
-        }
-
-        .page-subtitle {
-            margin-top: 4px;
-            font-size: 12px;
-            color: #6b7280;
-        }
-
-
-        /* PANEL */
-
-        .panel {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 7px;
-            overflow: hidden;
-        }
-
-        .panel-header {
-            padding: 13px 16px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .panel-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #1f2937;
-        }
-
-        .panel-subtitle {
-            margin-top: 3px;
-            font-size: 11px;
-            color: #6b7280;
-        }
-
-
-        /* TABLA */
-
-        .table-wrapper {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-        }
-
-        th {
-            padding: 9px 12px;
-            background: #f9fafb;
-            border-bottom: 1px solid #e5e7eb;
-            color: #6b7280;
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: uppercase;
-            text-align: left;
-            white-space: nowrap;
-        }
-
-        td {
-            padding: 11px 12px;
-            border-bottom: 1px solid #f0f1f3;
-            color: #374151;
-            vertical-align: middle;
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-
-        /* INPUTS */
-
-        .input {
-            width: 100%;
-            height: 32px;
-            box-sizing: border-box;
-            border: 1px solid #d1d5db;
-            border-radius: 5px;
-            padding: 6px 8px;
-            font-size: 12px;
-            color: #374151;
-            background: white;
-        }
-
-        .input:focus {
-            outline: none;
-            border-color: #6b7280;
-            box-shadow: 0 0 0 2px rgba(107,114,128,.10);
-        }
-
-        .price-input {
-            width: 110px;
-        }
-
-
-        /* ESTADO */
-
-        .status {
-            display: inline-flex;
-            padding: 4px 7px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: 600;
-        }
-
-        .status-active {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .status-inactive {
-            background: #f3f4f6;
-            color: #6b7280;
-        }
-
-
-        /* BOTÓN */
-
-        .btn-save {
-            border: none;
-            border-radius: 5px;
-            background: #1f2937;
-            color: white;
-            padding: 7px 11px;
-            font-size: 11px;
-            cursor: pointer;
-        }
-
-        .btn-save:hover {
-            background: #111827;
-        }
-
-
-        /* ALERTA */
-
-        .alert-success {
-            margin-bottom: 16px;
-            padding: 10px 12px;
-            border: 1px solid #bbf7d0;
-            border-radius: 5px;
-            background: #f0fdf4;
-            color: #166534;
-            font-size: 11px;
-        }
-
-
-        /* ERRORES */
-
-        .error {
-            margin-top: 4px;
-            color: #dc2626;
-            font-size: 10px;
-        }
-
-
-        /* RESPONSIVE */
-
-        @media(max-width:700px) {
-
-            .sfa-container {
-                padding: 16px;
-            }
-
-            .page-header {
-                align-items: flex-start;
-                flex-direction: column;
-                gap: 5px;
-            }
-
-        }
-
-        .btn-new {
-            display: inline-flex;
-            align-items: center;
-            padding: 8px 13px;
-            border: none;
-            border-radius: 5px;
-            background: #1f2937;
-            color: white;
-            font-size: 11px;
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        .btn-new:hover {
-            background: #111827;
-        }
-
-
-        /* =========================================================
-           MODAL
-        ========================================================= */
-
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            background: rgba(17, 24, 39, .45);
-        }
-
-        .modal {
-            width: 100%;
-            max-width: 430px;
-            background: white;
-            border-radius: 7px;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 15px 40px rgba(0,0,0,.15);
-            overflow: hidden;
-        }
-
-        .modal-header {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            padding: 15px 16px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .modal-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #1f2937;
-        }
-
-        .modal-subtitle {
-            margin-top: 3px;
-            font-size: 11px;
-            color: #6b7280;
-        }
-
-        .modal-close {
-            border: none;
-            background: transparent;
-            color: #9ca3af;
-            font-size: 22px;
-            line-height: 1;
-            cursor: pointer;
-        }
-
-        .modal-close:hover {
-            color: #374151;
-        }
-
-        .modal-body {
-            padding: 16px;
-        }
-
-        .modal-group {
-            margin-bottom: 13px;
-        }
-
-        .modal-group:last-child {
-            margin-bottom: 0;
-        }
-
-        .modal-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 11px;
-            font-weight: 500;
-            color: #4b5563;
-        }
-
-        .modal-group textarea {
-            height: auto;
-            resize: vertical;
-        }
-
-        .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-            padding: 12px 16px;
-            border-top: 1px solid #e5e7eb;
-            background: #fafafa;
-        }
-
-        .btn-cancel {
-            padding: 7px 11px;
-            border: 1px solid #d1d5db;
-            border-radius: 5px;
-            background: white;
-            color: #4b5563;
-            font-size: 11px;
-            cursor: pointer;
-        }
-
-        .btn-cancel:hover {
-            background: #f9fafb;
-        }
-
-    </style>
-
-
-    <div class="sfa-page">
-
-        <div class="sfa-container">
-
-
-            {{-- HEADER --}}
-
-            <div class="page-header">
-
-                <div>
-
-                    <h1 class="page-title">
-                        {{ __('services.title') }}
-                    </h1>
-
-                    <p class="page-subtitle">
-                        {{ __('services.subtitle') }}
-                    </p>
-
+<style>
+    .sfa-page {
+        min-height: 100vh;
+        background: #f8fafc;
+        padding: 30px;
+    }
+
+    .sfa-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .sfa-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .sfa-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .sfa-subtitle {
+        margin-top: 5px;
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .iva-general-display {
+        background: #f3f4f6;
+        border: 1px solid #e5e7eb;
+        padding: 10px 14px;
+        border-radius: 8px;
+        color: #374151;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .btn-new {
+        border: none;
+        background: #111827;
+        color: white;
+        padding: 10px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .btn-new:hover {
+        background: #1f2937;
+    }
+
+    .btn-iva {
+        background: #2563eb;
+    }
+
+    .btn-iva:hover {
+        background: #1d4ed8;
+    }
+
+    .panel {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .services-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1000px;
+    }
+
+    .services-table th {
+        background: #f9fafb;
+        color: #374151;
+        font-size: 13px;
+        font-weight: 700;
+        text-align: left;
+        padding: 14px 16px;
+        border-bottom: 1px solid #e5e7eb;
+        white-space: nowrap;
+    }
+
+    .services-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #f0f0f0;
+        vertical-align: middle;
+        color: #374151;
+        font-size: 14px;
+    }
+
+    .services-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .services-table tr:hover {
+        background: #fafafa;
+    }
+
+    .input {
+        width: 100%;
+        border: 1px solid #d1d5db;
+        border-radius: 7px;
+        padding: 8px 10px;
+        font-size: 14px;
+        background: white;
+    }
+
+    .input:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    }
+
+    .input-small {
+        width: 110px;
+    }
+
+    .service-name-input {
+        min-width: 170px;
+    }
+
+    .description-input {
+        min-width: 220px;
+    }
+
+    .tax-checkbox {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    .iva-cell {
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .iva-percent {
+        font-weight: 700;
+        color: #2563eb;
+    }
+
+    .iva-empty {
+        color: #9ca3af;
+    }
+
+    .total-cell {
+        font-weight: 700;
+        color: #111827;
+        white-space: nowrap;
+    }
+
+    .status {
+        border: 1px solid #d1d5db;
+        border-radius: 7px;
+        padding: 8px 10px;
+        font-size: 13px;
+        background: white;
+        cursor: pointer;
+    }
+
+    .status:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    }
+
+    .btn-save {
+        border: none;
+        background: #16a34a;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 7px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .btn-save:hover {
+        background: #15803d;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 45px 20px;
+        color: #6b7280;
+    }
+
+    .alert-success {
+        margin-bottom: 20px;
+        padding: 12px 15px;
+        border-radius: 8px;
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+    }
+
+    .alert-error {
+        margin-bottom: 20px;
+        padding: 12px 15px;
+        border-radius: 8px;
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
+    .alert-error ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+
+    /* =========================================================
+       MODALES
+    ========================================================= */
+
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 20px;
+    }
+
+    .modal {
+        width: 100%;
+        max-width: 550px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+    }
+
+    .modal-small {
+        max-width: 380px;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 20px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .modal-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .modal-close {
+        border: none;
+        background: transparent;
+        font-size: 24px;
+        color: #6b7280;
+        cursor: pointer;
+        line-height: 1;
+    }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 7px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #374151;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 15px 20px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .btn-cancel {
+        border: 1px solid #d1d5db;
+        background: white;
+        color: #374151;
+        padding: 9px 15px;
+        border-radius: 7px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .btn-cancel:hover {
+        background: #f9fafb;
+    }
+
+    .btn-primary {
+        border: none;
+        background: #2563eb;
+        color: white;
+        padding: 9px 15px;
+        border-radius: 7px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .btn-primary:hover {
+        background: #1d4ed8;
+    }
+
+    .checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-top: 5px;
+    }
+
+    .checkbox-row label {
+        font-size: 14px;
+        color: #374151;
+        cursor: pointer;
+    }
+
+    .preview-box {
+        margin-top: 15px;
+        padding: 14px;
+        border-radius: 8px;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+    }
+
+    .preview-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 7px;
+        font-size: 14px;
+    }
+
+    .preview-row:last-child {
+        margin-bottom: 0;
+        padding-top: 8px;
+        border-top: 1px solid #e5e7eb;
+        font-weight: 700;
+    }
+
+    .iva-preview-label {
+        color: #2563eb;
+        font-weight: 600;
+    }
+</style>
+
+
+<div class="sfa-page">
+
+    <div class="sfa-container">
+
+        {{-- MENSAJES --}}
+
+        @if (session('success'))
+            <div class="alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="alert-error">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+
+        {{-- HEADER --}}
+
+        <div class="sfa-header">
+
+            <div>
+                <div class="sfa-title">
+                    {{ __('services.title') }}
                 </div>
 
+                <div class="sfa-subtitle">
+                    {{ __('services.subtitle') }}
+                </div>
+            </div>
+
+            <div class="header-actions">
+
+                <div class="iva-general-display">
+                    IVA general:
+                    <span id="ivaGeneralDisplay">
+                        {{ number_format($ivaGeneral, 2) }}%
+                    </span>
+                </div>
+
+                <button
+                    type="button"
+                    class="btn-new btn-iva"
+                    onclick="openIvaModal()"
+                >
+                    + Agregar IVA
+                </button>
 
                 <button
                     type="button"
@@ -360,101 +441,189 @@
 
             </div>
 
-
-            {{-- MENSAJE --}}
-
-            @if(session('success'))
-
-                <div class="alert-success">
-
-                    {{ session('success') }}
-
-                </div>
-
-            @endif
+        </div>
 
 
-            {{-- ERRORES --}}
+        {{-- TABLA --}}
 
-            @if($errors->any())
+        <div class="panel">
 
-                <div
-                    class="alert-success"
-                    style="
-                        background:#fef2f2;
-                        border-color:#fecaca;
-                        color:#991b1b;
-                    "
-                >
+            <div class="table-wrapper">
 
-                    {{ $errors->first() }}
+                <table class="services-table">
 
-                </div>
+                    <thead>
+                        <tr>
+                            <th>Servicio</th>
+                            <th>Descripción</th>
+                            <th>Precio</th>
+                            <th>IVA</th>
+                            <th>IVA (%)</th>
+                            <th>Total</th>
+                            <th>Peso</th>
+                            <th>Estado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
 
-            @endif
+                    <tbody>
 
+                        @forelse ($services as $service)
 
-            {{-- SERVICIOS --}}
+                            @php
+                                $ivaPorcentaje = $service->tax_enabled
+                                    ? (float) $ivaGeneral
+                                    : 0;
 
-            <div class="panel">
+                                $ivaAmount = $service->tax_enabled
+                                    ? ((float) $service->price * $ivaPorcentaje / 100)
+                                    : 0;
 
-                <div class="panel-header">
-
-                    <div class="panel-title">
-                        {{ __('services.services') }}
-                    </div>
-
-                    <div class="panel-subtitle">
-                        {{ __('services.services_description') }}
-                    </div>
-
-                </div>
-
-
-                <div class="table-wrapper">
-
-                    <table>
-
-                        <thead>
+                                $total = (float) $service->price + $ivaAmount;
+                            @endphp
 
                             <tr>
 
-                                <th>
-                                    {{ __('services.service') }}
-                                </th>
+                                {{-- SERVICIO --}}
 
-                                <th>
-                                    {{ __('services.description') }}
-                                </th>
-
-                                <th>
-                                    {{ __('services.price') }}
-                                </th>
-
-                                <th>
-                                    {{ __('services.weight') }}
-                                </th>
-
-                                <th>
-                                    {{ __('services.status') }}
-                                </th>
-
-                                <th style="width:90px;">
-                                    {{ __('services.action') }}
-                                </th>
-
-                            </tr>
-
-                        </thead>
+                                <td>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        form="service-form-{{ $service->id }}"
+                                        class="input service-name-input"
+                                        value="{{ $service->name }}"
+                                        required
+                                    >
+                                </td>
 
 
-                        <tbody>
+                                {{-- DESCRIPCIÓN --}}
 
-                            @forelse($services as $service)
+                                <td>
+                                    <input
+                                        type="text"
+                                        name="description"
+                                        form="service-form-{{ $service->id }}"
+                                        class="input description-input"
+                                        value="{{ $service->description }}"
+                                    >
+                                </td>
 
-                                <tr>
+
+                                {{-- PRECIO --}}
+
+                                <td>
+                                    <input
+                                        type="number"
+                                        name="price"
+                                        form="service-form-{{ $service->id }}"
+                                        class="input input-small service-price"
+                                        value="{{ $service->price }}"
+                                        min="0"
+                                        step="0.01"
+                                        required
+                                    >
+                                </td>
+
+
+                                {{-- IVA --}}
+
+                                <td class="iva-cell">
+
+                                    <input
+                                        type="checkbox"
+                                        name="tax_enabled"
+                                        value="1"
+                                        form="service-form-{{ $service->id }}"
+                                        class="tax-checkbox service-tax-enabled"
+                                        {{ $service->tax_enabled ? 'checked' : '' }}
+                                    >
+
+                                </td>
+
+
+                                {{-- IVA (%) AUTOMÁTICO --}}
+
+                                <td class="iva-cell">
+
+                                    <span
+                                        class="iva-percent service-tax-percent {{ $service->tax_enabled ? '' : 'iva-empty' }}"
+                                    >
+                                        {{ $service->tax_enabled
+                                            ? number_format($ivaGeneral, 2) . '%'
+                                            : '—'
+                                        }}
+                                    </span>
+
+                                </td>
+
+
+                                {{-- TOTAL --}}
+
+                                <td class="total-cell">
+
+                                    <span class="service-total">
+                                        ${{ number_format($total, 2) }}
+                                    </span>
+
+                                </td>
+
+
+                                {{-- PESO --}}
+
+                                <td>
+
+                                    <input
+                                        type="number"
+                                        name="weight"
+                                        form="service-form-{{ $service->id }}"
+                                        class="input input-small"
+                                        value="{{ $service->weight }}"
+                                        min="0"
+                                        step="0.01"
+                                    >
+
+                                </td>
+
+
+                                {{-- ESTADO
+                                     ESTE ES EL CONTROL QUE YA TENÍAS
+                                --}}
+
+                                <td>
+
+                                    <select
+                                        name="active"
+                                        form="service-form-{{ $service->id }}"
+                                        class="status"
+                                    >
+
+                                        <option
+                                            value="1"
+                                            {{ $service->active ? 'selected' : '' }}
+                                        >
+                                            Activo
+                                        </option>
+
+                                        <option
+                                            value="0"
+                                            {{ !$service->active ? 'selected' : '' }}
+                                        >
+                                            Inactivo
+                                        </option>
+
+                                    </select>
+
+                                </td>
+
+
+                                {{-- ACCIÓN --}}
+
+                                <td>
 
                                     <form
+                                        id="service-form-{{ $service->id }}"
                                         method="POST"
                                         action="{{ route('service-types.update', $service) }}"
                                     >
@@ -463,129 +632,38 @@
 
                                         @method('PUT')
 
-
-                                        <td>
-
-                                            <input
-                                                type="text"
-                                                name="name"
-                                                class="input"
-                                                value="{{ $service->name }}"
-                                                required
-                                            >
-
-                                        </td>
-
-
-                                        <td>
-
-                                            <input
-                                                type="text"
-                                                name="description"
-                                                class="input"
-                                                value="{{ $service->description }}"
-                                            >
-
-                                        </td>
-
-
-                                        <td>
-
-                                            <input
-                                                type="number"
-                                                name="price"
-                                                class="input price-input"
-                                                value="{{ $service->price }}"
-                                                min="0"
-                                                step="0.01"
-                                                required
-                                            >
-
-                                        </td>
-
-
-                                        <td>
-
-                                            <input
-                                                type="number"
-                                                name="weight"
-                                                class="input"
-                                                value="{{ $service->weight }}"
-                                                min="0"
-                                                step="0.01"
-                                                placeholder="{{ __('services.weight') }}"
-                                            >
-
-                                        </td>
-
-
-                                        <td>
-
-                                            <select
-                                                name="active"
-                                                class="input"
-                                            >
-
-                                                <option
-                                                    value="1"
-                                                    {{ $service->active ? 'selected' : '' }}
-                                                >
-                                                    {{ __('services.active') }}
-                                                </option>
-
-                                                <option
-                                                    value="0"
-                                                    {{ !$service->active ? 'selected' : '' }}
-                                                >
-                                                    {{ __('services.inactive') }}
-                                                </option>
-
-                                            </select>
-
-                                        </td>
-
-
-                                        <td>
-
-                                            <button
-                                                type="submit"
-                                                class="btn-save"
-                                            >
-                                                {{ __('services.save') }}
-                                            </button>
-
-                                        </td>
+                                        <button
+                                            type="submit"
+                                            class="btn-save"
+                                        >
+                                            Guardar
+                                        </button>
 
                                     </form>
 
-                                </tr>
+                                </td>
 
-                            @empty
+                            </tr>
 
-                                <tr>
+                        @empty
 
-                                    <td
-                                        colspan="6"
-                                        style="
-                                            padding:40px;
-                                            text-align:center;
-                                            color:#9ca3af;
-                                        "
-                                    >
+                            <tr>
 
-                                        {{ __('services.no_services') }}
+                                <td colspan="9">
 
-                                    </td>
+                                    <div class="empty-state">
+                                        No hay servicios registrados.
+                                    </div>
 
-                                </tr>
+                                </td>
 
-                            @endforelse
+                            </tr>
 
-                        </tbody>
+                        @endforelse
 
-                    </table>
+                    </tbody>
 
-                </div>
+                </table>
 
             </div>
 
@@ -593,192 +671,638 @@
 
     </div>
 
+</div>
 
-    {{-- =========================================================
-         MODAL NUEVO SERVICIO
-    ========================================================= --}}
 
-    <div
-        id="serviceModal"
-        class="modal-overlay"
-        style="display:none;"
-    >
+{{-- =========================================================
+     MODAL IVA GENERAL
+========================================================== --}}
 
-        <div class="modal">
+<div
+    id="ivaModal"
+    class="modal-overlay"
+>
 
-            <div class="modal-header">
+    <div class="modal modal-small">
 
-                <div>
+        <div class="modal-header">
 
-                    <div class="modal-title">
-                        {{ __('services.modal.new_service') }}
-                    </div>
+            <div class="modal-title">
+                IVA general
+            </div>
 
-                    <div class="modal-subtitle">
-                        {{ __('services.modal.subtitle') }}
+            <button
+                type="button"
+                class="modal-close"
+                onclick="closeIvaModal()"
+            >
+                &times;
+            </button>
+
+        </div>
+
+        <form
+            method="POST"
+            action="{{ route('service-types.save-iva') }}"
+        >
+
+            @csrf
+
+            <div class="modal-body">
+
+                <div class="form-group">
+
+                    <label class="form-label">
+                        Porcentaje de IVA
+                    </label>
+
+                    <div style="display:flex; align-items:center; gap:8px;">
+
+                        <input
+                            type="number"
+                            id="ivaGeneralInput"
+                            name="iva_general"
+                            class="input"
+                            value="{{ $ivaGeneral }}"
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            required
+                        >
+
+                        <strong>%</strong>
+
                     </div>
 
                 </div>
 
+                <div style="font-size:13px; color:#6b7280;">
+
+                    Este porcentaje será utilizado automáticamente
+                    en todos los servicios que tengan activada la casilla IVA.
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
 
                 <button
                     type="button"
-                    class="modal-close"
-                    onclick="closeServiceModal()"
+                    class="btn-cancel"
+                    onclick="closeIvaModal()"
                 >
-                    ×
+                    Cancelar
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn-primary"
+                >
+                    Guardar IVA
                 </button>
 
             </div>
 
-
-            <form
-                method="POST"
-                action="{{ route('service-types.store') }}"
-            >
-
-                @csrf
-
-
-                <div class="modal-body">
-
-                    {{-- NOMBRE --}}
-
-                    <div class="modal-group">
-
-                        <label>
-                            {{ __('services.modal.name') }}
-                        </label>
-
-                        <input
-                            type="text"
-                            name="name"
-                            class="input"
-                            placeholder="{{ __('services.modal.name_placeholder') }}"
-                            required
-                        >
-
-                    </div>
-
-
-                    {{-- DESCRIPCIÓN --}}
-
-                    <div class="modal-group">
-
-                        <label>
-                            {{ __('services.modal.description') }}
-                        </label>
-
-                        <textarea
-                            name="description"
-                            class="input"
-                            rows="3"
-                            placeholder="{{ __('services.modal.description_placeholder') }}"
-                        ></textarea>
-
-                    </div>
-
-
-                    {{-- PRECIO --}}
-
-                    <div class="modal-group">
-
-                        <label>
-                            {{ __('services.modal.price') }}
-                        </label>
-
-                        <input
-                            type="number"
-                            name="price"
-                            class="input"
-                            value="0.00"
-                            min="0"
-                            step="0.01"
-                            required
-                        >
-
-                    </div>
-
-
-                    {{-- PESO --}}
-
-                    <div class="modal-group">
-
-                        <label>
-                            {{ __('services.modal.weight') }}
-                        </label>
-
-                        <input
-                            type="number"
-                            name="weight"
-                            class="input"
-                            placeholder="{{ __('services.modal.weight_placeholder') }}"
-                            min="0"
-                            step="0.01"
-                        >
-
-                    </div>
-
-                </div>
-
-
-                <div class="modal-footer">
-
-                    <button
-                        type="button"
-                        class="btn-cancel"
-                        onclick="closeServiceModal()"
-                    >
-                        {{ __('services.modal.cancel') }}
-                    </button>
-
-
-                    <button
-                        type="submit"
-                        class="btn-save"
-                    >
-                        {{ __('services.modal.save_service') }}
-                    </button>
-
-                </div>
-
-            </form>
-
-        </div>
+        </form>
 
     </div>
 
+</div>
 
-    <script>
 
-        function openServiceModal() {
+{{-- =========================================================
+     MODAL NUEVO SERVICIO
+========================================================== --}}
 
-            document.getElementById('serviceModal')
-                .style.display = 'flex';
+<div
+    id="serviceModal"
+    class="modal-overlay"
+>
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <div class="modal-title">
+                {{ __('services.new_service') }}
+            </div>
+
+            <button
+                type="button"
+                class="modal-close"
+                onclick="closeServiceModal()"
+            >
+                &times;
+            </button>
+
+        </div>
+
+        <form
+            method="POST"
+            action="{{ route('service-types.store') }}"
+        >
+
+            @csrf
+
+            <div class="modal-body">
+
+                <div class="form-group">
+
+                    <label class="form-label">
+                        Nombre del servicio
+                    </label>
+
+                    <input
+                        type="text"
+                        name="name"
+                        class="input"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label class="form-label">
+                        Descripción
+                    </label>
+
+                    <input
+                        type="text"
+                        name="description"
+                        class="input"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label class="form-label">
+                        Precio
+                    </label>
+
+                    <input
+                        type="number"
+                        id="newServicePrice"
+                        name="price"
+                        class="input"
+                        min="0"
+                        step="0.01"
+                        value="0"
+                        required
+                        oninput="calculateNewServiceTotal()"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <div class="checkbox-row">
+
+                        <input
+                            type="checkbox"
+                            id="newServiceTaxEnabled"
+                            name="tax_enabled"
+                            value="1"
+                            class="tax-checkbox"
+                            onchange="calculateNewServiceTotal()"
+                        >
+
+                        <label for="newServiceTaxEnabled">
+                            Aplicar IVA
+                        </label>
+
+                    </div>
+
+                </div>
+
+
+                <div class="preview-box">
+
+                    <div class="preview-row">
+
+                        <span>
+                            IVA general:
+                        </span>
+
+                        <span
+                            id="newServiceIvaPercent"
+                            class="iva-preview-label"
+                        >
+                            —
+                        </span>
+
+                    </div>
+
+
+                    <div class="preview-row">
+
+                        <span>
+                            IVA calculado:
+                        </span>
+
+                        <span id="newServiceIvaAmount">
+                            $0.00
+                        </span>
+
+                    </div>
+
+
+                    <div class="preview-row">
+
+                        <span>
+                            Total:
+                        </span>
+
+                        <span id="newServiceTotal">
+                            $0.00
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="form-group"
+                    style="margin-top:16px;"
+                >
+
+                    <label class="form-label">
+                        Peso
+                    </label>
+
+                    <input
+                        type="number"
+                        name="weight"
+                        class="input"
+                        min="0"
+                        step="0.01"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn-cancel"
+                    onclick="closeServiceModal()"
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn-primary"
+                >
+                    Guardar servicio
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    /*
+    |--------------------------------------------------------------------------
+    | IVA GENERAL
+    |--------------------------------------------------------------------------
+    */
+
+    const ivaGeneral =
+        {{ json_encode((float) $ivaGeneral) }};
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | MODAL IVA
+    |--------------------------------------------------------------------------
+    */
+
+    function openIvaModal() {
+
+        const modal =
+            document.getElementById('ivaModal');
+
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+
+    }
+
+
+    function closeIvaModal() {
+
+        const modal =
+            document.getElementById('ivaModal');
+
+        if (modal) {
+            modal.style.display = 'none';
+        }
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | MODAL NUEVO SERVICIO
+    |--------------------------------------------------------------------------
+    */
+
+    function openServiceModal() {
+
+        const modal =
+            document.getElementById('serviceModal');
+
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+
+        calculateNewServiceTotal();
+
+    }
+
+
+    function closeServiceModal() {
+
+        const modal =
+            document.getElementById('serviceModal');
+
+        if (modal) {
+            modal.style.display = 'none';
+        }
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CALCULAR NUEVO SERVICIO
+    |--------------------------------------------------------------------------
+    */
+
+    function calculateNewServiceTotal() {
+
+        const priceInput =
+            document.getElementById('newServicePrice');
+
+        const taxCheckbox =
+            document.getElementById('newServiceTaxEnabled');
+
+        const ivaPercentElement =
+            document.getElementById('newServiceIvaPercent');
+
+        const ivaAmountElement =
+            document.getElementById('newServiceIvaAmount');
+
+        const totalElement =
+            document.getElementById('newServiceTotal');
+
+
+        if (!priceInput) {
+            return;
+        }
+
+
+        const price =
+            parseFloat(priceInput.value) || 0;
+
+
+        const taxEnabled =
+            taxCheckbox
+                ? taxCheckbox.checked
+                : false;
+
+
+        const ivaAmount =
+            taxEnabled
+                ? price * ivaGeneral / 100
+                : 0;
+
+
+        const total =
+            price + ivaAmount;
+
+
+        if (ivaPercentElement) {
+
+            ivaPercentElement.textContent =
+                taxEnabled
+                    ? ivaGeneral.toFixed(2) + '%'
+                    : '—';
 
         }
 
 
-        function closeServiceModal() {
+        if (ivaAmountElement) {
 
-            document.getElementById('serviceModal')
-                .style.display = 'none';
+            ivaAmountElement.textContent =
+                '$' + ivaAmount.toFixed(2);
 
         }
 
 
-        document
-            .getElementById('serviceModal')
-            .addEventListener('click', function (event) {
+        if (totalElement) {
 
-                if (event.target === this) {
+            totalElement.textContent =
+                '$' + total.toFixed(2);
 
-                    closeServiceModal();
+        }
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACTUALIZAR IVA DE CADA SERVICIO
+    |--------------------------------------------------------------------------
+    */
+
+    function updateServiceRow(row) {
+
+        const priceInput =
+            row.querySelector('.service-price');
+
+        const taxCheckbox =
+            row.querySelector('.service-tax-enabled');
+
+        const percentElement =
+            row.querySelector('.service-tax-percent');
+
+        const totalElement =
+            row.querySelector('.service-total');
+
+
+        if (!priceInput || !taxCheckbox) {
+            return;
+        }
+
+
+        const price =
+            parseFloat(priceInput.value) || 0;
+
+
+        const taxEnabled =
+            taxCheckbox.checked;
+
+
+        const ivaAmount =
+            taxEnabled
+                ? price * ivaGeneral / 100
+                : 0;
+
+
+        const total =
+            price + ivaAmount;
+
+
+        if (percentElement) {
+
+            if (taxEnabled) {
+
+                percentElement.textContent =
+                    ivaGeneral.toFixed(2) + '%';
+
+                percentElement.classList.remove(
+                    'iva-empty'
+                );
+
+            } else {
+
+                percentElement.textContent =
+                    '—';
+
+                percentElement.classList.add(
+                    'iva-empty'
+                );
+
+            }
+
+        }
+
+
+        if (totalElement) {
+
+            totalElement.textContent =
+                '$' + total.toFixed(2);
+
+        }
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EVENTOS DE LOS SERVICIOS
+    |--------------------------------------------------------------------------
+    */
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        function () {
+
+            const rows =
+                document.querySelectorAll(
+                    '.services-table tbody tr'
+                );
+
+
+            rows.forEach(function (row) {
+
+                const priceInput =
+                    row.querySelector(
+                        '.service-price'
+                    );
+
+                const taxCheckbox =
+                    row.querySelector(
+                        '.service-tax-enabled'
+                    );
+
+
+                if (priceInput) {
+
+                    priceInput.addEventListener(
+                        'input',
+                        function () {
+
+                            updateServiceRow(row);
+
+                        }
+                    );
 
                 }
 
+
+                if (taxCheckbox) {
+
+                    taxCheckbox.addEventListener(
+                        'change',
+                        function () {
+
+                            updateServiceRow(row);
+
+                        }
+                    );
+
+                }
+
+
+                updateServiceRow(row);
+
             });
 
-    </script>
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CERRAR MODALES AL HACER CLICK AFUERA
+    |--------------------------------------------------------------------------
+    */
+
+    document.addEventListener(
+        'click',
+        function (event) {
+
+            const ivaModal =
+                document.getElementById('ivaModal');
+
+            const serviceModal =
+                document.getElementById('serviceModal');
+
+
+            if (event.target === ivaModal) {
+
+                closeIvaModal();
+
+            }
+
+
+            if (event.target === serviceModal) {
+
+                closeServiceModal();
+
+            }
+
+        }
+    );
+
+</script>
 
 </x-app-layout>

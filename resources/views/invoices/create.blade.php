@@ -310,6 +310,72 @@
 }
 
 /* =========================================================
+   CANTIDAD
+========================================================= */
+
+.billing-quantity {
+    width: 100%;
+}
+
+.quantity-type-label {
+    margin-top: 4px;
+    font-size: 11px;
+    color: #6b7280;
+    text-transform: capitalize;
+}
+
+/* =========================================================
+   SERVICIOS
+========================================================= */
+
+.service-item {
+    padding: 7px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.service-item:last-child {
+    border-bottom: 0;
+}
+
+.service-name {
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 3px;
+}
+
+.service-base {
+    font-size: 11px;
+    color: #6b7280;
+}
+
+.service-tax {
+    font-size: 11px;
+    color: #92400e;
+}
+
+.service-total {
+    font-size: 11px;
+    font-weight: 700;
+    color: #111827;
+}
+
+/* =========================================================
+   CARGO ADICIONAL
+========================================================= */
+
+.additional-charge-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+}
+
+.additional-total {
+    margin-top: 4px;
+    font-size: 11px;
+    color: #6b7280;
+}
+
+/* =========================================================
    ESTADOS
 ========================================================= */
 
@@ -333,7 +399,7 @@
 
 .summary-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 12px;
 }
 
@@ -353,6 +419,18 @@
 .summary-value {
     font-size: 18px;
     font-weight: 700;
+    color: #111827;
+}
+
+.summary-service-tax {
+    color: #92400e;
+}
+
+.summary-tax {
+    color: #7f1d1d;
+}
+
+.summary-total {
     color: #111827;
 }
 
@@ -514,6 +592,7 @@
 ========================================================= */
 
 @media (max-width: 1000px) {
+
     .form-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -525,9 +604,11 @@
     .options-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
 }
 
 @media (max-width: 700px) {
+
     .sfa-page {
         padding: 12px;
     }
@@ -553,8 +634,15 @@
     .billing-type {
         flex-direction: column;
     }
+
+    .additional-charge-grid {
+        grid-template-columns: 1fr;
+    }
+
 }
+
 </style>
+
 
 <div class="sfa-page">
 
@@ -599,10 +687,7 @@
 
             <div class="form-grid">
 
-
-                {{-- =================================================
-                     EMPRESA ENCARGADA
-                ================================================== --}}
+                {{-- EMPRESA ENCARGADA --}}
 
                 <div class="form-group">
 
@@ -623,14 +708,14 @@
 
                             @foreach($companies as $company)
 
-                                <option
-                                    value="{{ $company->id }}"
-                                >
+                                <option value="{{ $company->id }}">
+
                                     {{ $company->name }}
 
                                     @if($company->code)
                                         — {{ $company->code }}
                                     @endif
+
                                 </option>
 
                             @endforeach
@@ -651,9 +736,7 @@
                 </div>
 
 
-                {{-- =================================================
-                     BROKER
-                ================================================== --}}
+                {{-- BROKER --}}
 
                 <div class="form-group">
 
@@ -674,9 +757,7 @@
 
                             @foreach($brokers as $broker)
 
-                                <option
-                                    value="{{ $broker->id }}"
-                                >
+                                <option value="{{ $broker->id }}">
                                     {{ $broker->name }}
                                 </option>
 
@@ -698,9 +779,7 @@
                 </div>
 
 
-                {{-- =================================================
-                     CONSIGNATARIO
-                ================================================== --}}
+                {{-- CONSIGNATARIO --}}
 
                 <div class="form-group">
 
@@ -721,9 +800,7 @@
 
                             @foreach($consignees as $consignee)
 
-                                <option
-                                    value="{{ $consignee->id }}"
-                                >
+                                <option value="{{ $consignee->id }}">
                                     {{ $consignee->name }}
                                 </option>
 
@@ -747,11 +824,9 @@
             </div>
 
 
-            {{-- =================================================
-                 TIPO DE FACTURACIÓN
-            ================================================== --}}
+            {{-- TIPO DE FACTURACIÓN --}}
 
-            <div style="margin-top: 16px;">
+            <div style="margin-top:16px;">
 
                 <label class="form-label">
                     {{ __('invoices.create.billing_type') }}
@@ -796,13 +871,11 @@
             </div>
 
 
-            {{-- =================================================
-                 EMPRESA DE LOS REGISTROS
-            ================================================== --}}
+            {{-- EMPRESA DE LOS REGISTROS --}}
 
             <div
                 id="singleCompanyGroup"
-                style="margin-top: 15px;"
+                style="margin-top:15px;"
             >
 
                 <div class="form-group">
@@ -822,14 +895,14 @@
 
                         @foreach($companies as $company)
 
-                            <option
-                                value="{{ $company->id }}"
-                            >
+                            <option value="{{ $company->id }}">
+
                                 {{ $company->name }}
 
                                 @if($company->code)
                                     — {{ $company->code }}
                                 @endif
+
                             </option>
 
                         @endforeach
@@ -841,9 +914,7 @@
             </div>
 
 
-            {{-- =================================================
-                 VARIAS EMPRESAS
-            ================================================== --}}
+            {{-- VARIAS EMPRESAS --}}
 
             <div
                 id="multipleCompaniesGroup"
@@ -880,13 +951,11 @@
             </div>
 
 
-            {{-- =================================================
-                 PERIODO
-            ================================================== --}}
+            {{-- PERIODO --}}
 
             <div
                 class="form-grid-2"
-                style="margin-top: 15px;"
+                style="margin-top:15px;"
             >
 
                 <div class="form-group">
@@ -945,8 +1014,7 @@
 
             <div class="form-grid-2">
 
-
-                {{-- IVA --}}
+                {{-- SALES TAX --}}
 
                 <div>
 
@@ -1070,12 +1138,10 @@
                         <tr>
 
                             <th class="check-cell">
-
                                 <input
                                     type="checkbox"
                                     id="selectAllRecords"
                                 >
-
                             </th>
 
                             <th>
@@ -1118,8 +1184,9 @@
                                 {{ __('invoices.create.table.billing_paps') }}
                             </th>
 
+                            {{-- CANTIDAD --}}
                             <th>
-                                {{ __('invoices.create.table.pallets') }}
+                                Cantidad
                             </th>
 
                             <th>
@@ -1133,6 +1200,7 @@
                         </tr>
 
                     </thead>
+
 
                     <tbody id="recordsTableBody">
 
@@ -1211,11 +1279,27 @@
                 <div class="summary-box">
 
                     <div class="summary-label">
-                        {{ __('invoices.create.tax') }}
+                        IVA servicios
                     </div>
 
                     <div
-                        class="summary-value"
+                        class="summary-value summary-service-tax"
+                        id="summaryServiceTax"
+                    >
+                        $0.00
+                    </div>
+
+                </div>
+
+
+                <div class="summary-box">
+
+                    <div class="summary-label">
+                        Sales Tax
+                    </div>
+
+                    <div
+                        class="summary-value summary-tax"
                         id="summaryTax"
                     >
                         $0.00
@@ -1231,7 +1315,7 @@
                     </div>
 
                     <div
-                        class="summary-value"
+                        class="summary-value summary-total"
                         id="summaryTotal"
                     >
                         $0.00
@@ -1299,6 +1383,7 @@
 </div>
 
 </div>
+
 
 {{-- =========================================================
 MODAL NUEVA EMPRESA
@@ -1415,6 +1500,7 @@ MODAL NUEVA EMPRESA
 
 </div>
 
+
 {{-- =========================================================
 MODAL NUEVO BROKER
 ========================================================= --}}
@@ -1493,6 +1579,7 @@ MODAL NUEVO BROKER
 </div>
 
 </div>
+
 
 {{-- =========================================================
 MODAL NUEVO CONSIGNATARIO
@@ -1573,6 +1660,7 @@ MODAL NUEVO CONSIGNATARIO
 
 </div>
 
+
 {{-- =========================================================
 FORMULARIO REAL
 ========================================================= --}}
@@ -1645,6 +1733,7 @@ FORMULARIO REAL
 <div id="formRecords"></div>
 
 </form>
+
 
 <script>
 
@@ -1840,7 +1929,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     /* =====================================================
-       ALERTAS MODALES
+       ALERTAS
     ===================================================== */
 
     function showModalAlert(
@@ -1857,7 +1946,8 @@ document.addEventListener('DOMContentLoaded', function () {
         alert.className =
             'sfa-alert ' + type;
 
-        alert.textContent = message;
+        alert.textContent =
+            message;
 
     }
 
@@ -1869,9 +1959,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (!alert) return;
 
-        alert.className = 'sfa-alert';
+        alert.className =
+            'sfa-alert';
 
-        alert.textContent = '';
+        alert.textContent =
+            '';
 
     }
 
@@ -2262,7 +2354,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     /* =====================================================
-       IMPUESTO
+       SALES TAX
     ===================================================== */
 
     taxEnabled.addEventListener(
@@ -2334,10 +2426,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     '.record-company-checkbox:checked'
                 )
             ).map(
-                checkbox => checkbox.value
+                checkbox =>
+                    checkbox.value
             );
 
         }
+
 
         if (recordCompany.value) {
 
@@ -2346,6 +2440,7 @@ document.addEventListener('DOMContentLoaded', function () {
             ];
 
         }
+
 
         return [];
 
@@ -2363,6 +2458,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const companyIds =
                 getRecordCompanyIds();
 
+
             if (!companyIds.length) {
 
                 alert(
@@ -2374,8 +2470,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
 
-            if (!periodStart.value ||
-                !periodEnd.value) {
+            if (
+                !periodStart.value ||
+                !periodEnd.value
+            ) {
 
                 alert(
                     @json(__('invoices.create.js.select_period'))
@@ -2451,7 +2549,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
 
 
-                    if (Array.isArray(data.records)) {
+                    if (
+                        Array.isArray(
+                            data.records
+                        )
+                    ) {
 
                         loadedRecords =
                             loadedRecords.concat(
@@ -2481,6 +2583,31 @@ document.addEventListener('DOMContentLoaded', function () {
 
         }
     );
+
+
+    /* =====================================================
+       OBTENER NOMBRE DE LA UNIDAD
+    ===================================================== */
+
+    function getQuantityTypeLabel(quantityType) {
+
+        switch (quantityType) {
+
+            case 'palets':
+                return 'Pallets';
+
+            case 'contenedores':
+                return 'Contenedores';
+
+            case 'piezas':
+                return 'Piezas';
+
+            default:
+                return quantityType || '';
+
+        }
+
+    }
 
 
     /* =====================================================
@@ -2516,17 +2643,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             : [];
 
 
-                    const serviceTotal =
-                        services.reduce(
-                            (sum, service) =>
-                                sum +
-                                parseFloat(
-                                    service.subtotal || 0
-                                ),
-                            0
-                        );
-
-
                     const companyName =
                         record.company?.name ||
                         '';
@@ -2538,30 +2654,139 @@ document.addEventListener('DOMContentLoaded', function () {
                         '';
 
 
+                    /* =================================================
+                       SERVICIOS
+                    ================================================= */
+
                     const servicesHtml =
                         services.length
-                            ? services.map(
-                                service => `
-                                    <div>
-                                        ${escapeHtml(
-                                            service.service_type?.name ||
-                                            service.serviceType?.name ||
-                                            service.name ||
-                                            @json(__('invoices.create.js.service'))
-                                        )}
-                                        -
-                                        $${formatMoney(
-                                            service.subtotal || 0
-                                        )}
+                            ? services.map(service => {
+
+                                const serviceName =
+                                    service.service_type?.name ||
+                                    service.serviceType?.name ||
+                                    service.name ||
+                                    @json(__('invoices.create.js.service'));
+
+
+                                const base =
+                                    Number(
+                                        service.subtotal || 0
+                                    );
+
+
+                                const taxRate =
+                                    Number(
+                                        service.service_type?.tax_rate ??
+                                        service.serviceType?.tax_rate ??
+                                        0
+                                    );
+
+
+                                const taxAmount =
+                                    Math.round(
+                                        (
+                                            base *
+                                            (taxRate / 100)
+                                        ) * 100
+                                    ) / 100;
+
+
+                                const serviceTotal =
+                                    Math.round(
+                                        (
+                                            base +
+                                            taxAmount
+                                        ) * 100
+                                    ) / 100;
+
+
+                                return `
+                                    <div class="service-item">
+
+                                        <div class="service-name">
+                                            ${escapeHtml(serviceName)}
+                                        </div>
+
+                                        <div class="service-base">
+                                            Base:
+                                            $${formatMoney(base)}
+                                        </div>
+
+                                        <div class="service-tax">
+                                            IVA ${formatMoney(taxRate)}%:
+                                            $${formatMoney(taxAmount)}
+                                        </div>
+
+                                        <div class="service-total">
+                                            Total:
+                                            $${formatMoney(serviceTotal)}
+                                        </div>
+
                                     </div>
-                                `
-                            ).join('')
+                                `;
+
+                            }).join('')
                             : @json(__('invoices.create.js.no_services'));
+
+
+                    /* =================================================
+                       CANTIDAD
+                    ================================================= */
+
+                    const quantity =
+                        record.quantity ?? '';
+
+
+                    const quantityType =
+                        getQuantityTypeLabel(
+                            record.quantity_type
+                        );
+
+
+                    /* =================================================
+                       TOTAL DE SERVICIOS
+                    ================================================= */
+
+                    const serviceTotal =
+                        services.reduce(
+                            (sum, service) => {
+
+                                const base =
+                                    Number(
+                                        service.subtotal || 0
+                                    );
+
+
+                                const taxRate =
+                                    Number(
+                                        service.service_type?.tax_rate ??
+                                        service.serviceType?.tax_rate ??
+                                        0
+                                    );
+
+
+                                const tax =
+                                    Math.round(
+                                        (
+                                            base *
+                                            (taxRate / 100)
+                                        ) * 100
+                                    ) / 100;
+
+
+                                return sum + base + tax;
+
+                            },
+                            0
+                        );
 
 
                     return `
 
                         <tr data-record-id="${record.id}">
+
+                            {{-- CHECKBOX --}}
 
                             <td class="check-cell">
 
@@ -2574,55 +2799,93 @@ document.addEventListener('DOMContentLoaded', function () {
                             </td>
 
 
+                            {{-- FECHA --}}
+
                             <td>
+
                                 ${escapeHtml(
                                     formatDate(record.date)
                                 )}
+
                             </td>
 
 
+                            {{-- EMPRESA --}}
+
                             <td>
-                                ${escapeHtml(companyName)}
+
+                                ${escapeHtml(
+                                    companyName
+                                )}
+
                             </td>
 
 
+                            {{-- FACTURA --}}
+
                             <td>
+
                                 ${escapeHtml(
                                     record.invoice_number || ''
                                 )}
+
                             </td>
 
 
+                            {{-- PAPS --}}
+
                             <td>
+
                                 ${escapeHtml(
                                     record.paps_number || ''
                                 )}
+
                             </td>
 
 
+                            {{-- FACT --}}
+
                             <td>
+
                                 ${escapeHtml(
                                     record.fact_number || ''
                                 )}
+
                             </td>
 
 
+                            {{-- ORIGEN --}}
+
                             <td>
+
                                 ${escapeHtml(
                                     record.origin || ''
                                 )}
+
                             </td>
 
 
+                            {{-- DESTINO --}}
+
                             <td>
-                                ${escapeHtml(consignee)}
+
+                                ${escapeHtml(
+                                    consignee
+                                )}
+
                             </td>
 
 
+                            {{-- SERVICIOS --}}
+
                             <td>
+
                                 ${servicesHtml}
+
                             </td>
 
+
+                            {{-- FACTURA DE COBRO --}}
 
                             <td>
 
@@ -2638,6 +2901,8 @@ document.addEventListener('DOMContentLoaded', function () {
                             </td>
 
 
+                            {{-- PAPS DE COBRO --}}
+
                             <td>
 
                                 <input
@@ -2652,58 +2917,77 @@ document.addEventListener('DOMContentLoaded', function () {
                             </td>
 
 
+                            {{-- CANTIDAD Y TIPO --}}
+
                             <td>
 
                                 <input
                                     type="number"
-                                    class="billing-pallets"
+                                    class="billing-quantity"
                                     data-record-id="${record.id}"
                                     min="0"
                                     step="0.01"
-                                    value="${record.quantity_type === 'palets'
-                                        ? (record.quantity || '')
-                                        : ''
-                                    }"
+                                    value="${escapeHtml(quantity)}"
                                 >
+
+                                <div class="quantity-type-label">
+
+                                    ${escapeHtml(
+                                        quantityType
+                                    )}
+
+                                </div>
 
                             </td>
 
 
-                            <td>
-
-                                <input
-                                    type="number"
-                                    class="additional-quantity"
-                                    data-record-id="${record.id}"
-                                    min="0"
-                                    step="0.01"
-                                    value="0"
-                                >
-
-                            </td>
-
+                            {{-- CARGO ADICIONAL --}}
 
                             <td>
 
-                                <input
-                                    type="number"
-                                    class="additional-unit-price"
-                                    data-record-id="${record.id}"
-                                    min="0"
-                                    step="0.01"
-                                    value="0"
-                                >
+                                <div class="additional-charge-grid">
+
+                                    <input
+                                        type="number"
+                                        class="additional-quantity"
+                                        data-record-id="${record.id}"
+                                        min="0"
+                                        step="0.01"
+                                        value="0"
+                                        placeholder="Qty"
+                                    >
+
+                                    <input
+                                        type="number"
+                                        class="additional-unit-price"
+                                        data-record-id="${record.id}"
+                                        min="0"
+                                        step="0.01"
+                                        value="0"
+                                        placeholder="Price"
+                                    >
+
+                                </div>
 
                                 <div
                                     class="additional-total"
                                     data-record-id="${record.id}"
-                                    style="margin-top:4px;font-size:11px;color:#6b7280;"
                                 >
                                     $0.00
                                 </div>
 
+                            </td>
+
+
+                            {{-- TOTAL --}}
+
+                            <td>
+
                                 <div
-                                    style="margin-top:4px;font-size:11px;color:#6b7280;"
+                                    style="
+                                        font-size:11px;
+                                        color:#6b7280;
+                                    "
                                 >
                                     ${@json(__('invoices.create.js.services_label'))}
                                     $${formatMoney(serviceTotal)}
@@ -2783,10 +3067,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 `.additional-quantity[data-record-id="${recordId}"]`
             );
 
+
         const priceInput =
             document.querySelector(
                 `.additional-unit-price[data-record-id="${recordId}"]`
             );
+
 
         const totalElement =
             document.querySelector(
@@ -2794,9 +3080,11 @@ document.addEventListener('DOMContentLoaded', function () {
             );
 
 
-        if (!quantityInput ||
+        if (
+            !quantityInput ||
             !priceInput ||
-            !totalElement) {
+            !totalElement
+        ) {
 
             return;
 
@@ -2804,10 +3092,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
         const quantity =
-            parseFloat(quantityInput.value || 0);
+            parseFloat(
+                quantityInput.value || 0
+            );
+
 
         const price =
-            parseFloat(priceInput.value || 0);
+            parseFloat(
+                priceInput.value || 0
+            );
+
 
         const total =
             quantity * price;
@@ -2836,6 +3130,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 });
 
+
             calculateSummary();
 
         }
@@ -2861,8 +3156,9 @@ document.addEventListener('DOMContentLoaded', function () {
             );
 
 
-        let subtotal =
-            0;
+        let subtotal = 0;
+
+        let serviceTaxTotal = 0;
 
 
         selectedIds.forEach(id => {
@@ -2883,20 +3179,54 @@ document.addEventListener('DOMContentLoaded', function () {
                     : [];
 
 
+            /* ==========================================
+               SERVICIOS
+            ========================================== */
+
             services.forEach(service => {
 
-                subtotal +=
-                    parseFloat(
+                const base =
+                    Number(
                         service.subtotal || 0
                     );
 
+
+                const taxRate =
+                    Number(
+                        service.service_type?.tax_rate ??
+                        service.serviceType?.tax_rate ??
+                        0
+                    );
+
+
+                const serviceTax =
+                    Math.round(
+                        (
+                            base *
+                            (taxRate / 100)
+                        ) * 100
+                    ) / 100;
+
+
+                subtotal +=
+                    base;
+
+
+                serviceTaxTotal +=
+                    serviceTax;
+
             });
 
+
+            /* ==========================================
+               CARGO ADICIONAL
+            ========================================== */
 
             const quantityInput =
                 document.querySelector(
                     `.additional-quantity[data-record-id="${id}"]`
                 );
+
 
             const priceInput =
                 document.querySelector(
@@ -2905,54 +3235,97 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
             const quantity =
-                parseFloat(
+                Number(
                     quantityInput?.value || 0
                 );
 
 
             const price =
-                parseFloat(
+                Number(
                     priceInput?.value || 0
                 );
 
 
+            const additionalAmount =
+                Math.round(
+                    (
+                        quantity *
+                        price
+                    ) * 100
+                ) / 100;
+
+
             subtotal +=
-                quantity * price;
+                additionalAmount;
 
         });
 
 
-        const shipping =
+        /* ==============================================
+           SHIPPING / HANDLING
+        ============================================== */
+
+        const shippingRateValue =
             shippingEnabled.checked
-                ? subtotal *
-                    (
-                        parseFloat(
-                            shippingRate.value || 0
-                        ) / 100
-                    )
+                ? Number(
+                    shippingRate.value || 0
+                )
                 : 0;
 
 
-        const taxBase =
-            subtotal + shipping;
+        const shipping =
+            Math.round(
+                (
+                    subtotal *
+                    (shippingRateValue / 100)
+                ) * 100
+            ) / 100;
 
 
-        const tax =
+        /* ==============================================
+           SALES TAX
+        ============================================== */
+
+        const salesTaxRate =
             taxEnabled.checked
-                ? taxBase *
-                    (
-                        parseFloat(
-                            taxRate.value || 0
-                        ) / 100
-                    )
+                ? Number(
+                    taxRate.value || 0
+                )
                 : 0;
 
+
+        const salesTaxBase =
+            subtotal +
+            shipping;
+
+
+        const salesTax =
+            Math.round(
+                (
+                    salesTaxBase *
+                    (salesTaxRate / 100)
+                ) * 100
+            ) / 100;
+
+
+        /* ==============================================
+           TOTAL
+        ============================================== */
 
         const total =
-            subtotal +
-            shipping +
-            tax;
+            Math.round(
+                (
+                    subtotal +
+                    serviceTaxTotal +
+                    shipping +
+                    salesTax
+                ) * 100
+            ) / 100;
 
+
+        /* ==============================================
+           MOSTRAR
+        ============================================== */
 
         document.getElementById(
             'summaryRecords'
@@ -2963,19 +3336,29 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById(
             'summarySubtotal'
         ).textContent =
-            '$' + formatMoney(subtotal);
+            '$' +
+            formatMoney(subtotal);
+
+
+        document.getElementById(
+            'summaryServiceTax'
+        ).textContent =
+            '$' +
+            formatMoney(serviceTaxTotal);
 
 
         document.getElementById(
             'summaryTax'
         ).textContent =
-            '$' + formatMoney(tax);
+            '$' +
+            formatMoney(salesTax);
 
 
         document.getElementById(
             'summaryTotal'
         ).textContent =
-            '$' + formatMoney(total);
+            '$' +
+            formatMoney(total);
 
     }
 
@@ -3012,8 +3395,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
 
-            if (!periodStart.value ||
-                !periodEnd.value) {
+            if (
+                !periodStart.value ||
+                !periodEnd.value
+            ) {
 
                 alert(
                     @json(__('invoices.create.js.select_period'))
@@ -3024,79 +3409,49 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
 
-            /*
-             * =================================================
-             * EMPRESA ENCARGADA
-             *
-             * ES OPCIONAL.
-             *
-             * Si está seleccionada se manda.
-             * Si está vacía se manda vacío.
-             *
-             * No depende del Broker ni del Consignatario.
-             * =================================================
-             */
+            /* ==========================================
+               DATOS GENERALES
+            ========================================== */
 
             formCompany.value =
                 billingCompany.value || '';
 
 
-            /*
-             * =================================================
-             * BROKER
-             *
-             * OPCIONAL.
-             * =================================================
-             */
-
             formBroker.value =
                 billingBroker.value || '';
 
-
-            /*
-             * =================================================
-             * CONSIGNATARIO
-             *
-             * OPCIONAL.
-             * =================================================
-             */
 
             formConsignee.value =
                 billingConsignee.value || '';
 
 
-            /*
-             * =================================================
-             * DATOS GENERALES
-             * =================================================
-             */
-
             formPeriodStart.value =
                 periodStart.value;
+
 
             formPeriodEnd.value =
                 periodEnd.value;
 
+
             formTaxRate.value =
                 taxEnabled.checked
-                    ? (
-                        parseFloat(
-                            taxRate.value || 0
-                        )
+                    ? parseFloat(
+                        taxRate.value || 0
                     )
                     : 0;
+
 
             formShippingRate.value =
                 shippingEnabled.checked
-                    ? (
-                        parseFloat(
-                            shippingRate.value || 0
-                        )
+                    ? parseFloat(
+                        shippingRate.value || 0
                     )
                     : 0;
 
+
             formComments.value =
                 comments.value || '';
+
 
             formBillingType.value =
                 billingMultiple.checked
@@ -3104,11 +3459,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     : 'single';
 
 
-            /*
-             * =================================================
-             * EMPRESAS DE LOS REGISTROS
-             * =================================================
-             */
+            /* ==========================================
+               EMPRESAS
+            ========================================== */
 
             formRecordCompanies.innerHTML =
                 '';
@@ -3117,30 +3470,18 @@ document.addEventListener('DOMContentLoaded', function () {
             getRecordCompanyIds()
                 .forEach(companyId => {
 
-                    const input =
-                        document.createElement('input');
-
-                    input.type =
-                        'hidden';
-
-                    input.name =
-                        'record_companies[]';
-
-                    input.value =
-                        companyId;
-
-                    formRecordCompanies.appendChild(
-                        input
+                    addHiddenInput(
+                        formRecordCompanies,
+                        'record_companies[]',
+                        companyId
                     );
 
                 });
 
 
-            /*
-             * =================================================
-             * REGISTROS
-             * =================================================
-             */
+            /* ==========================================
+               REGISTROS
+            ========================================== */
 
             formRecords.innerHTML =
                 '';
@@ -3170,10 +3511,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     )?.value || '';
 
 
-                const pallets =
+                const quantity =
                     document.querySelector(
-                        `.billing-pallets[data-record-id="${id}"]`
+                        `.billing-quantity[data-record-id="${id}"]`
                     )?.value || '';
+
+
+                const quantityType =
+                    record.quantity_type || '';
 
 
                 const additionalQuantity =
@@ -3192,12 +3537,20 @@ document.addEventListener('DOMContentLoaded', function () {
                     @json(__('invoices.create.js.additional_charge'));
 
 
+                /* ======================================
+                   ID
+                ====================================== */
+
                 addHiddenInput(
                     formRecords,
                     `records[${id}][id]`,
                     id
                 );
 
+
+                /* ======================================
+                   FACTURA
+                ====================================== */
 
                 addHiddenInput(
                     formRecords,
@@ -3206,6 +3559,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 );
 
 
+                /* ======================================
+                   PAPS
+                ====================================== */
+
                 addHiddenInput(
                     formRecords,
                     `records[${id}][billing_paps]`,
@@ -3213,12 +3570,31 @@ document.addEventListener('DOMContentLoaded', function () {
                 );
 
 
+                /* ======================================
+                   CANTIDAD
+                ====================================== */
+
                 addHiddenInput(
                     formRecords,
-                    `records[${id}][pallets]`,
-                    pallets
+                    `records[${id}][quantity]`,
+                    quantity
                 );
 
+
+                /* ======================================
+                   TIPO DE CANTIDAD
+                ====================================== */
+
+                addHiddenInput(
+                    formRecords,
+                    `records[${id}][quantity_type]`,
+                    quantityType
+                );
+
+
+                /* ======================================
+                   CARGO ADICIONAL
+                ====================================== */
 
                 addHiddenInput(
                     formRecords,
@@ -3243,8 +3619,13 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
 
+            /* ==========================================
+               ENVIAR
+            ========================================== */
+
             generateInvoice.disabled =
                 true;
+
 
             generateInvoice.textContent =
                 @json(__('invoices.create.js.generating'));
@@ -3271,14 +3652,18 @@ document.addEventListener('DOMContentLoaded', function () {
         const input =
             document.createElement('input');
 
+
         input.type =
             'hidden';
+
 
         input.name =
             name;
 
+
         input.value =
             value ?? '';
+
 
         container.appendChild(
             input
@@ -3326,7 +3711,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
 
-        if (@json(app()->getLocale()) === 'en') {
+        if (
+            @json(app()->getLocale()) === 'en'
+        ) {
 
             return `${parts[1]}/${parts[2]}/${parts[0]}`;
 
@@ -3377,11 +3764,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     updateBillingType();
 
+
     taxRate.disabled =
         !taxEnabled.checked;
 
+
     shippingRate.disabled =
         !shippingEnabled.checked;
+
 
     calculateSummary();
 

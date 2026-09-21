@@ -38,6 +38,7 @@ class DashboardController extends Controller
             'shipper',
             'consignee',
             'broker',
+            'images',
         ])
         ->latest('id')
         ->take(10)
