@@ -1311,7 +1311,7 @@ td {
         </div>
 
         <div class="panel-subtitle">
-            Servicios, IVA, cargos adicionales y cantidades
+            Servicios, cargos adicionales y cantidades
         </div>
 
     </div>
@@ -1390,13 +1390,26 @@ td {
                             );
 
 
+                        /*
+                        |--------------------------------------------------------------------------
+                        | IVA
+                        |
+                        | SOLO SE CALCULA Y MUESTRA SI LA FACTURA
+                        | FUE GUARDADA CON IVA.
+                        |--------------------------------------------------------------------------
+                        */
+
                         $serviceTaxRate =
                             (float) (
-                                $service
-                                    ->serviceType
-                                    ->tax_rate
-                                ?? 0
-                            );
+                                $invoice->service_tax ?? 0
+                            ) > 0
+                                ? (float) (
+                                    $service
+                                        ->serviceType
+                                        ->tax_rate
+                                    ?? 0
+                                )
+                                : 0;
 
 
                         $serviceTaxAmount =
@@ -1557,7 +1570,7 @@ td {
 
                     /*
                     |--------------------------------------------------------------------------
-                    | CARGO ADICIONAL
+                    | TIPO DE CARGO ADICIONAL
                     |--------------------------------------------------------------------------
                     */
 
@@ -1672,13 +1685,26 @@ td {
                                     );
 
 
+                                /*
+                                |--------------------------------------------------------------------------
+                                | IVA
+                                |
+                                | EL IVA SOLO EXISTE VISUALMENTE SI
+                                | LA FACTURA FUE GUARDADA CON IVA.
+                                |--------------------------------------------------------------------------
+                                */
+
                                 $serviceTaxRate =
                                     (float) (
-                                        $service
-                                            ->serviceType
-                                            ->tax_rate
-                                        ?? 0
-                                    );
+                                        $invoice->service_tax ?? 0
+                                    ) > 0
+                                        ? (float) (
+                                            $service
+                                                ->serviceType
+                                                ->tax_rate
+                                            ?? 0
+                                        )
+                                        : 0;
 
 
                                 $serviceTaxAmount =
@@ -1742,33 +1768,37 @@ td {
 
                                 {{-- IVA --}}
 
-                                <div class="service-line">
+                                @if($serviceTaxRate > 0)
 
-                                    <span class="service-tax">
+                                    <div class="service-line">
 
-                                        IVA
-                                        {{
-                                            number_format(
-                                                $serviceTaxRate,
-                                                2
-                                            )
-                                        }}%
+                                        <span class="service-tax">
 
-                                    </span>
+                                            IVA
+                                            {{
+                                                number_format(
+                                                    $serviceTaxRate,
+                                                    2
+                                                )
+                                            }}%
 
-                                    <strong class="service-tax">
+                                        </span>
 
-                                        $
-                                        {{
-                                            number_format(
-                                                $serviceTaxAmount,
-                                                2
-                                            )
-                                        }}
+                                        <strong class="service-tax">
 
-                                    </strong>
+                                            $
+                                            {{
+                                                number_format(
+                                                    $serviceTaxAmount,
+                                                    2
+                                                )
+                                            }}
 
-                                </div>
+                                        </strong>
+
+                                    </div>
+
+                                @endif
 
 
                                 {{-- TOTAL SERVICIO --}}
@@ -1888,24 +1918,32 @@ td {
                             </div>
 
 
-                            <div class="record-summary-row">
+                            {{-- IVA DEL REGISTRO --}}
 
-                                <span>
-                                    IVA servicios
-                                </span>
+                            @if($servicesTaxTotal > 0)
 
-                                <strong>
-                                    $
-                                    {{
-                                        number_format(
-                                            $servicesTaxTotal,
-                                            2
-                                        )
-                                    }}
-                                </strong>
+                                <div class="record-summary-row">
 
-                            </div>
+                                    <span>
+                                        IVA servicios
+                                    </span>
 
+                                    <strong>
+                                        $
+                                        {{
+                                            number_format(
+                                                $servicesTaxTotal,
+                                                2
+                                            )
+                                        }}
+                                    </strong>
+
+                                </div>
+
+                            @endif
+
+
+                            {{-- CARGO ADICIONAL --}}
 
                             @if($additionalAmount > 0)
 
@@ -1929,6 +1967,8 @@ td {
 
                             @endif
 
+
+                            {{-- TOTAL REGISTRO --}}
 
                             <div
                                 class="
@@ -2064,39 +2104,50 @@ td {
                 </div>
 
 
-                {{-- IVA SERVICIOS --}}
+                {{-- =================================================
+                     IVA DE SERVICIOS
+                     SOLO SE MUESTRA SI LA FACTURA TIENE IVA
+                ================================================== --}}
 
-                <div class="summary-row">
+                @if(
+                    (float) (
+                        $invoice->service_tax ?? 0
+                    ) > 0
+                )
 
-                    <div class="summary-description">
+                    <div class="summary-row">
 
-                        <span class="summary-service-tax">
-                            IVA de servicios
-                        </span>
+                        <div class="summary-description">
 
-                        <span class="summary-rate">
-                            Impuesto calculado individualmente por servicio
-                        </span>
+                            <span class="summary-service-tax">
+                                IVA de servicios
+                            </span>
+
+                            <span class="summary-rate">
+                                Impuesto calculado individualmente por servicio
+                            </span>
+
+                        </div>
+
+                        <strong class="summary-service-tax">
+
+                            $
+
+                            {{
+                                number_format(
+                                    (float) (
+                                        $invoice->service_tax
+                                        ?? 0
+                                    ),
+                                    2
+                                )
+                            }}
+
+                        </strong>
 
                     </div>
 
-                    <strong class="summary-service-tax">
-
-                        $
-
-                        {{
-                            number_format(
-                                (float) (
-                                    $invoice->service_tax
-                                    ?? 0
-                                ),
-                                2
-                            )
-                        }}
-
-                    </strong>
-
-                </div>
+                @endif
 
 
                 {{-- SHIPPING --}}

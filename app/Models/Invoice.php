@@ -50,6 +50,7 @@ class Invoice extends Model
     
         'consignee_id',
         'service_tax',
+        'service_tax_enabled',
     ];
 
 
@@ -77,6 +78,7 @@ class Invoice extends Model
 
         'generated_at' => 'datetime',
         'service_tax' => 'decimal:2',
+        'service_tax_enabled' => 'boolean',
     ];
 
 

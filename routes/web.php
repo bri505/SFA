@@ -429,6 +429,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         [InvoiceController::class, 'sendEmail']
     )->name('invoices.send-email');
 
+    /*
+    |--------------------------------------------------------------------------
+    | ENVÍO MASIVO DE FACTURAS
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/invoices/bulk-email',
+        [InvoiceController::class, 'bulkEmail']
+    )->name('invoices.bulk-email');
+
+    Route::post(
+        '/invoices/bulk-email/send',
+        [InvoiceController::class, 'sendBulkEmail']
+    )->name('invoices.bulk-email.send');
+
     
 
 });

@@ -254,6 +254,101 @@
 
 
     /* =========================================================
+       BARRA DE ENVÍO MASIVO
+    ========================================================= */
+
+    .bulk-toolbar {
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 10px;
+
+        margin-bottom: 12px;
+
+        padding: 10px 12px;
+
+        background: white;
+
+        border: 1px solid #e5e7eb;
+
+        border-radius: 7px;
+    }
+
+    .bulk-info {
+        font-size: 11px;
+
+        color: #6b7280;
+    }
+
+    .bulk-info strong {
+        color: #1f2937;
+    }
+
+    .bulk-email-button {
+        display: inline-flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 6px;
+
+        padding: 7px 11px;
+
+        border: 1px solid #1f2937;
+
+        border-radius: 5px;
+
+        background: #1f2937;
+
+        color: white;
+
+        font-size: 11px;
+
+        cursor: pointer;
+
+        transition:
+            background .15s ease,
+            opacity .15s ease;
+    }
+
+    .bulk-email-button:hover:not(:disabled) {
+        background: #111827;
+    }
+
+    .bulk-email-button:disabled {
+        opacity: .45;
+
+        cursor: not-allowed;
+    }
+
+
+    /* =========================================================
+       CHECKBOX
+    ========================================================= */
+
+    .invoice-checkbox,
+    .select-all-checkbox {
+        width: 15px;
+
+        height: 15px;
+
+        cursor: pointer;
+
+        accent-color: #1f2937;
+    }
+
+    .checkbox-cell {
+        width: 42px;
+
+        text-align: center !important;
+    }
+
+
+    /* =========================================================
        TABLA
     ========================================================= */
 
@@ -441,6 +536,8 @@
         font-size: 11px;
 
         text-decoration: none;
+
+        cursor: pointer;
     }
 
     .btn-action:hover {
@@ -507,6 +604,12 @@
 
         .btn-primary {
             padding: 8px 11px;
+        }
+
+        .bulk-toolbar {
+            align-items: flex-start;
+
+            flex-direction: column;
         }
 
     }
@@ -782,6 +885,95 @@
 
 
         {{-- =====================================================
+             ENVÍO MASIVO
+             
+             SOLO SE MUESTRA EN:
+             - pending
+             - in_process
+             - paid
+        ====================================================== --}}
+
+        @if(
+            in_array(
+                $paymentStatus,
+                [
+                    'pending',
+                    'in_process',
+                    'paid',
+                ],
+                true
+            )
+        )
+
+            <form
+                method="POST"
+                action="{{ route('invoices.bulk-email') }}"
+                id="bulkInvoicesForm"
+            >
+
+                @csrf
+
+                {{-- Estado activo del filtro --}}
+                <input
+                    type="hidden"
+                    name="payment_status"
+                    value="{{ $paymentStatus }}"
+                >
+
+
+                <div class="bulk-toolbar">
+
+                <div class="bulk-info">
+
+                    <strong id="selectedInvoicesCount">
+                        0
+                    </strong>
+
+                    factura(s) seleccionada(s)
+
+                    @if($paymentStatus === 'pending')
+
+                        · Se enviará como
+                        <strong>
+                            {{ __('invoices.payment_status.pending') }}
+                        </strong>
+
+                    @elseif($paymentStatus === 'in_process')
+
+                        · Se enviará como
+                        <strong>
+                            {{ __('invoices.payment_status.in_process') }}
+                        </strong>
+
+                    @elseif($paymentStatus === 'paid')
+
+                        · Se enviará como
+                        <strong>
+                            {{ __('invoices.payment_status.paid') }}
+                        </strong>
+
+                    @endif
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        id="bulkEmailButton"
+                        class="bulk-email-button"
+                        disabled
+                    >
+                        📧 Enviar seleccionadas
+                    </button>
+
+                </div>
+
+            </form>
+
+        @endif
+
+
+        {{-- =====================================================
              TABLA
         ====================================================== --}}
 
@@ -803,6 +995,34 @@
                     <thead>
 
                         <tr>
+
+                            {{-- CHECKBOX MASIVO --}}
+
+                            @if(
+                                in_array(
+                                    $paymentStatus,
+                                    [
+                                        'pending',
+                                        'in_process',
+                                        'paid',
+                                    ],
+                                    true
+                                )
+                            )
+
+                                <th class="checkbox-cell">
+
+                                    <input
+                                        type="checkbox"
+                                        id="selectAllInvoices"
+                                        class="select-all-checkbox"
+                                        title="Seleccionar todas"
+                                    >
+
+                                </th>
+
+                            @endif
+
 
                             <th>
                                 {{ __('invoices.table.invoice') }}
@@ -854,6 +1074,35 @@
                         )
 
                             <tr>
+
+
+                                {{-- CHECKBOX FACTURA --}}
+
+                                @if(
+                                    in_array(
+                                        $paymentStatus,
+                                        [
+                                            'pending',
+                                            'in_process',
+                                            'paid',
+                                        ],
+                                        true
+                                    )
+                                )
+
+                                    <td class="checkbox-cell">
+
+                                        <input
+                                            type="checkbox"
+                                            name="invoice_ids[]"
+                                            value="{{ $invoice->id }}"
+                                            class="invoice-checkbox"
+                                            form="bulkInvoicesForm"
+                                        >
+
+                                    </td>
+
+                                @endif
 
 
                                 {{-- FACTURA --}}
@@ -923,6 +1172,7 @@
                                 <td>
 
                                     $
+
                                     {{
                                         number_format(
                                             $invoice->subtotal,
@@ -938,6 +1188,7 @@
                                 <td>
 
                                     $
+
                                     {{
                                         number_format(
                                             $invoice->tax,
@@ -953,6 +1204,7 @@
                                 <td class="total">
 
                                     $
+
                                     {{
                                         number_format(
                                             $invoice->total,
@@ -1061,64 +1313,64 @@
 
                                 <td>
 
-    <div class="actions">
+                                    <div class="actions">
 
-        <a
-            href="{{ route(
-                'invoices.show',
-                $invoice
-            ) }}"
-            class="btn-action"
-        >
-            {{ __('invoices.actions.view') }}
-        </a>
+                                        <a
+                                            href="{{ route(
+                                                'invoices.show',
+                                                $invoice
+                                            ) }}"
+                                            class="btn-action"
+                                        >
+                                            {{ __('invoices.actions.view') }}
+                                        </a>
 
 
-        {{-- =====================================================
-             RECORDATORIO DE PAGO
-        ====================================================== --}}
+                                        {{-- =====================================================
+                                             RECORDATORIO DE PAGO INDIVIDUAL
+                                        ====================================================== --}}
 
-        @if(
-            in_array(
-                $invoice->payment_status,
-                [
-                    'pending',
-                    'in_process',
-                ],
-                true
-            )
-        )
+                                        @if(
+                                            in_array(
+                                                $invoice->payment_status,
+                                                [
+                                                    'pending',
+                                                    'in_process',
+                                                ],
+                                                true
+                                            )
+                                        )
 
-            <form
-                method="POST"
-                action="{{ route(
-                    'invoices.send-reminder',
-                    $invoice
-                ) }}"
-                onsubmit="
-                    return confirm(
-                        '¿Deseas enviar un recordatorio de pago a todos los correos registrados de esta compañía?'
-                    );
-                "
-            >
+                                            <form
+                                                method="POST"
+                                                action="{{ route(
+                                                    'invoices.send-reminder',
+                                                    $invoice
+                                                ) }}"
+                                                onsubmit="
+                                                    return confirm(
+                                                        '¿Deseas enviar un recordatorio de pago a todos los correos registrados de esta compañía?'
+                                                    );
+                                                "
+                                            >
 
-                @csrf
+                                                @csrf
 
-                <button
-                    type="submit"
-                    class="btn-action"
-                    title="Enviar recordatorio de pago"
-                >
-                    🔔 Recordatorio
-                </button>
+                                                <button
+                                                    type="submit"
+                                                    class="btn-action"
+                                                    title="Enviar recordatorio de pago"
+                                                >
+                                                    🔔 Recordatorio
+                                                </button>
 
-            </form>
+                                            </form>
 
-        @endif
+                                        @endif
 
-    </div>
+                                    </div>
 
-</td>
+                                </td>
 
 
                             </tr>
@@ -1127,7 +1379,17 @@
 
                             <tr>
 
-                                <td colspan="9">
+                                <td
+                                    colspan="{{ in_array(
+                                        $paymentStatus,
+                                        [
+                                            'pending',
+                                            'in_process',
+                                            'paid',
+                                        ],
+                                        true
+                                    ) ? 10 : 9 }}"
+                                >
 
                                     <div class="empty">
 
@@ -1154,5 +1416,208 @@
     </div>
 
 </div>
+
+
+{{-- =========================================================
+     JAVASCRIPT SELECCIÓN MASIVA
+========================================================= --}}
+
+@if(
+    in_array(
+        $paymentStatus,
+        [
+            'pending',
+            'in_process',
+            'paid',
+        ],
+        true
+    )
+)
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const form =
+        document.getElementById('bulkInvoicesForm');
+
+    const selectAll =
+        document.getElementById('selectAllInvoices');
+
+    const checkboxes =
+        document.querySelectorAll('.invoice-checkbox');
+
+    const button =
+        document.getElementById('bulkEmailButton');
+
+    const counter =
+        document.getElementById('selectedInvoicesCount');
+
+
+    if (
+        !form ||
+        !selectAll ||
+        !button ||
+        !counter
+    ) {
+        return;
+    }
+
+
+    function updateBulkState() {
+
+        const selected =
+            document.querySelectorAll(
+                '.invoice-checkbox:checked'
+            );
+
+        const selectedCount =
+            selected.length;
+
+
+        counter.textContent =
+            selectedCount;
+
+
+        button.disabled =
+            selectedCount === 0;
+
+
+        if (
+            checkboxes.length > 0 &&
+            selectedCount === checkboxes.length
+        ) {
+
+            selectAll.checked = true;
+
+            selectAll.indeterminate = false;
+
+        } else if (
+            selectedCount > 0
+        ) {
+
+            selectAll.checked = false;
+
+            selectAll.indeterminate = true;
+
+        } else {
+
+            selectAll.checked = false;
+
+            selectAll.indeterminate = false;
+
+        }
+
+    }
+
+
+    selectAll.addEventListener(
+        'change',
+        function () {
+
+            checkboxes.forEach(
+                function (checkbox) {
+
+                    checkbox.checked =
+                        selectAll.checked;
+
+                }
+            );
+
+
+            updateBulkState();
+
+        }
+    );
+
+
+    checkboxes.forEach(
+        function (checkbox) {
+
+            checkbox.addEventListener(
+                'change',
+                updateBulkState
+            );
+
+        }
+    );
+
+
+    form.addEventListener(
+        'submit',
+        function (event) {
+
+            const selected =
+                document.querySelectorAll(
+                    '.invoice-checkbox:checked'
+                );
+
+
+            if (
+                selected.length === 0
+            ) {
+
+                event.preventDefault();
+
+                alert(
+                    'Selecciona al menos una factura.'
+                );
+
+                return;
+
+            }
+
+
+            const status =
+                @json($paymentStatus);
+
+
+            let message = '';
+
+
+            if (
+                status === 'pending'
+            ) {
+
+                message =
+                    '¿Deseas preparar el envío de las facturas seleccionadas como pago pendiente?';
+
+            } else if (
+                status === 'in_process'
+            ) {
+
+                message =
+                    '¿Deseas preparar el envío de las facturas seleccionadas como pago en proceso?';
+
+            } else if (
+                status === 'paid'
+            ) {
+
+                message =
+                    '¿Deseas preparar el envío de las facturas seleccionadas como pago recibido?';
+
+            }
+
+
+            if (
+                message &&
+                !confirm(message)
+            ) {
+
+                event.preventDefault();
+
+            }
+
+        }
+    );
+
+
+    updateBulkState();
+
+});
+
+</script>
+
+@endif
 
 </x-app-layout>
