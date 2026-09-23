@@ -17,6 +17,7 @@ class ServiceType extends Model
         'tax_enabled',
         'active',
         'weight',
+        'weight_unit',
     ];
 
     protected $casts = [

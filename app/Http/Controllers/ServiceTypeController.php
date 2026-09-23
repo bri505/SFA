@@ -104,6 +104,11 @@ class ServiceTypeController extends Controller
                 'numeric',
                 'min:0',
             ],
+            'weight_unit' => [
+                'nullable',
+                'string',
+                'max:20',
+            ],
         ]);
 
         ServiceType::create([
@@ -126,6 +131,8 @@ class ServiceTypeController extends Controller
 
             'weight' =>
                 $validated['weight'] ?? null,
+            'weight_unit' =>
+                $validated['weight_unit'] ?? null,
 
             /*
              * Los servicios nuevos se crean activos.
@@ -183,6 +190,11 @@ class ServiceTypeController extends Controller
                 'numeric',
                 'min:0',
             ],
+            'weight_unit' => [
+                'nullable',
+                'string',
+                'max:20',
+            ],
         ]);
 
         /*
@@ -209,9 +221,12 @@ class ServiceTypeController extends Controller
             'tax_enabled' =>
                 $request->boolean('tax_enabled'),
 
-            'weight' =>
+                'weight' =>
                 $validated['weight'] ?? null,
-
+            
+            'weight_unit' =>
+                $validated['weight_unit'] ?? null,
+            
             /*
              * Conservamos el control existente
              * Activo / Inactivo.

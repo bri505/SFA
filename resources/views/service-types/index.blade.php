@@ -1,6 +1,118 @@
 <x-app-layout>
 
 <style>
+    /* =========================================================
+   MODAL NUEVO SERVICIO - COMPACTO Y PROFESIONAL
+========================================================= */
+
+.service-modal {
+    max-width: 500px;
+}
+
+.service-modal .modal-header {
+    padding: 15px 18px;
+}
+
+.service-modal .modal-title {
+    font-size: 17px;
+}
+
+.service-modal .modal-body {
+    padding: 16px 18px;
+}
+
+.service-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.service-form-full {
+    grid-column: 1 / -1;
+}
+
+.service-modal .form-group {
+    margin-bottom: 0;
+}
+
+.service-modal .form-label {
+    margin-bottom: 5px;
+    font-size: 12px;
+}
+
+.service-modal .input {
+    padding: 7px 9px;
+    min-height: 38px;
+    font-size: 13px;
+}
+
+.service-modal .checkbox-row {
+    margin-top: 22px;
+    gap: 7px;
+}
+
+.service-modal .checkbox-row label {
+    font-size: 13px;
+}
+
+.service-modal .tax-checkbox {
+    width: 16px;
+    height: 16px;
+}
+
+.service-modal .preview-box {
+    margin-top: 12px;
+    padding: 10px 12px;
+}
+
+.service-modal .preview-row {
+    margin-bottom: 5px;
+    font-size: 13px;
+}
+
+.service-modal .preview-row:last-child {
+    padding-top: 6px;
+}
+
+.service-modal .modal-footer {
+    padding: 12px 18px;
+}
+
+.service-modal .btn-cancel,
+.service-modal .btn-primary {
+    padding: 8px 14px;
+    font-size: 13px;
+}
+
+.weight-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+@media (max-width: 600px) {
+
+    .service-modal {
+        max-width: 100%;
+    }
+
+    .service-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .service-form-full {
+        grid-column: auto;
+    }
+
+    .service-modal .checkbox-row {
+        margin-top: 0;
+    }
+
+    .weight-fields {
+        grid-template-columns: 1fr 1fr;
+    }
+
+}
     .sfa-page {
         min-height: 100vh;
         background: #f8fafc;
@@ -88,7 +200,7 @@
     .services-table {
         width: 100%;
         border-collapse: collapse;
-        min-width: 1000px;
+        min-width: 1100px;
     }
 
     .services-table th {
@@ -417,7 +529,7 @@
             <div class="header-actions">
 
                 <div class="iva-general-display">
-                    IVA general:
+                {{ __('services.general_tax_label') }}
                     <span id="ivaGeneralDisplay">
                         {{ number_format($ivaGeneral, 2) }}%
                     </span>
@@ -428,7 +540,8 @@
                     class="btn-new btn-iva"
                     onclick="openIvaModal()"
                 >
-                    + Agregar IVA
+                {{ __('services.add_tax') }}
+
                 </button>
 
                 <button
@@ -454,15 +567,16 @@
 
                     <thead>
                         <tr>
-                            <th>Servicio</th>
-                            <th>Descripción</th>
-                            <th>Precio</th>
-                            <th>IVA</th>
-                            <th>IVA (%)</th>
-                            <th>Total</th>
-                            <th>Peso</th>
-                            <th>Estado</th>
-                            <th>Acción</th>
+                            <th>{{ __('services.service') }}</th>
+                            <th>{{ __('services.description') }}</th>
+                            <th>{{ __('services.price') }}</th>
+                            <th>{{ __('services.tax') }}</th>
+                            <th>{{ __('services.tax_percent') }}</th>
+                            <th>{{ __('services.total') }}</th>
+                            <th>{{ __('services.weight') }}</th>
+                            <th>{{ __('services.weight_unit') }}</th>
+                            <th>{{ __('services.status') }}</th>
+                            <th>{{ __('services.action') }}</th>
                         </tr>
                     </thead>
 
@@ -587,9 +701,80 @@
                                 </td>
 
 
-                                {{-- ESTADO
-                                     ESTE ES EL CONTROL QUE YA TENÍAS
-                                --}}
+                                {{-- UNIDAD DE PESO --}}
+
+                                <td>
+
+                                <select
+                                name="weight_unit"
+                                form="service-form-{{ $service->id }}"
+                                class="input input-small"
+                            >
+                                <option value="">
+                                    {{ __('services.select_weight_unit') }}
+                                </option>
+
+                                <option
+                                    value="mg"
+                                    {{ $service->weight_unit === 'mg' ? 'selected' : '' }}
+                                >
+                                    {{ __('services.weight_unit_mg') }}
+                                </option>
+
+                                <option
+                                    value="g"
+                                    {{ $service->weight_unit === 'g' ? 'selected' : '' }}
+                                >
+                                    {{ __('services.weight_unit_g') }}
+                                </option>
+
+                                <option
+                                    value="kg"
+                                    {{ $service->weight_unit === 'kg' ? 'selected' : '' }}
+                                >
+                                    {{ __('services.weight_unit_kg') }}
+                                </option>
+
+                                <option
+                                    value="oz"
+                                    {{ $service->weight_unit === 'oz' ? 'selected' : '' }}
+                                >
+                                    {{ __('services.weight_unit_oz') }}
+                                </option>
+
+                                <option
+                                    value="lb"
+                                    {{ $service->weight_unit === 'lb' ? 'selected' : '' }}
+                                >
+                                    {{ __('services.weight_unit_lb') }}
+                                </option>
+
+                                <option
+                                    value="t"
+                                    {{ $service->weight_unit === 't' ? 'selected' : '' }}
+                                >
+                                    {{ __('services.weight_unit_ton') }}
+                                </option>
+
+                                <option
+                                    value="short_ton"
+                                    {{ $service->weight_unit === 'short_ton' ? 'selected' : '' }}
+                                >
+                                    {{ __('services.weight_unit_short_ton') }}
+                                </option>
+
+                                <option
+                                    value="long_ton"
+                                    {{ $service->weight_unit === 'long_ton' ? 'selected' : '' }}
+                                >
+                                    {{ __('services.weight_unit_long_ton') }}
+                                </option>
+                            </select>
+
+                                </td>
+
+
+                                {{-- ESTADO --}}
 
                                 <td>
 
@@ -603,14 +788,14 @@
                                             value="1"
                                             {{ $service->active ? 'selected' : '' }}
                                         >
-                                            Activo
+                                            {{ __('services.active') }}
                                         </option>
 
                                         <option
                                             value="0"
                                             {{ !$service->active ? 'selected' : '' }}
                                         >
-                                            Inactivo
+                                            {{ __('services.inactive') }}
                                         </option>
 
                                     </select>
@@ -636,7 +821,7 @@
                                             type="submit"
                                             class="btn-save"
                                         >
-                                            Guardar
+                                            {{ __('services.save') }}
                                         </button>
 
                                     </form>
@@ -649,10 +834,10 @@
 
                             <tr>
 
-                                <td colspan="9">
+                                <td colspan="10">
 
                                     <div class="empty-state">
-                                        No hay servicios registrados.
+                                        {{ __('services.no_services') }}
                                     </div>
 
                                 </td>
@@ -688,7 +873,7 @@
         <div class="modal-header">
 
             <div class="modal-title">
-                IVA general
+                {{ __('services.general_tax') }}
             </div>
 
             <button
@@ -713,7 +898,7 @@
                 <div class="form-group">
 
                     <label class="form-label">
-                        Porcentaje de IVA
+                        {{ __('services.tax_percentage') }}
                     </label>
 
                     <div style="display:flex; align-items:center; gap:8px;">
@@ -738,8 +923,7 @@
 
                 <div style="font-size:13px; color:#6b7280;">
 
-                    Este porcentaje será utilizado automáticamente
-                    en todos los servicios que tengan activada la casilla IVA.
+                    {{ __('services.general_tax_description') }}
 
                 </div>
 
@@ -752,14 +936,14 @@
                     class="btn-cancel"
                     onclick="closeIvaModal()"
                 >
-                    Cancelar
+                    {{ __('services.cancel') }}
                 </button>
 
                 <button
                     type="submit"
                     class="btn-primary"
                 >
-                    Guardar IVA
+                    {{ __('services.save_tax') }}
                 </button>
 
             </div>
@@ -780,7 +964,7 @@
     class="modal-overlay"
 >
 
-    <div class="modal">
+    <div class="modal service-modal">
 
         <div class="modal-header">
 
@@ -798,6 +982,7 @@
 
         </div>
 
+
         <form
             method="POST"
             action="{{ route('service-types.store') }}"
@@ -807,142 +992,202 @@
 
             <div class="modal-body">
 
-                <div class="form-group">
+                <div class="service-form-grid">
 
-                    <label class="form-label">
-                        Nombre del servicio
-                    </label>
+                    {{-- NOMBRE --}}
 
-                    <input
-                        type="text"
-                        name="name"
-                        class="input"
-                        required
-                    >
+                    <div class="form-group">
 
-                </div>
-
-
-                <div class="form-group">
-
-                    <label class="form-label">
-                        Descripción
-                    </label>
-
-                    <input
-                        type="text"
-                        name="description"
-                        class="input"
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label class="form-label">
-                        Precio
-                    </label>
-
-                    <input
-                        type="number"
-                        id="newServicePrice"
-                        name="price"
-                        class="input"
-                        min="0"
-                        step="0.01"
-                        value="0"
-                        required
-                        oninput="calculateNewServiceTotal()"
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <div class="checkbox-row">
-
-                        <input
-                            type="checkbox"
-                            id="newServiceTaxEnabled"
-                            name="tax_enabled"
-                            value="1"
-                            class="tax-checkbox"
-                            onchange="calculateNewServiceTotal()"
-                        >
-
-                        <label for="newServiceTaxEnabled">
-                            Aplicar IVA
+                        <label class="form-label">
+                            {{ __('services.service_name') }}
                         </label>
 
-                    </div>
-
-                </div>
-
-
-                <div class="preview-box">
-
-                    <div class="preview-row">
-
-                        <span>
-                            IVA general:
-                        </span>
-
-                        <span
-                            id="newServiceIvaPercent"
-                            class="iva-preview-label"
+                        <input
+                            type="text"
+                            name="name"
+                            class="input"
+                            required
                         >
-                            —
-                        </span>
 
                     </div>
 
 
-                    <div class="preview-row">
+                    {{-- DESCRIPCIÓN --}}
 
-                        <span>
-                            IVA calculado:
-                        </span>
+                    <div class="form-group">
 
-                        <span id="newServiceIvaAmount">
-                            $0.00
-                        </span>
+                        <label class="form-label">
+                            {{ __('services.description') }}
+                        </label>
+
+                        <input
+                            type="text"
+                            name="description"
+                            class="input"
+                        >
+
+                    </div>
+
+
+                    {{-- PRECIO --}}
+
+                    <div class="form-group">
+
+                        <label class="form-label">
+                            {{ __('services.price') }}
+                        </label>
+
+                        <input
+                            type="number"
+                            id="newServicePrice"
+                            name="price"
+                            class="input"
+                            min="0"
+                            step="0.01"
+                            value="0"
+                            required
+                            oninput="calculateNewServiceTotal()"
+                        >
 
                     </div>
 
 
-                    <div class="preview-row">
+                    {{-- IVA --}}
 
-                        <span>
-                            Total:
-                        </span>
+                    <div class="form-group">
 
-                        <span id="newServiceTotal">
-                            $0.00
-                        </span>
+                        <div class="checkbox-row">
+
+                            <input
+                                type="checkbox"
+                                id="newServiceTaxEnabled"
+                                name="tax_enabled"
+                                value="1"
+                                class="tax-checkbox"
+                                onchange="calculateNewServiceTotal()"
+                            >
+
+                            <label for="newServiceTaxEnabled">
+                                {{ __('services.apply_tax') }}
+                            </label>
+
+                        </div>
 
                     </div>
 
-                </div>
+
+                    {{-- PESO --}}
+
+                    <div class="form-group">
+
+                        <label class="form-label">
+                            {{ __('services.weight') }}
+                        </label>
+
+                        <div class="weight-fields">
+
+                            <input
+                                type="number"
+                                name="weight"
+                                class="input"
+                                min="0"
+                                step="0.01"
+                            >
+
+                            <select
+                                name="weight_unit"
+                                class="input"
+                            >
+
+                                <option value="">
+                                    {{ __('services.select_weight_unit') }}
+                                </option>
+
+                                <option value="mg">
+                                    {{ __('services.weight_unit_mg') }}
+                                </option>
+
+                                <option value="g">
+                                    {{ __('services.weight_unit_g') }}
+                                </option>
+
+                                <option value="kg">
+                                    {{ __('services.weight_unit_kg') }}
+                                </option>
+
+                                <option value="oz">
+                                    {{ __('services.weight_unit_oz') }}
+                                </option>
+
+                                <option value="lb">
+                                    {{ __('services.weight_unit_lb') }}
+                                </option>
+
+                                <option value="t">
+                                    {{ __('services.weight_unit_ton') }}
+                                </option>
+
+                                <option value="short_ton">
+                                    {{ __('services.weight_unit_short_ton') }}
+                                </option>
+
+                                <option value="long_ton">
+                                    {{ __('services.weight_unit_long_ton') }}
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
 
 
-                <div
-                    class="form-group"
-                    style="margin-top:16px;"
-                >
+                    {{-- RESUMEN IVA --}}
 
-                    <label class="form-label">
-                        Peso
-                    </label>
+                    <div class="preview-box service-form-full">
 
-                    <input
-                        type="number"
-                        name="weight"
-                        class="input"
-                        min="0"
-                        step="0.01"
-                    >
+                        <div class="preview-row">
+
+                            <span>
+                                {{ __('services.general_tax') }}:
+                            </span>
+
+                            <span
+                                id="newServiceIvaPercent"
+                                class="iva-preview-label"
+                            >
+                                —
+                            </span>
+
+                        </div>
+
+
+                        <div class="preview-row">
+
+                            <span>
+                                {{ __('services.calculated_tax') }}:
+                            </span>
+
+                            <span id="newServiceIvaAmount">
+                                $0.00
+                            </span>
+
+                        </div>
+
+
+                        <div class="preview-row">
+
+                            <span>
+                                {{ __('services.total') }}:
+                            </span>
+
+                            <span id="newServiceTotal">
+                                $0.00
+                            </span>
+
+                        </div>
+
+                    </div>
 
                 </div>
 
@@ -956,14 +1201,14 @@
                     class="btn-cancel"
                     onclick="closeServiceModal()"
                 >
-                    Cancelar
+                    {{ __('services.cancel') }}
                 </button>
 
                 <button
                     type="submit"
                     class="btn-primary"
                 >
-                    Guardar servicio
+                    {{ __('services.save_service') }}
                 </button>
 
             </div>
@@ -973,7 +1218,6 @@
     </div>
 
 </div>
-
 
 <script>
 

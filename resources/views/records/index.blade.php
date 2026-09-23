@@ -1030,7 +1030,7 @@
 
 
     /*
-    |--------------------------------------------------------------------------
+    |-------------------------------------------------------------------------- 
     | IVA GENERAL
     |--------------------------------------------------------------------------
     |
@@ -1055,7 +1055,7 @@
 
 
     /*
-    |--------------------------------------------------------------------------
+    |-------------------------------------------------------------------------- 
     | TIPOS DE SERVICIO
     |--------------------------------------------------------------------------
     |
@@ -1074,10 +1074,35 @@
     $serviceTypesData = $serviceTypes->map(function ($serviceType) {
 
         return [
+
             'id' => $serviceType->id,
+
             'name' => $serviceType->name,
+
             'price' => (float) $serviceType->price,
+
             'tax_enabled' => (bool) $serviceType->tax_enabled,
+
+            /*
+            |--------------------------------------------------------------------------
+            | PESO CONFIGURADO DEL SERVICIO
+            |--------------------------------------------------------------------------
+            |
+            | Es únicamente informativo.
+            |
+            | Ejemplo:
+            | Precio $50 → corresponde a 100 kg.
+            |
+            | NO se realiza ningún cálculo con este valor.
+            |
+            */
+
+            'weight' => $serviceType->weight !== null
+                ? (float) $serviceType->weight
+                : null,
+
+            'weight_unit' => $serviceType->weight_unit,
+
         ];
 
     })->values()->all();
@@ -1165,365 +1190,387 @@
                     </tr>
 
                 </thead>
-<tbody>
 
-    @forelse($records as $record)
+                <tbody>
 
-        @php
+                    @forelse($records as $record)
 
-            /*
-            |--------------------------------------------------------------------------
-            | IMÁGENES DEL REGISTRO
-            |--------------------------------------------------------------------------
-            */
+                        @php
 
-            $imageUrls = $record->images->map(function ($image) {
+                            /*
+                            |-------------------------------------------------------------------------- 
+                            | IMÁGENES DEL REGISTRO
+                            |--------------------------------------------------------------------------
+                            */
 
-                return [
-                    'id' => $image->id,
-                    'url' => \Illuminate\Support\Facades\Storage::disk('public')->url(
-                        $image->image_path
-                    ),
-                ];
+                            $imageUrls = $record->images->map(function ($image) {
 
-            })->values();
+                                return [
+                                    'id' => $image->id,
+                                    'url' => \Illuminate\Support\Facades\Storage::disk('public')->url(
+                                        $image->image_path
+                                    ),
+                                ];
 
+                            })->values();
 
-            /*
-            |--------------------------------------------------------------------------
-            | SERVICIOS DEL REGISTRO
-            |--------------------------------------------------------------------------
-            */
 
-            $services = $record->services ?? collect();
+                            /*
+                            |-------------------------------------------------------------------------- 
+                            | SERVICIOS DEL REGISTRO
+                            |--------------------------------------------------------------------------
+                            */
 
+                            $services = $record->services ?? collect();
 
-            /*
-            |--------------------------------------------------------------------------
-            | DATOS DE SERVICIOS PARA JAVASCRIPT
-            |--------------------------------------------------------------------------
-            |
-            | El IVA se determina mediante:
-            |
-            | 1. service_types.tax_enabled
-            | 2. app_settings.iva_general
-            |
-            | Ya NO se utiliza service_types.tax_rate.
-            |
-            */
 
-            $servicesData = $services->map(function ($service) use ($ivaGeneral) {
+                            /*
+                            |-------------------------------------------------------------------------- 
+                            | DATOS DE SERVICIOS PARA JAVASCRIPT
+                            |--------------------------------------------------------------------------
+                            |
+                            | El IVA se determina mediante:
+                            |
+                            | 1. service_types.tax_enabled
+                            | 2. app_settings.iva_general
+                            |
+                            | Ya NO se utiliza service_types.tax_rate.
+                            |
+                            */
 
-                $serviceType = $service->serviceType;
+                            $servicesData = $services->map(function ($service) use ($ivaGeneral) {
 
+                                $serviceType = $service->serviceType;
 
-                /*
-                |--------------------------------------------------------------------------
-                | ¿EL SERVICIO CAUSA IVA?
-                |--------------------------------------------------------------------------
-                */
 
-                $taxEnabled = $serviceType
-                    ? (bool) $serviceType->tax_enabled
-                    : false;
+                                /*
+                                |----------------------------------------------------------------------
+                                | ¿EL SERVICIO CAUSA IVA?
+                                |----------------------------------------------------------------------
+                                */
 
+                                $taxEnabled = $serviceType
+                                    ? (bool) $serviceType->tax_enabled
+                                    : false;
 
-                /*
-                |--------------------------------------------------------------------------
-                | IVA EFECTIVO
-                |--------------------------------------------------------------------------
-                */
 
-                $taxRate = $taxEnabled
-                    ? (float) $ivaGeneral
-                    : 0;
+                                /*
+                                |----------------------------------------------------------------------
+                                | IVA EFECTIVO
+                                |----------------------------------------------------------------------
+                                */
 
+                                $taxRate = $taxEnabled
+                                    ? (float) $ivaGeneral
+                                    : 0;
 
-                /*
-                |--------------------------------------------------------------------------
-                | SUBTOTAL
-                |--------------------------------------------------------------------------
-                */
 
-                $subtotal = round(
-                    (float) $service->subtotal,
-                    2
-                );
+                                /*
+                                |----------------------------------------------------------------------
+                                | SUBTOTAL
+                                |----------------------------------------------------------------------
+                                */
 
+                                $subtotal = round(
+                                    (float) $service->subtotal,
+                                    2
+                                );
 
-                /*
-                |--------------------------------------------------------------------------
-                | IVA
-                |--------------------------------------------------------------------------
-                */
 
-                $taxAmount = round(
-                    $subtotal * ($taxRate / 100),
-                    2
-                );
+                                /*
+                                |----------------------------------------------------------------------
+                                | IVA
+                                |----------------------------------------------------------------------
+                                */
 
+                                $taxAmount = round(
+                                    $subtotal * ($taxRate / 100),
+                                    2
+                                );
 
-                /*
-                |--------------------------------------------------------------------------
-                | TOTAL
-                |--------------------------------------------------------------------------
-                */
 
-                $total = round(
-                    $subtotal + $taxAmount,
-                    2
-                );
-
-
-                return [
-
-                    'id' => $service->id,
-
-                    'service_type_id' => $service->service_type_id,
-
-                    'name' => $serviceType?->name ?? 'Servicio',
-
-                    'quantity' => (float) $service->quantity,
-
-                    'unit_price' => (float) $service->unit_price,
-
-                    'subtotal' => $subtotal,
-
-                    'tax_enabled' => $taxEnabled,
-
-                    'tax_rate' => $taxRate,
-
-                    'tax_amount' => $taxAmount,
-
-                    'total' => $total,
-
-                    'notes' => $service->notes,
-
-                ];
-
-            })->values();
-
-        @endphp
-
-
-        <tr
-            onclick="openRecordDetailModal(
-                {{ $record->id }},
-                @js(optional($record->date)->format('d/m/Y')),
-                @js($record->invoice_number),
-                @js($record->company_id),
-                @js($record->company->name ?? ''),
-                @js($record->driver_id),
-                @js($record->driver->name ?? ''),
-                @js($record->trailer_id),
-                @js($record->trailer->number ?? ''),
-                @js($record->paps_number),
-                @js($record->shipper_id),
-                @js($record->shipper->name ?? ''),
-                @js($record->consignee_id),
-                @js($record->consignee->name ?? ''),
-                @js($record->broker_id),
-                @js($record->broker->name ?? ''),
-                @js($record->registeredBy->name ?? ''),
-                @js(optional($record->created_at)->format('d/m/Y H:i')),
-                @js($record->origin),
-                @js($record->destination),
-                @js($record->quantity),
-                @js($record->quantity_type),
-                @js($imageUrls),
-                @js($record->notes),
-                @js($servicesData)
-            )"
-        >
-
-                        <td>
-                            {{ optional($record->date)->format('d/m/Y') }}
-                        </td>
-
-
-                        <td>
-                            <span class="table-main">
-                                {{ $record->company->name ?? '—' }}
-                            </span>
-                        </td>
-
-
-                        <td>
-                            {{ $record->driver->name ?? '—' }}
-                        </td>
-
-
-                        <td>
-                            {{ $record->trailer->number ?? '—' }}
-                        </td>
-
-
-                        <td>
-                            {{ $record->invoice_number ?? '—' }}
-                        </td>
-
-
-                        <td>
-                            {{ $record->paps_number ?? '—' }}
-                        </td>
-
-
-                        <td>
-                            {{ $record->shipper->name ?? '—' }}
-                        </td>
-
-
-                        <td>
-                            {{ $record->consignee->name ?? '—' }}
-                        </td>
-
-
-                        <td>
-                            {{ $record->broker->name ?? '—' }}
-                        </td>
-
-
-                        <td>
-
-                            <span class="record-id">
-                                #{{ $record->id }}
-                            </span>
-
-                        </td>
-
-
-                        <td>
-                            {{ $record->registeredBy->name ?? '—' }}
-                        </td>
-
-
-                        <td
-                            onclick="event.stopPropagation()"
+                                /*
+                                |----------------------------------------------------------------------
+                                | TOTAL
+                                |----------------------------------------------------------------------
+                                */
+
+                                $total = round(
+                                    $subtotal + $taxAmount,
+                                    2
+                                );
+
+
+                                return [
+
+                                    'id' => $service->id,
+
+                                    'service_type_id' => $service->service_type_id,
+
+                                    'name' => $serviceType?->name ?? 'Servicio',
+
+                                    'quantity' => (float) $service->quantity,
+
+                                    'unit_price' => (float) $service->unit_price,
+
+                                    'subtotal' => $subtotal,
+
+                                    'tax_enabled' => $taxEnabled,
+
+                                    'tax_rate' => $taxRate,
+
+                                    'tax_amount' => $taxAmount,
+
+                                    'total' => $total,
+
+                                    'notes' => $service->notes,
+
+                                    /*
+                                    |--------------------------------------------------------------------------
+                                    | PESO CONFIGURADO DEL SERVICIO
+                                    |--------------------------------------------------------------------------
+                                    |
+                                    | Es únicamente informativo.
+                                    |
+                                    | NO se multiplica por quantity.
+                                    | NO modifica subtotal.
+                                    | NO modifica IVA.
+                                    | NO modifica total.
+                                    |
+                                    */
+
+                                    'weight' => $serviceType?->weight !== null
+                                        ? (float) $serviceType->weight
+                                        : null,
+
+                                    'weight_unit' => $serviceType?->weight_unit,
+
+                                ];
+
+                            })->values();
+
+                        @endphp
+
+
+                        <tr
+                            onclick="openRecordDetailModal(
+                                {{ $record->id }},
+                                @js(optional($record->date)->format('d/m/Y')),
+                                @js($record->invoice_number),
+                                @js($record->company_id),
+                                @js($record->company->name ?? ''),
+                                @js($record->driver_id),
+                                @js($record->driver->name ?? ''),
+                                @js($record->trailer_id),
+                                @js($record->trailer->number ?? ''),
+                                @js($record->paps_number),
+                                @js($record->shipper_id),
+                                @js($record->shipper->name ?? ''),
+                                @js($record->consignee_id),
+                                @js($record->consignee->name ?? ''),
+                                @js($record->broker_id),
+                                @js($record->broker->name ?? ''),
+                                @js($record->registeredBy->name ?? ''),
+                                @js(optional($record->created_at)->format('d/m/Y H:i')),
+                                @js($record->origin),
+                                @js($record->destination),
+                                @js($record->quantity),
+                                @js($record->quantity_type),
+                                @js($imageUrls),
+                                @js($record->notes),
+                                @js($servicesData)
+                            )"
                         >
 
-                            <div class="action-buttons">
-
-                                {{-- VER --}}
-
-                                <button
-                                    type="button"
-                                    class="action-button"
-                                    onclick="openRecordDetailModal(
-                                        {{ $record->id }},
-                                        @js(optional($record->date)->format('d/m/Y')),
-                                        @js($record->invoice_number),
-                                        @js($record->company_id),
-                                        @js($record->company->name ?? ''),
-                                        @js($record->driver_id),
-                                        @js($record->driver->name ?? ''),
-                                        @js($record->trailer_id),
-                                        @js($record->trailer->number ?? ''),
-                                        @js($record->paps_number),
-                                        @js($record->shipper_id),
-                                        @js($record->shipper->name ?? ''),
-                                        @js($record->consignee_id),
-                                        @js($record->consignee->name ?? ''),
-                                        @js($record->broker_id),
-                                        @js($record->broker->name ?? ''),
-                                        @js($record->registeredBy->name ?? ''),
-                                        @js(optional($record->created_at)->format('d/m/Y H:i')),
-                                        @js($record->origin),
-                                        @js($record->destination),
-                                        @js($record->quantity),
-                                        @js($record->quantity_type),
-                                        @js($imageUrls),
-                                        @js($record->notes),
-                                        @js($servicesData)
-                                    )"
-                                >
-                                    {{ __('records.view_records') }}
-                                </button>
+                            <td>
+                                {{ optional($record->date)->format('d/m/Y') }}
+                            </td>
 
 
-                                {{-- EDITAR --}}
-
-                                <button
-                                    type="button"
-                                    class="action-button primary"
-                                    onclick="openEditRecordModal(
-                                        {{ $record->id }},
-                                        @js(optional($record->date)->format('Y-m-d')),
-                                        @js($record->invoice_number),
-                                        @js($record->paps_number),
-                                        @js($record->company_id),
-                                        @js($record->company->name ?? ''),
-                                        @js($record->driver_id),
-                                        @js($record->driver->name ?? ''),
-                                        @js($record->trailer_id),
-                                        @js($record->trailer->number ?? ''),
-                                        @js($record->broker_id),
-                                        @js($record->broker->name ?? ''),
-                                        @js($record->shipper_id),
-                                        @js($record->shipper->name ?? ''),
-                                        @js($record->consignee_id),
-                                        @js($record->consignee->name ?? ''),
-                                        @js($record->origin),
-                                        @js($record->destination),
-                                        @js($record->quantity),
-                                        @js($record->quantity_type),
-                                        @js($record->notes),
-                                        @js($servicesData),
-                                        @js($record->registeredBy->name ?? ''),
-                                        @js(optional($record->created_at)->format('d/m/Y H:i')),
-                                        @js($imageUrls)
-                                    )"
-                                >
-                                    {{ __('records.modal.edit_record') }}
-                                </button>
-
-                            </div>
-
-                        </td>
+                            <td>
+                                <span class="table-main">
+                                    {{ $record->company->name ?? '—' }}
+                                </span>
+                            </td>
 
 
-                        @if(auth()->user()->role === 'admin')
+                            <td>
+                                {{ $record->driver->name ?? '—' }}
+                            </td>
+
+
+                            <td>
+                                {{ $record->trailer->number ?? '—' }}
+                            </td>
+
+
+                            <td>
+                                {{ $record->invoice_number ?? '—' }}
+                            </td>
+
+
+                            <td>
+                                {{ $record->paps_number ?? '—' }}
+                            </td>
+
+
+                            <td>
+                                {{ $record->shipper->name ?? '—' }}
+                            </td>
+
+
+                            <td>
+                                {{ $record->consignee->name ?? '—' }}
+                            </td>
+
+
+                            <td>
+                                {{ $record->broker->name ?? '—' }}
+                            </td>
+
+
+                            <td>
+
+                                <span class="record-id">
+                                    #{{ $record->id }}
+                                </span>
+
+                            </td>
+
+
+                            <td>
+                                {{ $record->registeredBy->name ?? '—' }}
+                            </td>
+
 
                             <td
                                 onclick="event.stopPropagation()"
                             >
 
-                                <button
-                                    type="button"
-                                    class="action-button service"
-                                    onclick="openServiceModal({{ $record->id }})"
-                                >
-                                    + {{ __('records.service') }}
-                                </button>
+                                <div class="action-buttons">
+
+                                    {{-- VER --}}
+
+                                    <button
+                                        type="button"
+                                        class="action-button"
+                                        onclick="openRecordDetailModal(
+                                            {{ $record->id }},
+                                            @js(optional($record->date)->format('d/m/Y')),
+                                            @js($record->invoice_number),
+                                            @js($record->company_id),
+                                            @js($record->company->name ?? ''),
+                                            @js($record->driver_id),
+                                            @js($record->driver->name ?? ''),
+                                            @js($record->trailer_id),
+                                            @js($record->trailer->number ?? ''),
+                                            @js($record->paps_number),
+                                            @js($record->shipper_id),
+                                            @js($record->shipper->name ?? ''),
+                                            @js($record->consignee_id),
+                                            @js($record->consignee->name ?? ''),
+                                            @js($record->broker_id),
+                                            @js($record->broker->name ?? ''),
+                                            @js($record->registeredBy->name ?? ''),
+                                            @js(optional($record->created_at)->format('d/m/Y H:i')),
+                                            @js($record->origin),
+                                            @js($record->destination),
+                                            @js($record->quantity),
+                                            @js($record->quantity_type),
+                                            @js($imageUrls),
+                                            @js($record->notes),
+                                            @js($servicesData)
+                                        )"
+                                    >
+                                        {{ __('records.view_records') }}
+                                    </button>
+
+
+                                    {{-- EDITAR --}}
+
+                                    <button
+                                        type="button"
+                                        class="action-button primary"
+                                        onclick="openEditRecordModal(
+                                            {{ $record->id }},
+                                            @js(optional($record->date)->format('Y-m-d')),
+                                            @js($record->invoice_number),
+                                            @js($record->paps_number),
+                                            @js($record->company_id),
+                                            @js($record->company->name ?? ''),
+                                            @js($record->driver_id),
+                                            @js($record->driver->name ?? ''),
+                                            @js($record->driver->name ?? ''),
+                                            @js($record->trailer_id),
+                                            @js($record->trailer->number ?? ''),
+                                            @js($record->broker_id),
+                                            @js($record->broker->name ?? ''),
+                                            @js($record->shipper_id),
+                                            @js($record->shipper->name ?? ''),
+                                            @js($record->consignee_id),
+                                            @js($record->consignee->name ?? ''),
+                                            @js($record->origin),
+                                            @js($record->destination),
+                                            @js($record->quantity),
+                                            @js($record->quantity_type),
+                                            @js($record->notes),
+                                            @js($servicesData),
+                                            @js($record->registeredBy->name ?? ''),
+                                            @js(optional($record->created_at)->format('d/m/Y H:i')),
+                                            @js($imageUrls)
+                                        )"
+                                    >
+                                        {{ __('records.modal.edit_record') }}
+                                    </button>
+
+                                </div>
 
                             </td>
 
-                        @endif
 
-                    </tr>
+                            @if(auth()->user()->role === 'admin')
+
+                                <td
+                                    onclick="event.stopPropagation()"
+                                >
+
+                                    <button
+                                        type="button"
+                                        class="action-button service"
+                                        onclick="openServiceModal({{ $record->id }})"
+                                    >
+                                        + {{ __('records.service') }}
+                                    </button>
+
+                                </td>
+
+                            @endif
+
+                        </tr>
 
 
-                @empty
+                    @empty
 
-                    <tr>
+                        <tr>
 
-                        <td
-                            colspan="{{ auth()->user()->role === 'admin' ? 13 : 12 }}"
-                            class="empty-state"
-                        >
+                            <td
+                                colspan="{{ auth()->user()->role === 'admin' ? 13 : 12 }}"
+                                class="empty-state"
+                            >
 
-                            <div class="empty-state-title">
-                                {{ __('records.no_records') }}
-                            </div>
+                                <div class="empty-state-title">
+                                    {{ __('records.no_records') }}
+                                </div>
 
-                            <div class="empty-state-text">
-                                {{ __('records.records.create') }}
-                            </div>
+                                <div class="empty-state-text">
+                                    {{ __('records.records.create') }}
+                                </div>
 
-                        </td>
+                            </td>
 
-                    </tr>
+                        </tr>
 
-                @endforelse
+                    @endforelse
 
                 </tbody>
 
@@ -1678,6 +1725,7 @@
             {{-- IMAGEN --}}
 
             <div id="detailImageSection" class="detail-image-section" style="display:none;">
+
                 <div class="form-section-title">
                     {{ __('records.modal.image') }}
                 </div>
@@ -1686,6 +1734,7 @@
                     id="detailImagesContainer"
                     class="detail-images-container"
                 ></div>
+
             </div>
 
 
@@ -1849,10 +1898,7 @@
                             {{ __('records.modal.shipper') }}
                         </div>
 
-                        <div
-                            id="detailShipper"
-                            class="detail-value"
-                        >
+                        <div class="detail-value" id="detailShipper">
                             —
                         </div>
 
@@ -2060,7 +2106,6 @@
                                 id="editInvoice"
                                 name="invoice_number"
                                 class="form-input"
-                                
                             >
 
                         </div>
@@ -2090,6 +2135,7 @@
                 {{-- IMAGEN --}}
 
                 <div class="form-section">
+
                     <div class="form-section-title">
                         {{ __('records.modal.image') }}
                     </div>
@@ -2115,6 +2161,7 @@
                         ></div>
 
                     </div>
+
                 </div>
 
 
@@ -2709,7 +2756,6 @@
                     <select
                         name="service_type_id"
                         class="form-select"
-                        
                     >
 
                         <option value="">
@@ -2719,6 +2765,7 @@
                         @foreach($serviceTypes as $serviceType)
 
                             @php
+
                                 $serviceTaxRate = $serviceType->tax_rate !== null
                                     ? (float) $serviceType->tax_rate
                                     : 0;
@@ -2734,15 +2781,19 @@
                                     $servicePrice + $serviceTaxAmount,
                                     2
                                 );
+
                             @endphp
 
                             <option value="{{ $serviceType->id }}">
+
                                 {{ $serviceType->name }}
                                 — ${{ number_format($servicePrice, 2) }}
 
                                 @if($serviceTaxRate > 0)
+
                                     + IVA {{ number_format($serviceTaxRate, 2) }}%
                                     = ${{ number_format($serviceTotal, 2) }}
+
                                 @endif
 
                             </option>
@@ -4384,10 +4435,35 @@ function addEditServiceRow(
         );
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | OBTENER TIPO DE SERVICIO
+    |--------------------------------------------------------------------------
+    */
+
     const selectedServiceType =
         getServiceType(
             serviceTypeId
         );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PESO DEL SERVICIO
+    |--------------------------------------------------------------------------
+    | Solamente informativo.
+    | NO participa en ningún cálculo.
+    */
+
+    const serviceWeight =
+        selectedServiceType?.weight !== null &&
+        selectedServiceType?.weight !== undefined
+            ? Number(selectedServiceType.weight)
+            : null;
+
+
+    const serviceWeightUnit =
+        selectedServiceType?.weight_unit ?? '';
 
 
     /*
@@ -4516,6 +4592,27 @@ function addEditServiceRow(
 
             </select>
 
+
+            ${
+                serviceWeight !== null &&
+                serviceWeightUnit
+                    ? `
+                        <div
+                            class="table-secondary service-weight-info"
+                            style="margin-top:5px;"
+                        >
+                            ${escapeHtml(serviceWeight)}
+                            ${escapeHtml(serviceWeightUnit)}
+                        </div>
+                    `
+                    : `
+                        <div
+                            class="table-secondary service-weight-info"
+                            style="margin-top:5px;"
+                        ></div>
+                    `
+            }
+
         </div>
 
 
@@ -4557,12 +4654,6 @@ function addEditServiceRow(
         </div>
 
 
-        
-        
-
-
-
-        
         <button
             type="button"
             class="service-remove-button"
@@ -4640,6 +4731,12 @@ function addEditServiceRow(
                 );
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | ACTUALIZAR PRECIO
+            |--------------------------------------------------------------------------
+            */
+
             if (serviceType) {
 
                 priceInput.value =
@@ -4649,6 +4746,47 @@ function addEditServiceRow(
 
             }
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | ACTUALIZAR PESO
+            |--------------------------------------------------------------------------
+            | El peso es únicamente informativo.
+            */
+
+            const weightInfo =
+                row.querySelector(
+                    '.service-weight-info'
+                );
+
+
+            if (weightInfo) {
+
+                const weight =
+                    serviceType?.weight !== null &&
+                    serviceType?.weight !== undefined
+                        ? Number(serviceType.weight)
+                        : null;
+
+
+                const weightUnit =
+                    serviceType?.weight_unit ?? '';
+
+
+                weightInfo.textContent =
+                    weight !== null &&
+                    weightUnit
+                        ? `${weight} ${weightUnit}`
+                        : '';
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ACTUALIZAR SUBTOTAL
+            |--------------------------------------------------------------------------
+            */
 
             updateServiceRowSubtotal(
                 row
@@ -4965,8 +5103,6 @@ function updateEditServicesTotal() {
 
     });
 
-
-
 }
 
 
@@ -5112,7 +5248,7 @@ function renderServices(
 
         /*
         |--------------------------------------------------------------------------
-        | IVA GENERAL
+        | TIPO DE SERVICIO
         |--------------------------------------------------------------------------
         */
 
@@ -5121,6 +5257,38 @@ function renderServices(
                 service.service_type_id
             );
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | PESO
+        |--------------------------------------------------------------------------
+        | El peso viene de la configuración del servicio.
+        | No participa en ningún cálculo.
+        */
+
+        const serviceWeight =
+            service.weight !== null &&
+            service.weight !== undefined
+                ? Number(service.weight)
+                : (
+                    serviceType?.weight !== null &&
+                    serviceType?.weight !== undefined
+                        ? Number(serviceType.weight)
+                        : null
+                );
+
+
+        const serviceWeightUnit =
+            service.weight_unit ??
+            serviceType?.weight_unit ??
+            '';
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | IVA GENERAL
+        |--------------------------------------------------------------------------
+        */
 
         const taxEnabled =
             service.tax_enabled !== undefined
@@ -5177,6 +5345,19 @@ function renderServices(
                         '{{ __('records.service') }}'
                     )}
                 </div>
+
+
+                ${
+                    serviceWeight !== null &&
+                    serviceWeightUnit
+                        ? `
+                            <div class="table-secondary">
+                                ${escapeHtml(serviceWeight)}
+                                ${escapeHtml(serviceWeightUnit)}
+                            </div>
+                        `
+                        : ''
+                }
 
 
                 ${
@@ -5250,8 +5431,6 @@ function renderServices(
     totals.className =
         'service-view-totals';
 
-
-    
 
     container.appendChild(
         totals
