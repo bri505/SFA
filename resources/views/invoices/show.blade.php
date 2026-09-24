@@ -585,6 +585,7 @@ td {
 .email-modal-box {
     width: 100%;
     max-width: 520px;
+    max-height: 90vh;
     background: white;
     border-radius: 8px;
     border: 1px solid #e5e7eb;
@@ -630,6 +631,8 @@ td {
 
 #sendInvoiceForm {
     padding: 18px;
+    max-height: calc(90vh - 75px);
+    overflow-y: auto;
 }
 
 .email-form-group {
@@ -660,6 +663,11 @@ td {
     border-color: #9ca3af;
 }
 
+
+/* =========================================================
+   DESTINATARIOS
+========================================================= */
+
 .email-recipients {
     display: flex;
     flex-direction: column;
@@ -668,7 +676,7 @@ td {
     background: #f9fafb;
     border: 1px solid #e5e7eb;
     border-radius: 6px;
-    max-height: 140px;
+    max-height: 180px;
     overflow-y: auto;
 }
 
@@ -676,12 +684,32 @@ td {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 7px 8px;
+    padding: 8px;
     background: white;
     border: 1px solid #e5e7eb;
     border-radius: 5px;
     font-size: 11px;
     color: #374151;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+}
+
+.email-recipient:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+
+.email-recipient input {
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.email-recipient-text {
+    flex: 1;
+    min-width: 0;
+    word-break: break-word;
 }
 
 .email-recipient-icon {
@@ -695,6 +723,7 @@ td {
     color: #166534;
     font-size: 10px;
     font-weight: 700;
+    flex-shrink: 0;
 }
 
 .email-no-recipients {
@@ -706,6 +735,92 @@ td {
     border: 1px solid #fecaca;
     border-radius: 5px;
 }
+
+
+/* =========================================================
+   AGREGAR CORREO
+========================================================= */
+
+.email-add-row {
+    display: flex;
+    gap: 7px;
+    align-items: stretch;
+}
+
+.email-add-row .email-input {
+    flex: 1;
+}
+
+.email-add-button {
+    flex-shrink: 0;
+    padding: 9px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 5px;
+    background: #f9fafb;
+    color: #374151;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.email-add-button:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.email-added-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.email-added-recipient {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 7px 9px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 5px;
+    font-size: 11px;
+    color: #1e3a8a;
+}
+
+.email-added-recipient span {
+    min-width: 0;
+    word-break: break-word;
+}
+
+.email-remove-button {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: #6b7280;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.email-remove-button:hover {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.email-recipient-help {
+    margin-top: 6px;
+    font-size: 10px;
+    color: #9ca3af;
+}
+
+
+/* =========================================================
+   DOCUMENTOS
+========================================================= */
 
 .email-documents {
     display: grid;
@@ -745,6 +860,11 @@ td {
     font-size: 10px;
     color: #9ca3af;
 }
+
+
+/* =========================================================
+   FOOTER MODAL
+========================================================= */
 
 .email-modal-footer {
     display: flex;
@@ -801,6 +921,14 @@ td {
     }
 
     .summary-box {
+        width: 100%;
+    }
+
+    .email-add-row {
+        flex-direction: column;
+    }
+
+    .email-add-button {
         width: 100%;
     }
 
@@ -1364,15 +1492,7 @@ td {
 
                 @php
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | SERVICIOS
-                    |--------------------------------------------------------------------------
-                    */
-
                     $servicesBaseTotal = 0;
-
-                    $servicesTaxTotal = 0;
 
                     $servicesGrandTotal = 0;
 
@@ -1390,52 +1510,12 @@ td {
                             );
 
 
-                        /*
-                        |--------------------------------------------------------------------------
-                        | IVA
-                        |
-                        | SOLO SE CALCULA Y MUESTRA SI LA FACTURA
-                        | FUE GUARDADA CON IVA.
-                        |--------------------------------------------------------------------------
-                        */
-
-                        $serviceTaxRate =
-                            (float) (
-                                $invoice->service_tax ?? 0
-                            ) > 0
-                                ? (float) (
-                                    $service
-                                        ->serviceType
-                                        ->tax_rate
-                                    ?? 0
-                                )
-                                : 0;
-
-
-                        $serviceTaxAmount =
-                            $serviceTaxRate > 0
-                                ? round(
-                                    $serviceBase *
-                                    ($serviceTaxRate / 100),
-                                    2
-                                )
-                                : 0;
-
-
                         $serviceTotal =
-                            round(
-                                $serviceBase +
-                                $serviceTaxAmount,
-                                2
-                            );
+                            $serviceBase;
 
 
                         $servicesBaseTotal +=
                             $serviceBase;
-
-
-                        $servicesTaxTotal +=
-                            $serviceTaxAmount;
 
 
                         $servicesGrandTotal +=
@@ -1687,42 +1767,12 @@ td {
 
                                 /*
                                 |--------------------------------------------------------------------------
-                                | IVA
-                                |
-                                | EL IVA SOLO EXISTE VISUALMENTE SI
-                                | LA FACTURA FUE GUARDADA CON IVA.
+                                | SIN IVA DE SERVICIOS
                                 |--------------------------------------------------------------------------
                                 */
 
-                                $serviceTaxRate =
-                                    (float) (
-                                        $invoice->service_tax ?? 0
-                                    ) > 0
-                                        ? (float) (
-                                            $service
-                                                ->serviceType
-                                                ->tax_rate
-                                            ?? 0
-                                        )
-                                        : 0;
-
-
-                                $serviceTaxAmount =
-                                    $serviceTaxRate > 0
-                                        ? round(
-                                            $serviceBase *
-                                            ($serviceTaxRate / 100),
-                                            2
-                                        )
-                                        : 0;
-
-
                                 $serviceTotal =
-                                    round(
-                                        $serviceBase +
-                                        $serviceTaxAmount,
-                                        2
-                                    );
+                                    $serviceBase;
 
                             @endphp
 
@@ -1745,62 +1795,6 @@ td {
                                 </div>
 
 
-                                {{-- BASE --}}
-
-                                <div class="service-line">
-
-                                    <span class="service-base">
-                                        Base
-                                    </span>
-
-                                    <strong>
-                                        $
-                                        {{
-                                            number_format(
-                                                $serviceBase,
-                                                2
-                                            )
-                                        }}
-                                    </strong>
-
-                                </div>
-
-
-                                {{-- IVA --}}
-
-                                @if($serviceTaxRate > 0)
-
-                                    <div class="service-line">
-
-                                        <span class="service-tax">
-
-                                            IVA
-                                            {{
-                                                number_format(
-                                                    $serviceTaxRate,
-                                                    2
-                                                )
-                                            }}%
-
-                                        </span>
-
-                                        <strong class="service-tax">
-
-                                            $
-                                            {{
-                                                number_format(
-                                                    $serviceTaxAmount,
-                                                    2
-                                                )
-                                            }}
-
-                                        </strong>
-
-                                    </div>
-
-                                @endif
-
-
                                 {{-- TOTAL SERVICIO --}}
 
                                 <div class="service-line">
@@ -1812,6 +1806,7 @@ td {
                                     <strong class="service-total">
 
                                         $
+
                                         {{
                                             number_format(
                                                 $serviceTotal,
@@ -1902,7 +1897,7 @@ td {
                             <div class="record-summary-row">
 
                                 <span>
-                                    Base servicios
+                                    Servicios
                                 </span>
 
                                 <strong>
@@ -1916,31 +1911,6 @@ td {
                                 </strong>
 
                             </div>
-
-
-                            {{-- IVA DEL REGISTRO --}}
-
-                            @if($servicesTaxTotal > 0)
-
-                                <div class="record-summary-row">
-
-                                    <span>
-                                        IVA servicios
-                                    </span>
-
-                                    <strong>
-                                        $
-                                        {{
-                                            number_format(
-                                                $servicesTaxTotal,
-                                                2
-                                            )
-                                        }}
-                                    </strong>
-
-                                </div>
-
-                            @endif
 
 
                             {{-- CARGO ADICIONAL --}}
@@ -1984,6 +1954,7 @@ td {
                                 <strong>
 
                                     $
+
                                     {{
                                         number_format(
                                             $recordTotal,
@@ -2007,6 +1978,7 @@ td {
                         <div class="total">
 
                             $
+
                             {{
                                 number_format(
                                     $recordTotal,
@@ -2059,7 +2031,7 @@ td {
         </div>
 
         <div class="panel-subtitle">
-            Desglose completo de impuestos y cargos
+            Desglose completo de cargos e impuestos
         </div>
 
     </div>
@@ -2104,53 +2076,7 @@ td {
                 </div>
 
 
-                {{-- =================================================
-                     IVA DE SERVICIOS
-                     SOLO SE MUESTRA SI LA FACTURA TIENE IVA
-                ================================================== --}}
-
-                @if(
-                    (float) (
-                        $invoice->service_tax ?? 0
-                    ) > 0
-                )
-
-                    <div class="summary-row">
-
-                        <div class="summary-description">
-
-                            <span class="summary-service-tax">
-                                IVA de servicios
-                            </span>
-
-                            <span class="summary-rate">
-                                Impuesto calculado individualmente por servicio
-                            </span>
-
-                        </div>
-
-                        <strong class="summary-service-tax">
-
-                            $
-
-                            {{
-                                number_format(
-                                    (float) (
-                                        $invoice->service_tax
-                                        ?? 0
-                                    ),
-                                    2
-                                )
-                            }}
-
-                        </strong>
-
-                    </div>
-
-                @endif
-
-
-                {{-- SHIPPING --}}
+                {{-- SHIPPING / HANDLING --}}
 
                 <div class="summary-row">
 
@@ -2301,6 +2227,7 @@ td {
         class="email-modal-box"
         role="dialog"
         aria-modal="true"
+        aria-labelledby="emailModalTitle"
     >
 
 
@@ -2310,7 +2237,10 @@ td {
 
             <div>
 
-                <div class="email-modal-title">
+                <div
+                    class="email-modal-title"
+                    id="emailModalTitle"
+                >
                     {{ __('invoices.send_invoice') }}
                 </div>
 
@@ -2325,6 +2255,7 @@ td {
                 type="button"
                 id="closeEmailModal"
                 class="email-modal-close"
+                aria-label="Cerrar"
             >
                 ×
             </button>
@@ -2346,11 +2277,16 @@ td {
             @csrf
 
 
-            {{-- ASUNTO --}}
+            {{-- =================================================
+                 ASUNTO
+            ================================================== --}}
 
             <div class="email-form-group">
 
-                <label class="email-label">
+                <label
+                    for="emailSubject"
+                    class="email-label"
+                >
 
                     {{ __('invoices.email_subject') }}
 
@@ -2360,6 +2296,7 @@ td {
                 <input
                     type="text"
                     name="subject"
+                    id="emailSubject"
                     class="email-input"
                     value="{{ __('invoices.default_email_subject', [
                         'invoice' => $invoice->invoice_number
@@ -2371,7 +2308,9 @@ td {
             </div>
 
 
-            {{-- DESTINATARIOS --}}
+            {{-- =================================================
+                 DESTINATARIOS GUARDADOS
+            ================================================== --}}
 
             <div class="email-form-group">
 
@@ -2389,17 +2328,29 @@ td {
                         as $companyEmail
                     )
 
-                        <div class="email-recipient">
+                        <label
+                            class="email-recipient"
+                            for="companyEmail{{ $companyEmail->id }}"
+                        >
+
+                            <input
+                                type="checkbox"
+                                name="recipients[]"
+                                value="{{ $companyEmail->email }}"
+                                id="companyEmail{{ $companyEmail->id }}"
+                                class="company-email-checkbox"
+                                checked
+                            >
 
                             <span class="email-recipient-icon">
                                 ✓
                             </span>
 
-                            <span>
+                            <span class="email-recipient-text">
                                 {{ $companyEmail->email }}
                             </span>
 
-                        </div>
+                        </label>
 
                     @empty
 
@@ -2416,7 +2367,65 @@ td {
             </div>
 
 
-            {{-- DOCUMENTOS --}}
+            {{-- =================================================
+                 AGREGAR CORREOS TEMPORALES
+            ================================================== --}}
+
+            <div class="email-form-group">
+
+                <label
+                    for="additionalEmailInput"
+                    class="email-label"
+                >
+
+                    Agregar otro correo
+
+                </label>
+
+
+                <div class="email-add-row">
+
+                    <input
+                        type="email"
+                        id="additionalEmailInput"
+                        class="email-input"
+                        placeholder="correo@ejemplo.com"
+                        maxlength="255"
+                        autocomplete="email"
+                    >
+
+
+                    <button
+                        type="button"
+                        id="addAdditionalEmail"
+                        class="email-add-button"
+                    >
+                        + Agregar
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="additionalEmailList"
+                    class="email-added-list"
+                ></div>
+
+
+                <div class="email-recipient-help">
+
+                    Los correos agregados aquí solo se utilizarán
+                    para este envío y no modificarán los correos
+                    guardados de la compañía.
+
+                </div>
+
+            </div>
+
+
+            {{-- =================================================
+                 DOCUMENTOS
+            ================================================== --}}
 
             <div class="email-form-group">
 
@@ -2487,7 +2496,9 @@ td {
             </div>
 
 
-            {{-- FOOTER --}}
+            {{-- =================================================
+                 FOOTER
+            ================================================== --}}
 
             <div class="email-modal-footer">
 
@@ -2735,6 +2746,467 @@ document.addEventListener(
 
             }
         );
+
+
+        /* =====================================================
+           CORREOS ADICIONALES TEMPORALES
+        ===================================================== */
+
+        const additionalEmailInput =
+            document.getElementById(
+                'additionalEmailInput'
+            );
+
+
+        const addAdditionalEmail =
+            document.getElementById(
+                'addAdditionalEmail'
+            );
+
+
+        const additionalEmailList =
+            document.getElementById(
+                'additionalEmailList'
+            );
+
+
+        const sendInvoiceForm =
+            document.getElementById(
+                'sendInvoiceForm'
+            );
+
+
+        /*
+         * Guarda únicamente los correos agregados
+         * temporalmente para este envío.
+         */
+        const additionalEmails = [];
+
+
+        function normalizeEmail(email) {
+
+            return String(email || '')
+                .trim()
+                .toLowerCase();
+
+        }
+
+
+        function getSelectedEmails() {
+
+            const selected = [];
+
+
+            document
+                .querySelectorAll(
+                    '.company-email-checkbox:checked'
+                )
+                .forEach(function (checkbox) {
+
+                    const email =
+                        normalizeEmail(
+                            checkbox.value
+                        );
+
+
+                    if (
+                        email &&
+                        !selected.includes(email)
+                    ) {
+
+                        selected.push(email);
+
+                    }
+
+                });
+
+
+            additionalEmails.forEach(
+                function (email) {
+
+                    const normalized =
+                        normalizeEmail(email);
+
+
+                    if (
+                        normalized &&
+                        !selected.includes(normalized)
+                    ) {
+
+                        selected.push(normalized);
+
+                    }
+
+                }
+            );
+
+
+            return selected;
+
+        }
+
+
+        function emailExists(email) {
+
+            const normalized =
+                normalizeEmail(email);
+
+
+            if (!normalized) {
+                return false;
+            }
+
+
+            const companyEmailExists =
+                Array.from(
+                    document.querySelectorAll(
+                        '.company-email-checkbox'
+                    )
+                ).some(
+                    function (checkbox) {
+
+                        return normalizeEmail(
+                            checkbox.value
+                        ) === normalized;
+
+                    }
+                );
+
+
+            const additionalEmailExists =
+                additionalEmails.some(
+                    function (existingEmail) {
+
+                        return normalizeEmail(
+                            existingEmail
+                        ) === normalized;
+
+                    }
+                );
+
+
+            return (
+                companyEmailExists ||
+                additionalEmailExists
+            );
+
+        }
+
+
+        function renderAdditionalEmails() {
+
+            if (!additionalEmailList) {
+                return;
+            }
+
+
+            additionalEmailList.innerHTML = '';
+
+
+            additionalEmails.forEach(
+                function (email, index) {
+
+                    const item =
+                        document.createElement(
+                            'div'
+                        );
+
+
+                    item.className =
+                        'email-added-recipient';
+
+
+                    const emailText =
+                        document.createElement(
+                            'span'
+                        );
+
+
+                    emailText.textContent =
+                        email;
+
+
+                    const removeButton =
+                        document.createElement(
+                            'button'
+                        );
+
+
+                    removeButton.type =
+                        'button';
+
+
+                    removeButton.className =
+                        'email-remove-button';
+
+
+                    removeButton.setAttribute(
+                        'aria-label',
+                        'Eliminar correo'
+                    );
+
+
+                    removeButton.textContent =
+                        '×';
+
+
+                    removeButton.addEventListener(
+                        'click',
+                        function () {
+
+                            additionalEmails
+                                .splice(
+                                    index,
+                                    1
+                                );
+
+
+                            renderAdditionalEmails();
+
+                        }
+                    );
+
+
+                    item.appendChild(
+                        emailText
+                    );
+
+
+                    item.appendChild(
+                        removeButton
+                    );
+
+
+                    additionalEmailList
+                        .appendChild(item);
+
+                }
+            );
+
+        }
+
+
+        function addEmail() {
+
+            if (
+                !additionalEmailInput
+            ) {
+
+                return;
+
+            }
+
+
+            const email =
+                normalizeEmail(
+                    additionalEmailInput.value
+                );
+
+
+            if (!email) {
+
+                additionalEmailInput.focus();
+
+                return;
+
+            }
+
+
+            /*
+             * Valida formato de correo.
+             */
+            const emailPattern =
+                /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+
+            if (!emailPattern.test(email)) {
+
+                alert(
+                    'Escriba un correo electrónico válido.'
+                );
+
+
+                additionalEmailInput.focus();
+
+                return;
+
+            }
+
+
+            if (emailExists(email)) {
+
+                alert(
+                    'Ese correo ya está agregado.'
+                );
+
+
+                additionalEmailInput.focus();
+
+                return;
+
+            }
+
+
+            additionalEmails.push(email);
+
+
+            additionalEmailInput.value =
+                '';
+
+
+            renderAdditionalEmails();
+
+
+            additionalEmailInput.focus();
+
+        }
+
+
+        if (addAdditionalEmail) {
+
+            addAdditionalEmail.addEventListener(
+                'click',
+                addEmail
+            );
+
+        }
+
+
+        if (additionalEmailInput) {
+
+            additionalEmailInput.addEventListener(
+                'keydown',
+                function (event) {
+
+                    if (
+                        event.key ===
+                        'Enter'
+                    ) {
+
+                        event.preventDefault();
+
+                        addEmail();
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        /* =====================================================
+           VALIDACIÓN DE DESTINATARIOS
+        ===================================================== */
+
+        if (sendInvoiceForm) {
+
+            sendInvoiceForm.addEventListener(
+                'submit',
+                function (event) {
+
+                    /*
+                     * Los correos adicionales se agregan
+                     * como inputs hidden al momento del envío.
+                     *
+                     * Así permanecen temporales y no modifican
+                     * la información de la compañía.
+                     */
+
+                    sendInvoiceForm
+                        .querySelectorAll(
+                            '.temporary-email-input'
+                        )
+                        .forEach(
+                            function (input) {
+
+                                input.remove();
+
+                            }
+                        );
+
+
+                    additionalEmails.forEach(
+                        function (email) {
+
+                            const input =
+                                document.createElement(
+                                    'input'
+                                );
+
+
+                            input.type =
+                                'hidden';
+
+
+                            input.name =
+                                'recipients[]';
+
+
+                            input.value =
+                                email;
+
+
+                            input.className =
+                                'temporary-email-input';
+
+
+                            sendInvoiceForm
+                                .appendChild(
+                                    input
+                                );
+
+                        }
+                    );
+
+
+                    const selectedEmails =
+                        getSelectedEmails();
+
+
+                    if (
+                        selectedEmails.length ===
+                        0
+                    ) {
+
+                        event.preventDefault();
+
+
+                        alert(
+                            'Seleccione al menos un correo electrónico al cual enviar la factura.'
+                        );
+
+
+                        return;
+
+                    }
+
+
+                    /*
+                     * Evita doble envío.
+                     */
+
+                    const sendButton =
+                        document.getElementById(
+                            'sendEmailButton'
+                        );
+
+
+                    if (sendButton) {
+
+                        sendButton.disabled =
+                            true;
+
+
+                        sendButton.textContent =
+                            'Enviando...';
+
+                    }
+
+                }
+            );
+
+        }
 
     }
 );

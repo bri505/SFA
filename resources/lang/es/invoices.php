@@ -230,6 +230,41 @@ return [
 
     'no_data' => '—',
 
+    'payment_proof' => [
+
+        'title' => 'Comprobante de pago',
+
+
+        'close' => 'Cerrar',
+
+        'current' => 'Comprobante actual',
+
+        'image_alt' => 'Comprobante de pago',
+
+        'photo' => 'Foto del comprobante',
+
+        'take-photo' => 'Tomar foto',
+
+        'choose_file' => 'Escoger archivo',
+
+
+
+
+
+        'file_help' => 'JPG, JPEG, PNG o WEBP. Máximo 10 MB.',
+
+        'notes' => 'Notas / comentarios',
+
+        'notes_placeholder' =>
+            'Escribe aquí los comentarios relacionados con el pago...',
+
+        'cancel' => 'Cancelar',
+
+        'save' => 'Guardar comprobante',
+
+    ],
+
+
     /*
     |--------------------------------------------------------------------------
     | CREAR FACTURA
@@ -374,6 +409,13 @@ return [
 
         'generate_invoice' => 'Generar factura',
 
+        /*
+        |--------------------------------------------------------------------------
+        | COMPROBANTE DE PAGO
+        |--------------------------------------------------------------------------
+        */
+
+        
         /*
         |--------------------------------------------------------------------------
         | MODAL NUEVA EMPRESA
@@ -566,5 +608,6 @@ return [
 'documents_to_send' => 'Documentos a enviar',
 'pdf_document' => 'Documento PDF de la factura',
 'xml_document' => 'Documento XML de la factura',
+
 
 ];

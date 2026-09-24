@@ -1321,342 +1321,130 @@
 
                     {{-- SERVICES --}}
 
-                    <td>
+<td>
 
+    @forelse(
+        $record->services as $service
+    )
 
-                        @forelse(
-                            $record->services
-                            as $service
-                        )
+        @php
 
+            $serviceBase =
+                round(
+                    (float) $service->subtotal,
+                    2
+                );
 
-                            @php
+            $serviceRate =
+                (float) (
+                    $service
+                        ->serviceType
+                        ?->tax_rate
+                    ?? 0
+                );
 
-                                $serviceBase =
-                                    round(
-                                        (float)
-                                        $service->subtotal,
-                                        2
-                                    );
+            $serviceTax =
+                round(
+                    $serviceBase *
+                    ($serviceRate / 100),
+                    2
+                );
 
+            $serviceTotal =
+                $serviceBase +
+                $serviceTax;
 
-                                $serviceRate =
-                                    (float) (
-                                        $service
-                                            ->serviceType
-                                            ?->tax_rate
-                                        ?? 0
-                                    );
+        @endphp
 
 
-                                $serviceTax =
-                                    round(
-                                        $serviceBase *
-                                        ($serviceRate / 100),
-                                        2
-                                    );
+        <div class="service">
 
+            <span class="service-name">
 
-                                $serviceTotal =
-                                    $serviceBase +
-                                    $serviceTax;
+                {{
+                    $service
+                        ->serviceType
+                        ?->name
+                    ??
+                    'Service'
+                }}
 
-                            @endphp
+            </span>
 
+            <span
+                style="
+                    float:right;
+                    font-weight:bold;
+                    color:#222;
+                "
+            >
 
-                            <div class="service">
+                $
 
+                {{
+                    number_format(
+                        $serviceTotal,
+                        2
+                    )
+                }}
 
-                                {{-- SERVICE NAME --}}
+            </span>
 
-                                <span class="service-name">
+        </div>
 
-                                    {{
-                                        $service
-                                            ->serviceType
-                                            ?->name
-                                        ??
-                                        'Service'
-                                    }}
+    @empty
 
-                                </span>
+        <span class="no-data">
 
+            No service
 
-                                {{-- QUANTITY / UNIT PRICE --}}
+        </span>
 
-                                @if(
-                                    $service->quantity !== null ||
-                                    $service->unit_price !== null
-                                )
+    @endforelse
 
-                                    <div class="service-detail">
 
-                                        @if($service->quantity !== null)
+    {{-- =================================================
+         ADDITIONAL CHARGE
+    ================================================== --}}
 
-                                            Qty:
-                                            {{
-                                                number_format(
-                                                    (float)
-                                                    $service->quantity,
-                                                    2
-                                                )
-                                            }}
+    @if($additionalAmount > 0)
 
-                                        @endif
+        <div class="additional-charge">
 
+            <span class="additional-charge-name">
 
-                                        @if(
-                                            $service->quantity !== null &&
-                                            $service->unit_price !== null
-                                        )
+                {{
+                    $additionalType
+                    ?:
+                    'Additional Charge'
+                }}
 
-                                            ×
+            </span>
 
-                                        @endif
+            <span
+                style="
+                    float:right;
+                    font-weight:bold;
+                    color:#222;
+                "
+            >
 
+                $
 
-                                        @if($service->unit_price !== null)
+                {{
+                    number_format(
+                        $additionalAmount,
+                        2
+                    )
+                }}
 
-                                            Unit:
-                                            $
+            </span>
 
-                                            {{
-                                                number_format(
-                                                    (float)
-                                                    $service->unit_price,
-                                                    2
-                                                )
-                                            }}
+        </div>
 
-                                        @endif
+    @endif
 
-                                    </div>
-
-                                @endif
-
-
-                                {{-- BASE --}}
-
-                                <div class="service-detail">
-
-                                    Base:
-
-                                    $
-
-                                    {{
-                                        number_format(
-                                            $serviceBase,
-                                            2
-                                        )
-                                    }}
-
-                                </div>
-
-
-                                {{-- SERVICE IVA --}}
-
-                                <div class="service-detail service-tax">
-
-                                    Service Tax / IVA:
-
-                                    {{
-                                        number_format(
-                                            $serviceRate,
-                                            2
-                                        )
-                                    }}%
-
-                                    &nbsp;
-
-                                    $
-
-                                    {{
-                                        number_format(
-                                            $serviceTax,
-                                            2
-                                        )
-                                    }}
-
-                                </div>
-
-
-                                {{-- SERVICE TOTAL --}}
-
-                                <div class="service-total">
-
-                                    Service Total:
-
-                                    $
-
-                                    {{
-                                        number_format(
-                                            $serviceTotal,
-                                            2
-                                        )
-                                    }}
-
-                                </div>
-
-
-                            </div>
-
-
-                        @empty
-
-                            <span class="no-data">
-
-                                No service
-
-                            </span>
-
-                        @endforelse
-
-
-
-                        {{-- =================================================
-                             ADDITIONAL CHARGE
-                        ================================================== --}}
-
-                        @if($additionalAmount > 0)
-
-                            <div class="additional-charge">
-
-
-                                <div class="additional-charge-name">
-
-                                    {{
-                                        $additionalType
-                                        ?:
-                                        'Additional Charge'
-                                    }}
-
-                                </div>
-
-
-                                <div class="additional-charge-detail">
-
-                                    Quantity:
-
-                                    {{
-                                        number_format(
-                                            $additionalQuantity,
-                                            2
-                                        )
-                                    }}
-
-
-                                    <br>
-
-
-                                    Unit Price:
-
-                                    $
-
-                                    {{
-                                        number_format(
-                                            $additionalUnitPrice,
-                                            2
-                                        )
-                                    }}
-
-
-                                    <br>
-
-
-                                    Amount:
-
-                                    $
-
-                                    {{
-                                        number_format(
-                                            $additionalAmount,
-                                            2
-                                        )
-                                    }}
-
-                                </div>
-
-
-                            </div>
-
-                        @endif
-
-
-
-                        {{-- =================================================
-                             RECORD BREAKDOWN
-                        ================================================== --}}
-
-                        <div class="record-breakdown">
-
-                            <strong>
-                                Services Base:
-                            </strong>
-
-                            $
-
-                            {{
-                                number_format(
-                                    $recordServicesBase,
-                                    2
-                                )
-                            }}
-
-
-                            <br>
-
-
-                            <strong>
-                                Service Tax:
-                            </strong>
-
-                            $
-
-                            {{
-                                number_format(
-                                    $recordServiceTax,
-                                    2
-                                )
-                            }}
-
-
-                            <br>
-
-
-                            <strong>
-                                Additional Charges:
-                            </strong>
-
-                            $
-
-                            {{
-                                number_format(
-                                    $additionalAmount,
-                                    2
-                                )
-                            }}
-
-
-                            <br>
-
-
-                            <strong>
-                                Record Total:
-                            </strong>
-
-                            $
-
-                            {{
-                                number_format(
-                                    $recordTotal,
-                                    2
-                                )
-                            }}
-
-                        </div>
-
-
-                    </td>
+</td>
 
 
 

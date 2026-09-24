@@ -39,7 +39,11 @@ class Invoice extends Model
         'status',
     
         'payment_status',
-    
+
+        'payment_proof',
+
+        'payment_notes',
+
         'cancellation_reason',
     
         'generated_by',

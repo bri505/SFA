@@ -98,6 +98,27 @@ class DashboardController extends Controller
             ->orderBy('name')
             ->get();
 
+            $defaultQuantityTypes = [
+                'palets',
+                'contenedores',
+                'piezas',
+            ];
+            
+            $existingQuantityTypes = Record::whereNotNull('quantity_type')
+                ->where('quantity_type', '!=', '')
+                ->distinct()
+                ->pluck('quantity_type')
+                ->toArray();
+            
+            $quantityTypes = collect(
+                array_merge(
+                    $defaultQuantityTypes,
+                    $existingQuantityTypes
+                )
+            )
+                ->unique()
+                ->values();
+
 
         // =====================================================
         // DASHBOARD
@@ -112,6 +133,7 @@ class DashboardController extends Controller
             'brokers',
             'shippers',
             'consignees',
+            'quantityTypes',
             'nextRecordId'
         ));
     }

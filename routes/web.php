@@ -380,6 +380,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             '/invoices/{invoice}/payment-status',
             [InvoiceController::class, 'updatePaymentStatus']
         )->name('invoices.payment-status');
+        Route::post(
+            '/invoices/{invoice}/payment-proof',
+            [InvoiceController::class, 'updatePaymentProof']
+        )->name('invoices.payment-proof');
 
         Route::post(
             '/invoices/{invoice}/send-reminder',

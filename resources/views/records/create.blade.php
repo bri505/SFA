@@ -743,101 +743,74 @@ color: #111827;
                             <div class="image-upload-container">
 
                             <button
-    type="button"
-    id="addImageButton"
-    class="image-upload-button"
->
-    📷 {{ __('records.modal.add_image') }}
-</button>
+                                type="button"
+                                id="addImageButton"
+                                class="image-upload-button"
+                            >
+                                📷 {{ __('records.modal.add_image') }}
+                            </button>
 
-<input
-    type="file"
-    name="images[]"
-    id="recordImages"
-    accept="image/jpeg,image/png,image/webp"
-    multiple
-    hidden
->
+                            <input
+                                type="file"
+                                name="images[]"
+                                id="recordImages"
+                                accept="image/jpeg,image/png,image/webp"
+                                multiple
+                                hidden
+                            >
 
-<input
-    type="file"
-    id="recordCameraInput"
-    accept="image/jpeg,image/png,image/webp"
-    capture="environment"
-    hidden
->
-<div
-    id="imageSourceModal"
-    class="image-source-modal"
-    style="display:none;"
->
-    <div class="image-source-box">
+                            <input
+                                type="file"
+                                id="recordCameraInput"
+                                accept="image/jpeg,image/png,image/webp"
+                                capture="environment"
+                                hidden
+                            >
+                            <div
+                                id="imageSourceModal"
+                                class="image-source-modal"
+                                style="display:none;"
+                            >
+                                <div class="image-source-box">
 
-        <div class="image-source-title">
-            {{ __('records.modal.add_image') }}
-        </div>
-
-        <button
-            type="button"
-            id="takePhotoButton"
-            class="image-source-option"
-        >
-            📷 Tomar foto
-        </button>
-
-        <button
-            type="button"
-            id="chooseGalleryButton"
-            class="image-source-option"
-        >
-            🖼️ Seleccionar de galería / archivos
-        </button>
-
-        <button
-            type="button"
-            id="cancelImageSource"
-            class="image-source-cancel"
-        >
-            {{ __('records.modal.cancel') }}
-        </button>
-
-    </div>
-</div>
-
-
-                                <div
-                                    id="imagePreviewContainer"
-                                    class="image-preview-container"
-                                    style="display:none;"
-                                >
-
-                                    <img
-                                        id="imagePreview"
-                                        class="image-preview"
-                                        src=""
-                                        alt="{{ __('records.modal.preview_alt') }}"
-                                    >
-
-
-                                    <div class="image-preview-actions">
-
-                                        <span
-                                            id="imageName"
-                                            class="image-name"
-                                        ></span>
-
-
-                                        <button
-                                            type="button"
-                                            id="removeImage"
-                                            class="image-remove-button"
-                                        >
-                                        {{ __('records.modal.remove_image') }}
-                                        </button>
-
+                                    <div class="image-source-title">
+                                        {{ __('records.modal.add_image') }}
                                     </div>
 
+                                    <button
+                                        type="button"
+                                        id="takePhotoButton"
+                                        class="image-source-option"
+                                    >
+                                        📷 Tomar foto
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        id="chooseGalleryButton"
+                                        class="image-source-option"
+                                    >
+                                        🖼️ Seleccionar de galería / archivos
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        id="cancelImageSource"
+                                        class="image-source-cancel"
+                                    >
+                                        {{ __('records.modal.cancel') }}
+                                    </button>
+
                                 </div>
+                            </div>
+
+
+                            <div
+                                id="imagePreviewContainer"
+                                class="image-preview-container"
+                                style="display:none;"
+                            >
+                            </div>
 
                             </div>
 
@@ -1007,53 +980,58 @@ color: #111827;
 
 
                         {{-- =================================================
-                             TIPO DE CANTIDAD
+                            TIPO DE CANTIDAD
                         ================================================== --}}
 
                         <div class="form-group">
 
                             <label class="form-label">
-                            {{ __('records.modal.type') }}
+                                {{ __('records.modal.type') }}
                             </label>
 
-
                             <select
-                                name="quantity_type"
+                                id="recordQuantityType"
                                 class="form-input"
                             >
 
                                 <option value="">
-                                {{ __('records.modal.select') }}
+                                    {{ __('records.modal.select') }}
                                 </option>
 
+                                @foreach($quantityTypes as $quantityType)
+                                    <option
+                                        value="{{ $quantityType }}"
+                                        @selected(old('quantity_type') === $quantityType)
+                                    >
+                                        {{ $quantityType }}
+                                    </option>
+                                @endforeach
 
-                                <option
-                                    value="palets"
-                                    @selected(old('quantity_type') === 'palets')
-                                >
-                                {{ __('records.modal.palets') }}
-                                </option>
-
-
-                                <option
-                                    value="contenedores"
-                                    @selected(old('quantity_type') === 'contenedores')
-                                >
-                                {{ __('records.modal.containers') }}
-                                </option>
-
-
-                                <option
-                                    value="piezas"
-                                    @selected(old('quantity_type') === 'piezas')
-                                >
-                                {{ __('records.modal.pieces') }}
+                                <option value="__new__">
+                                    + Agregar nuevo tipo
                                 </option>
 
                             </select>
 
-                        </div>
+                            {{-- Este es el valor que realmente se envía al controlador --}}
+                            <input
+                                type="hidden"
+                                name="quantity_type"
+                                id="recordQuantityTypeValue"
+                                value="{{ old('quantity_type') }}"
+                            >
 
+                            {{-- Campo para escribir un tipo nuevo --}}
+                            <input
+                                type="text"
+                                id="recordQuantityTypeInput"
+                                class="form-input"
+                                placeholder="Escribe el nuevo tipo"
+                                maxlength="100"
+                                style="display: none; margin-top: 8px;"
+                            >
+
+                        </div>
                     </div>
 
 
@@ -1536,8 +1514,8 @@ const removeImage =
     document.getElementById('removeImage');
 
 
-   /* =====================================================
-   IMAGENES
+/* =====================================================
+   IMÁGENES
 ===================================================== */
 
 const imageInput =
@@ -1552,6 +1530,18 @@ const addImageButton =
 const imagePreviewContainer =
     document.getElementById('imagePreviewContainer');
 
+const imageSourceModal =
+    document.getElementById('imageSourceModal');
+
+const takePhotoButton =
+    document.getElementById('takePhotoButton');
+
+const chooseGalleryButton =
+    document.getElementById('chooseGalleryButton');
+
+const cancelImageSource =
+    document.getElementById('cancelImageSource');
+
 
 if (
     imageInput &&
@@ -1560,170 +1550,191 @@ if (
     imagePreviewContainer
 ) {
 
+    /*
+     * Aquí conservamos TODAS las imágenes
+     * seleccionadas por el usuario.
+     */
+
     let selectedFiles = [];
 
 
     /* =====================================================
-       BOTON AGREGAR IMAGEN
+       ABRIR MENÚ DE IMAGEN
     ===================================================== */
 
-    /* =====================================================
-   MENU PARA ELEGIR ORIGEN DE IMAGEN
-===================================================== */
+    addImageButton.addEventListener(
+        'click',
+        function () {
 
-const imageSourceModal =
-    document.getElementById(
-        'imageSourceModal'
-    );
+            if (!imageSourceModal) {
+                return;
+            }
 
-const takePhotoButton =
-    document.getElementById(
-        'takePhotoButton'
-    );
-
-const chooseGalleryButton =
-    document.getElementById(
-        'chooseGalleryButton'
-    );
-
-const cancelImageSource =
-    document.getElementById(
-        'cancelImageSource'
-    );
-
-
-/* =====================================================
-   ABRIR MENU
-===================================================== */
-
-addImageButton.addEventListener(
-    'click',
-    function () {
-
-        if (!imageSourceModal) {
-            return;
-        }
-
-        imageSourceModal.style.display =
-            'flex';
-
-    }
-);
-
-
-/* =====================================================
-   TOMAR FOTO
-===================================================== */
-
-takePhotoButton.addEventListener(
-    'click',
-    function () {
-
-        imageSourceModal.style.display =
-            'none';
-
-        cameraInput.click();
-
-    }
-);
-
-
-/* =====================================================
-   GALERIA / ARCHIVOS
-===================================================== */
-
-chooseGalleryButton.addEventListener(
-    'click',
-    function () {
-
-        imageSourceModal.style.display =
-            'none';
-
-        imageInput.click();
-
-    }
-);
-
-
-/* =====================================================
-   CANCELAR
-===================================================== */
-
-cancelImageSource.addEventListener(
-    'click',
-    function () {
-
-        imageSourceModal.style.display =
-            'none';
-
-    }
-);
-
-
-/* =====================================================
-   CERRAR TOCANDO FUERA
-===================================================== */
-
-imageSourceModal.addEventListener(
-    'click',
-    function (event) {
-
-        if (
-            event.target ===
-            imageSourceModal
-        ) {
-
-            imageSourceModal.style.display =
-                'none';
+            imageSourceModal.style.display = 'flex';
 
         }
-
-    }
-);
+    );
 
 
     /* =====================================================
-       ARCHIVOS / GALERIA
+       TOMAR FOTO
+    ===================================================== */
+
+    if (takePhotoButton) {
+
+        takePhotoButton.addEventListener(
+            'click',
+            function () {
+
+                imageSourceModal.style.display = 'none';
+
+                /*
+                 * Limpiamos el input antes de abrir
+                 * nuevamente la cámara.
+                 *
+                 * Esto permite tomar otra foto aunque
+                 * ya se haya tomado una anteriormente.
+                 */
+
+                cameraInput.value = '';
+
+                cameraInput.click();
+
+            }
+        );
+
+    }
+
+
+    /* =====================================================
+       GALERÍA / ARCHIVOS
+    ===================================================== */
+
+    if (chooseGalleryButton) {
+
+        chooseGalleryButton.addEventListener(
+            'click',
+            function () {
+
+                imageSourceModal.style.display = 'none';
+
+                /*
+                 * Limpiamos el input para permitir
+                 * seleccionar nuevamente archivos.
+                 */
+
+                imageInput.value = '';
+
+                imageInput.click();
+
+            }
+        );
+
+    }
+
+
+    /* =====================================================
+       CANCELAR MENÚ
+    ===================================================== */
+
+    if (cancelImageSource) {
+
+        cancelImageSource.addEventListener(
+            'click',
+            function () {
+
+                imageSourceModal.style.display = 'none';
+
+            }
+        );
+
+    }
+
+
+    /* =====================================================
+       CERRAR MENÚ TOCANDO FUERA
+    ===================================================== */
+
+    if (imageSourceModal) {
+
+        imageSourceModal.addEventListener(
+            'click',
+            function (event) {
+
+                if (
+                    event.target === imageSourceModal
+                ) {
+
+                    imageSourceModal.style.display =
+                        'none';
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* =====================================================
+       ARCHIVOS / GALERÍA
     ===================================================== */
 
     imageInput.addEventListener(
-    'change',
-    function () {
+        'change',
+        function () {
 
-        const newFiles =
-            Array.from(
-                this.files || []
-            );
+            const files =
+                Array.from(
+                    this.files || []
+                );
 
-        /*
-         * Limpiamos el input ANTES de
-         * reconstruirlo con DataTransfer.
-         */
-        this.value = '';
+            /*
+             * Procesamos los archivos ANTES
+             * de limpiar el input.
+             */
 
-        addFiles(newFiles);
+            addFiles(files);
 
-    }
-);
+            /*
+             * Permitimos volver a seleccionar
+             * los mismos archivos.
+             */
+
+            this.value = '';
+
+        }
+    );
 
 
     /* =====================================================
-       CAMARA
+       CÁMARA
     ===================================================== */
 
     cameraInput.addEventListener(
         'change',
         function () {
 
-            const newFiles =
+            const files =
                 Array.from(
                     this.files || []
                 );
 
-            addFiles(newFiles);
+            /*
+             * La cámara normalmente entrega
+             * una sola imagen, pero soportamos
+             * más de una por seguridad.
+             */
+
+            addFiles(files);
 
             /*
-             * Limpiamos el input de cámara.
+             * MUY IMPORTANTE:
+             *
+             * El input de cámara se limpia,
+             * pero selectedFiles NO se toca.
+             *
+             * Así podemos tomar otra foto.
              */
 
             this.value = '';
@@ -1747,6 +1758,10 @@ imageSourceModal.addEventListener(
 
         for (const file of files) {
 
+            /*
+             * Validar tipo.
+             */
+
             if (
                 !allowedTypes.includes(
                     file.type
@@ -1758,8 +1773,13 @@ imageSourceModal.addEventListener(
                 );
 
                 continue;
+
             }
 
+
+            /*
+             * Validar tamaño.
+             */
 
             if (
                 file.size >
@@ -1771,8 +1791,13 @@ imageSourceModal.addEventListener(
                 );
 
                 continue;
+
             }
 
+
+            /*
+             * Agregar archivo a la colección.
+             */
 
             selectedFiles.push(file);
 
@@ -1787,13 +1812,17 @@ imageSourceModal.addEventListener(
 
 
     /* =====================================================
-       ACTUALIZAR PREVIEW
+       ACTUALIZAR VISTA PREVIA
     ===================================================== */
 
     function updateImagePreview() {
 
         imagePreviewContainer.innerHTML = '';
 
+
+        /*
+         * Sin imágenes.
+         */
 
         if (
             selectedFiles.length === 0
@@ -1807,6 +1836,10 @@ imageSourceModal.addEventListener(
         }
 
 
+        /*
+         * Mostrar contenedor.
+         */
+
         imagePreviewContainer.style.display =
             'grid';
 
@@ -1815,9 +1848,7 @@ imageSourceModal.addEventListener(
             function (file, index) {
 
                 const wrapper =
-                    document.createElement(
-                        'div'
-                    );
+                    document.createElement('div');
 
 
                 wrapper.style.position =
@@ -1827,11 +1858,12 @@ imageSourceModal.addEventListener(
                     '180px';
 
 
-                const image =
-                    document.createElement(
-                        'img'
-                    );
+                /*
+                 * Imagen.
+                 */
 
+                const image =
+                    document.createElement('img');
 
                 image.className =
                     'image-preview';
@@ -1846,11 +1878,12 @@ imageSourceModal.addEventListener(
                     'cover';
 
 
-                const name =
-                    document.createElement(
-                        'div'
-                    );
+                /*
+                 * Nombre.
+                 */
 
+                const name =
+                    document.createElement('div');
 
                 name.className =
                     'image-name';
@@ -1865,11 +1898,12 @@ imageSourceModal.addEventListener(
                     'break-word';
 
 
-                const removeButton =
-                    document.createElement(
-                        'button'
-                    );
+                /*
+                 * Botón eliminar.
+                 */
 
+                const removeButton =
+                    document.createElement('button');
 
                 removeButton.type =
                     'button';
@@ -1901,6 +1935,10 @@ imageSourceModal.addEventListener(
                 );
 
 
+                /*
+                 * Construir tarjeta.
+                 */
+
                 wrapper.appendChild(
                     image
                 );
@@ -1918,6 +1956,10 @@ imageSourceModal.addEventListener(
                     wrapper
                 );
 
+
+                /*
+                 * Mostrar imagen.
+                 */
 
                 const reader =
                     new FileReader();
@@ -1943,7 +1985,7 @@ imageSourceModal.addEventListener(
 
 
     /* =====================================================
-       ACTUALIZAR INPUT PRINCIPAL
+       ACTUALIZAR INPUT REAL DEL FORMULARIO
     ===================================================== */
 
     function updateFileInput() {
@@ -1962,6 +2004,13 @@ imageSourceModal.addEventListener(
             }
         );
 
+
+        /*
+         * Este es el input que realmente
+         * se envía al servidor:
+         *
+         * images[]
+         */
 
         imageInput.files =
             dataTransfer.files;
@@ -2197,6 +2246,137 @@ imageSourceModal.addEventListener(
                 'consigneeId',
                 'consigneeOptions'
             );
+
+            /* =====================================================
+   TIPO DE CANTIDAD
+===================================================== */
+
+const quantityTypeSelect =
+    document.getElementById(
+        'recordQuantityType'
+    );
+
+const quantityTypeValue =
+    document.getElementById(
+        'recordQuantityTypeValue'
+    );
+
+const quantityTypeInput =
+    document.getElementById(
+        'recordQuantityTypeInput'
+    );
+
+
+if (
+    quantityTypeSelect &&
+    quantityTypeValue &&
+    quantityTypeInput
+) {
+
+    function updateQuantityType() {
+
+        const selectedValue =
+            quantityTypeSelect.value;
+
+
+        if (
+            selectedValue === '__new__'
+        ) {
+
+            quantityTypeInput.style.display =
+                'block';
+
+            quantityTypeInput.value =
+                '';
+
+            quantityTypeValue.value =
+                '';
+
+            quantityTypeInput.focus();
+
+        } else {
+
+            quantityTypeInput.style.display =
+                'none';
+
+            quantityTypeInput.value =
+                '';
+
+            quantityTypeValue.value =
+                selectedValue;
+
+        }
+
+    }
+
+
+    quantityTypeSelect.addEventListener(
+        'change',
+        function () {
+
+            updateQuantityType();
+
+        }
+    );
+
+
+    quantityTypeInput.addEventListener(
+        'input',
+        function () {
+
+            quantityTypeValue.value =
+                this.value.trim();
+
+        }
+    );
+
+
+    /*
+     * Si Laravel regresó el formulario
+     * con un tipo personalizado mediante old(),
+     * mostramos el campo escrito.
+     */
+
+    const currentValue =
+        quantityTypeValue.value.trim();
+
+
+    const hasOption =
+        Array.from(
+            quantityTypeSelect.options
+        ).some(
+            function (option) {
+
+                return (
+                    option.value ===
+                    currentValue
+                );
+
+            }
+        );
+
+
+    if (
+        currentValue !== '' &&
+        !hasOption
+    ) {
+
+        quantityTypeSelect.value =
+            '__new__';
+
+        quantityTypeInput.style.display =
+            'block';
+
+        quantityTypeInput.value =
+            currentValue;
+
+    } else {
+
+        updateQuantityType();
+
+    }
+
+}
 
         }
     );

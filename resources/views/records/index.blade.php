@@ -966,6 +966,24 @@
     background: white;
     cursor: pointer;
 }
+/* ============================================================
+   ALINEACIÓN DE LA COLUMNA DE SERVICIOS
+============================================================ */
+
+.record-table td:last-child {
+    text-align: center;
+    vertical-align: middle;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.record-table td:last-child .action-button.service {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    white-space: nowrap;
+}
 
 </style>
 
@@ -1500,7 +1518,6 @@
                                             @js($record->company->name ?? ''),
                                             @js($record->driver_id),
                                             @js($record->driver->name ?? ''),
-                                            @js($record->driver->name ?? ''),
                                             @js($record->trailer_id),
                                             @js($record->trailer->number ?? ''),
                                             @js($record->broker_id),
@@ -1527,24 +1544,48 @@
 
                             </td>
 
+                                @if(auth()->user()->role === 'admin')
 
-                            @if(auth()->user()->role === 'admin')
+    <td onclick="event.stopPropagation()">
 
-                                <td
-                                    onclick="event.stopPropagation()"
-                                >
+        <button
+            type="button"
+            class="action-button service"
+            onclick="openServiceFromIndex(
+                {{ $record->id }},
+                @js($record->date?->format('Y-m-d') ?? ''),
+                @js($record->invoice_number ?? ''),
+                @js($record->paps_number ?? ''),
+                @js($record->company_id),
+                @js($record->company?->name ?? ''),
+                @js($record->driver_id),
+                @js($record->driver?->name ?? ''),
+                @js($record->trailer_id),
+                @js($record->trailer?->trailer_number ?? ''),
+                @js($record->broker_id),
+                @js($record->broker?->name ?? ''),
+                @js($record->shipper_id),
+                @js($record->shipper?->name ?? ''),
+                @js($record->consignee_id),
+                @js($record->consignee?->name ?? ''),
+                @js($record->origin ?? ''),
+                @js($record->destination ?? ''),
+                @js($record->quantity ?? ''),
+                @js($record->quantity_type ?? ''),
+                @js($record->notes ?? ''),
+                @js($servicesData),
+                @js($record->registeredBy?->name ?? ''),
+                @js($record->created_at?->format('d/m/Y H:i') ?? ''),
+                @js($imageUrls)
+            )"
+        >
+            + {{ __('records.service') }}
+        </button>
 
-                                    <button
-                                        type="button"
-                                        class="action-button service"
-                                        onclick="openServiceModal({{ $record->id }})"
-                                    >
-                                        + {{ __('records.service') }}
-                                    </button>
+    </td>
 
-                                </td>
+@endif
 
-                            @endif
 
                         </tr>
 
@@ -1581,7 +1622,6 @@
     </div>
 
 </div>
-
 
 
 {{-- ============================================================
@@ -1621,7 +1661,6 @@
 
             </div>
 
-
             <button
                 type="button"
                 id="closeRecordDetailModal"
@@ -1631,7 +1670,6 @@
             </button>
 
         </div>
-
 
 
         {{-- =====================================================
@@ -1721,10 +1759,13 @@
             </div>
 
 
-
             {{-- IMAGEN --}}
 
-            <div id="detailImageSection" class="detail-image-section" style="display:none;">
+            <div
+                id="detailImageSection"
+                class="detail-image-section"
+                style="display:none;"
+            >
 
                 <div class="form-section-title">
                     {{ __('records.modal.image') }}
@@ -1736,7 +1777,6 @@
                 ></div>
 
             </div>
-
 
 
             {{-- DATOS TRASLADO --}}
@@ -1815,7 +1855,6 @@
                 </div>
 
             </div>
-
 
 
             {{-- PARTICIPANTES --}}
@@ -1898,7 +1937,10 @@
                             {{ __('records.modal.shipper') }}
                         </div>
 
-                        <div class="detail-value" id="detailShipper">
+                        <div
+                            id="detailShipper"
+                            class="detail-value"
+                        >
                             —
                         </div>
 
@@ -1925,7 +1967,6 @@
             </div>
 
 
-
             {{-- SERVICIOS --}}
 
             <div class="form-section">
@@ -1940,7 +1981,6 @@
                 ></div>
 
             </div>
-
 
 
             {{-- CONTROL --}}
@@ -1989,7 +2029,6 @@
             </div>
 
 
-
             {{-- NOTAS --}}
 
             <div class="form-section">
@@ -2012,7 +2051,6 @@
             </div>
 
 
-
             {{-- ADMIN --}}
 
             @if(auth()->user()->role === 'admin')
@@ -2029,7 +2067,6 @@
             @endif
 
         </div>
-
 
 
         {{-- =====================================================
@@ -2131,8 +2168,9 @@
                 </div>
 
 
-
-                {{-- IMAGEN --}}
+                {{-- =====================================================
+                     IMAGENES EDITAR
+                ====================================================== --}}
 
                 <div class="form-section">
 
@@ -2146,14 +2184,73 @@
                             {{ __('records.modal.replace_image') }}
                         </label>
 
+
+                        {{-- INPUT REAL QUE SE ENVIA AL SERVIDOR --}}
+
                         <input
                             type="file"
                             id="editImages"
                             name="images[]"
-                            class="form-input"
                             accept="image/jpeg,image/png,image/webp"
                             multiple
+                            hidden
                         >
+
+
+                        {{-- INPUT PARA CAMARA --}}
+
+                        <input
+                            type="file"
+                            id="editCameraInput"
+                            accept="image/jpeg,image/png,image/webp"
+                            capture="environment"
+                            hidden
+                        >
+
+
+                        {{-- INPUT PARA ARCHIVOS --}}
+
+                        <input
+                            type="file"
+                            id="editFileInput"
+                            accept="image/jpeg,image/png,image/webp"
+                            multiple
+                            hidden
+                        >
+
+
+                        {{-- BOTONES --}}
+
+                        <div
+                            style="
+                                display:flex;
+                                gap:10px;
+                                flex-wrap:wrap;
+                                margin-top:8px;
+                            "
+                        >
+
+                            <button
+                                type="button"
+                                id="editTakePhotoButton"
+                                class="image-upload-button"
+                            >
+                                📷 Tomar foto
+                            </button>
+
+
+                            <button
+                                type="button"
+                                id="editChooseFileButton"
+                                class="image-upload-button"
+                            >
+                                📁 Elegir archivo
+                            </button>
+
+                        </div>
+
+
+                        {{-- IMAGENES EXISTENTES + NUEVAS --}}
 
                         <div
                             id="editImagesContainer"
@@ -2163,7 +2260,6 @@
                     </div>
 
                 </div>
-
 
 
                 {{-- TRASLADO --}}
@@ -2233,7 +2329,6 @@
 
                             <select
                                 id="editQuantityType"
-                                name="quantity_type"
                                 class="form-select"
                             >
 
@@ -2241,26 +2336,61 @@
                                     {{ __('records.modal.select') }}
                                 </option>
 
-                                <option value="palets">
-                                    {{ __('records.modal.palets') }}
-                                </option>
+                                @foreach($quantityTypes as $quantityType)
 
-                                <option value="contenedores">
-                                    {{ __('records.modal.containers') }}
-                                </option>
+                                    <option value="{{ $quantityType }}">
 
-                                <option value="piezas">
-                                    {{ __('records.modal.pieces') }}
+                                        @if($quantityType === 'palets')
+
+                                            {{ __('records.modal.palets') }}
+
+                                        @elseif($quantityType === 'contenedores')
+
+                                            {{ __('records.modal.containers') }}
+
+                                        @elseif($quantityType === 'piezas')
+
+                                            {{ __('records.modal.pieces') }}
+
+                                        @else
+
+                                            {{ $quantityType }}
+
+                                        @endif
+
+                                    </option>
+
+                                @endforeach
+
+                                <option value="__new__">
+                                    + Agregar nuevo tipo
                                 </option>
 
                             </select>
+
+
+                            <input
+                                type="hidden"
+                                name="quantity_type"
+                                id="editQuantityTypeValue"
+                                value=""
+                            >
+
+
+                            <input
+                                type="text"
+                                id="editQuantityTypeInput"
+                                class="form-input"
+                                placeholder="Escribe el nuevo tipo"
+                                maxlength="100"
+                                style="display:none; margin-top:8px;"
+                            >
 
                         </div>
 
                     </div>
 
                 </div>
-
 
 
                 {{-- PARTICIPANTES --}}
@@ -2535,7 +2665,6 @@
                 </div>
 
 
-
                 {{-- SERVICIOS ADMIN --}}
 
                 @if(auth()->user()->role === 'admin')
@@ -2569,7 +2698,6 @@
                     </div>
 
                 @endif
-
 
 
                 {{-- CONTROL --}}
@@ -2618,7 +2746,6 @@
                 </div>
 
 
-
                 {{-- NOTAS --}}
 
                 <div class="form-section">
@@ -2637,7 +2764,6 @@
                 </div>
 
             </div>
-
 
 
             {{-- FOOTER EDITAR --}}
@@ -2664,7 +2790,6 @@
         </form>
 
 
-
         {{-- FOOTER VER --}}
 
         <div
@@ -2679,7 +2804,6 @@
             >
                 {{ __('records.modal.close') }}
             </button>
-
 
             <button
                 type="button"
@@ -2724,7 +2848,6 @@
 
             </div>
 
-
             <button
                 type="button"
                 id="closeServiceModal"
@@ -2736,14 +2859,12 @@
         </div>
 
 
-
         <form
             id="serviceForm"
             method="POST"
         >
 
             @csrf
-
 
             <div class="modal-body">
 
@@ -2852,7 +2973,6 @@
 @endif
 
 
-
 <script>
 
 /* ============================================================
@@ -2885,6 +3005,29 @@ let currentRecordImageUrls = [];
 ============================================================ */
 
 let selectedEditFiles = [];
+
+
+/* ============================================================
+   ELEMENTOS IMAGENES EDITAR
+============================================================ */
+
+let editImagesInput = null;
+let editCameraInput = null;
+let editFileInput = null;
+let editImagesContainer = null;
+let editTakePhotoButton = null;
+let editChooseFileButton = null;
+
+
+/* ============================================================
+   CONTROL DE INICIALIZACION
+============================================================ */
+
+let editImagesInitialized = false;
+let editQuantityTypeInitialized = false;
+let editFormInitialized = false;
+
+
 
 
 /* ============================================================
@@ -2998,6 +3141,56 @@ function formatMoney(value) {
 
 
 /* ============================================================
+   CONVERTIR BOOLEANOS
+============================================================ */
+
+function toBoolean(value) {
+
+    if (
+        value === true ||
+        value === 1
+    ) {
+        return true;
+    }
+
+
+    if (
+        value === false ||
+        value === 0 ||
+        value === null ||
+        value === undefined
+    ) {
+        return false;
+    }
+
+
+    if (
+        typeof value === 'string'
+    ) {
+
+        const normalized =
+            value
+                .trim()
+                .toLowerCase();
+
+
+        return (
+            normalized === 'true' ||
+            normalized === '1' ||
+            normalized === 'yes' ||
+            normalized === 'si' ||
+            normalized === 'sí'
+        );
+
+    }
+
+
+    return Boolean(value);
+
+}
+
+
+/* ============================================================
    AUTOCOMPLETE
 ============================================================ */
 
@@ -3048,8 +3241,16 @@ function setupAutocomplete(type) {
             input.value.trim();
 
 
+        const sourceData =
+            Array.isArray(
+                autocompleteData[type]
+            )
+                ? autocompleteData[type]
+                : [];
+
+
         let results =
-            autocompleteData[type].filter(function(item) {
+            sourceData.filter(function(item) {
 
                 return String(item.value)
                     .toLowerCase()
@@ -3061,7 +3262,7 @@ function setupAutocomplete(type) {
         if (search === '') {
 
             results =
-                autocompleteData[type].slice(0, 10);
+                sourceData.slice(0, 10);
 
         } else {
 
@@ -3208,13 +3409,17 @@ function setupAutocomplete(type) {
    INICIALIZAR AUTOCOMPLETE
 ============================================================ */
 
-Object.keys(
-    autocompleteConfig
-).forEach(function(type) {
+function initializeAutocomplete() {
 
-    setupAutocomplete(type);
+    Object.keys(
+        autocompleteConfig
+    ).forEach(function(type) {
 
-});
+        setupAutocomplete(type);
+
+    });
+
+}
 
 
 /* ============================================================
@@ -3306,6 +3511,570 @@ function getServiceType(
 
 
 /* ============================================================
+   IMAGENES NUEVAS AL EDITAR
+============================================================ */
+
+function syncEditFiles() {
+
+    if (!editImagesInput) {
+        return;
+    }
+
+
+    const dataTransfer =
+        new DataTransfer();
+
+
+    selectedEditFiles.forEach(
+        function(file) {
+
+            dataTransfer.items.add(file);
+
+        }
+    );
+
+
+    editImagesInput.files =
+        dataTransfer.files;
+
+}
+
+
+/* ============================================================
+   RENDERIZAR IMAGENES NUEVAS
+============================================================ */
+
+function renderNewEditImages() {
+
+    if (!editImagesContainer) {
+        return;
+    }
+
+
+    editImagesContainer
+        .querySelectorAll('.new-edit-image')
+        .forEach(function(element) {
+
+            element.remove();
+
+        });
+
+
+    selectedEditFiles.forEach(
+        function(file, index) {
+
+            const item =
+                document.createElement('div');
+
+            item.className =
+                'edit-image-item new-edit-image';
+
+            item.style.position =
+                'relative';
+
+
+            const image =
+                document.createElement('img');
+
+            image.className =
+                'edit-image-gallery';
+
+            image.alt =
+                'Nueva imagen';
+
+
+            const reader =
+                new FileReader();
+
+
+            reader.onload =
+                function(event) {
+
+                    image.src =
+                        event.target.result;
+
+                };
+
+
+            reader.readAsDataURL(file);
+
+
+            const deleteButton =
+                document.createElement('button');
+
+            deleteButton.type =
+                'button';
+
+            deleteButton.textContent =
+                '×';
+
+            deleteButton.title =
+                'Eliminar imagen';
+
+            deleteButton.style.position =
+                'absolute';
+
+            deleteButton.style.top =
+                '8px';
+
+            deleteButton.style.right =
+                '8px';
+
+            deleteButton.style.zIndex =
+                '10';
+
+            deleteButton.style.cursor =
+                'pointer';
+
+
+            deleteButton.addEventListener(
+                'click',
+                function(event) {
+
+                    event.preventDefault();
+
+                    event.stopPropagation();
+
+
+                    selectedEditFiles.splice(
+                        index,
+                        1
+                    );
+
+
+                    syncEditFiles();
+
+                    renderNewEditImages();
+
+                }
+            );
+
+
+            item.appendChild(
+                image
+            );
+
+            item.appendChild(
+                deleteButton
+            );
+
+
+            editImagesContainer.appendChild(
+                item
+            );
+
+        }
+    );
+
+}
+
+
+/* ============================================================
+   AGREGAR IMAGENES NUEVAS
+============================================================ */
+
+function addEditImages(files) {
+
+    if (!files || files.length === 0) {
+        return;
+    }
+
+
+    const allowedTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/webp'
+    ];
+
+
+    Array.from(files).forEach(
+        function(file) {
+
+            if (
+                !allowedTypes.includes(
+                    file.type
+                )
+            ) {
+
+                alert(
+                    'Solo se permiten imágenes JPG, PNG o WEBP.'
+                );
+
+                return;
+
+            }
+
+
+            if (
+                file.size >
+                10 * 1024 * 1024
+            ) {
+
+                alert(
+                    'La imagen no puede superar los 10 MB.'
+                );
+
+                return;
+
+            }
+
+
+            selectedEditFiles.push(
+                file
+            );
+
+        }
+    );
+
+
+    syncEditFiles();
+
+    renderNewEditImages();
+
+}
+
+
+/* ============================================================
+   INICIALIZAR IMAGENES DE EDICION
+============================================================ */
+
+function initializeEditImages() {
+
+    if (editImagesInitialized) {
+        return;
+    }
+
+
+    editImagesInput =
+        document.getElementById(
+            'editImages'
+        );
+
+    editCameraInput =
+        document.getElementById(
+            'editCameraInput'
+        );
+
+    editFileInput =
+        document.getElementById(
+            'editFileInput'
+        );
+
+    editImagesContainer =
+        document.getElementById(
+            'editImagesContainer'
+        );
+
+    editTakePhotoButton =
+        document.getElementById(
+            'editTakePhotoButton'
+        );
+
+    editChooseFileButton =
+        document.getElementById(
+            'editChooseFileButton'
+        );
+
+
+    if (!editImagesInput) {
+
+        console.warn(
+            'No se encontró editImages.'
+        );
+
+        return;
+
+    }
+
+
+    editImagesInitialized = true;
+
+
+    /* ========================================================
+       TOMAR FOTO
+    ======================================================== */
+
+    if (editTakePhotoButton && editCameraInput) {
+
+        editTakePhotoButton.addEventListener(
+            'click',
+            function() {
+
+                editCameraInput.click();
+
+            }
+        );
+
+    }
+
+
+    /* ========================================================
+       ELEGIR ARCHIVO
+    ======================================================== */
+
+    if (editChooseFileButton && editFileInput) {
+
+        editChooseFileButton.addEventListener(
+            'click',
+            function() {
+
+                editFileInput.click();
+
+            }
+        );
+
+    }
+
+
+    /* ========================================================
+       CAMARA
+    ======================================================== */
+
+    if (editCameraInput) {
+
+        editCameraInput.addEventListener(
+            'change',
+            function() {
+
+                addEditImages(
+                    this.files
+                );
+
+
+                this.value =
+                    '';
+
+            }
+        );
+
+    }
+
+
+    /* ========================================================
+       ARCHIVO
+    ======================================================== */
+
+    if (editFileInput) {
+
+        editFileInput.addEventListener(
+            'change',
+            function() {
+
+                addEditImages(
+                    this.files
+                );
+
+
+                this.value =
+                    '';
+
+            }
+        );
+
+    }
+
+
+    /* ========================================================
+       INPUT REAL images[]
+       Por seguridad también se controla directamente.
+    ======================================================== */
+
+    editImagesInput.addEventListener(
+        'change',
+        function() {
+
+            const files =
+                Array.from(
+                    this.files || []
+                );
+
+
+            if (files.length === 0) {
+                return;
+            }
+
+
+            selectedEditFiles = [];
+
+
+            addEditImages(
+                files
+            );
+
+        }
+    );
+
+}
+
+
+/* ============================================================
+   TIPO DE CANTIDAD - EDITAR
+============================================================ */
+
+function initializeEditQuantityType() {
+
+    if (editQuantityTypeInitialized) {
+        return;
+    }
+
+
+    const select =
+        document.getElementById(
+            'editQuantityType'
+        );
+
+    const hiddenValue =
+        document.getElementById(
+            'editQuantityTypeValue'
+        );
+
+    const textInput =
+        document.getElementById(
+            'editQuantityTypeInput'
+        );
+
+
+    if (
+        !select ||
+        !hiddenValue ||
+        !textInput
+    ) {
+        return;
+    }
+
+
+    editQuantityTypeInitialized = true;
+
+
+    function updateEditQuantityType() {
+
+        const selectedValue =
+            select.value;
+
+
+        if (
+            selectedValue === '__new__'
+        ) {
+
+            textInput.style.display =
+                'block';
+
+            textInput.value =
+                '';
+
+            hiddenValue.value =
+                '';
+
+            textInput.focus();
+
+        } else {
+
+            textInput.style.display =
+                'none';
+
+            textInput.value =
+                '';
+
+            hiddenValue.value =
+                selectedValue;
+
+        }
+
+    }
+
+
+    select.addEventListener(
+        'change',
+        function() {
+
+            updateEditQuantityType();
+
+        }
+    );
+
+
+    textInput.addEventListener(
+        'input',
+        function() {
+
+            hiddenValue.value =
+                this.value.trim();
+
+        }
+    );
+
+}
+
+
+/* ============================================================
+   VALIDAR / PREPARAR TIPO DE CANTIDAD
+============================================================ */
+
+function prepareEditQuantityType() {
+
+    const select =
+        document.getElementById(
+            'editQuantityType'
+        );
+
+    const hiddenValue =
+        document.getElementById(
+            'editQuantityTypeValue'
+        );
+
+    const textInput =
+        document.getElementById(
+            'editQuantityTypeInput'
+        );
+
+
+    if (
+        !select ||
+        !hiddenValue ||
+        !textInput
+    ) {
+        return true;
+    }
+
+
+    if (
+        select.value === '__new__'
+    ) {
+
+        const newType =
+            textInput.value.trim();
+
+
+        if (newType === '') {
+
+            alert(
+                'Escribe el nuevo tipo de cantidad.'
+            );
+
+            textInput.focus();
+
+            return false;
+
+        }
+
+
+        hiddenValue.value =
+            newType;
+
+    } else {
+
+        hiddenValue.value =
+            select.value;
+
+    }
+
+
+    return true;
+
+}
+
+
+/* ============================================================
    MODAL DETALLE
 ============================================================ */
 
@@ -3391,124 +4160,257 @@ function openRecordDetailModal(
             : [];
 
 
-    document.getElementById(
-        'detailModalTitle'
-    ).textContent =
-        `{{ __('records.table.record') }} #${recordId}`;
+    const title =
+        document.getElementById(
+            'detailModalTitle'
+        );
+
+    if (title) {
+
+        title.textContent =
+            `{{ __('records.table.record') }} #${recordId}`;
+
+    }
 
 
-    document.getElementById(
-        'detailModalSubtitle'
-    ).textContent =
-        invoice
-            ? `{{ __('records.invoice') }}: ${invoice}`
-            : '{{ __('records.modal.information') }}';
+    const subtitle =
+        document.getElementById(
+            'detailModalSubtitle'
+        );
+
+    if (subtitle) {
+
+        subtitle.textContent =
+            invoice
+                ? `{{ __('records.invoice') }}: ${invoice}`
+                : '{{ __('records.modal.information') }}';
+
+    }
 
 
-    document.getElementById(
-        'detailDate'
-    ).textContent =
-        cleanDetailValue(date);
+    const detailDate =
+        document.getElementById(
+            'detailDate'
+        );
+
+    if (detailDate) {
+
+        detailDate.textContent =
+            cleanDetailValue(date);
+
+    }
 
 
-    document.getElementById(
-        'detailRecordId'
-    ).textContent =
-        `#${recordId}`;
+    const detailRecordId =
+        document.getElementById(
+            'detailRecordId'
+        );
+
+    if (detailRecordId) {
+
+        detailRecordId.textContent =
+            `#${recordId}`;
+
+    }
 
 
-    document.getElementById(
-        'detailInvoice'
-    ).textContent =
-        cleanDetailValue(invoice);
+    const detailInvoice =
+        document.getElementById(
+            'detailInvoice'
+        );
+
+    if (detailInvoice) {
+
+        detailInvoice.textContent =
+            cleanDetailValue(invoice);
+
+    }
 
 
-    document.getElementById(
-        'detailPaps'
-    ).textContent =
-        cleanDetailValue(paps);
+    const detailPaps =
+        document.getElementById(
+            'detailPaps'
+        );
+
+    if (detailPaps) {
+
+        detailPaps.textContent =
+            cleanDetailValue(paps);
+
+    }
 
 
-    document.getElementById(
-        'detailOrigin'
-    ).textContent =
-        cleanDetailValue(origin);
+    const detailOrigin =
+        document.getElementById(
+            'detailOrigin'
+        );
+
+    if (detailOrigin) {
+
+        detailOrigin.textContent =
+            cleanDetailValue(origin);
+
+    }
 
 
-    document.getElementById(
-        'detailDestination'
-    ).textContent =
-        cleanDetailValue(destination);
+    const detailDestination =
+        document.getElementById(
+            'detailDestination'
+        );
+
+    if (detailDestination) {
+
+        detailDestination.textContent =
+            cleanDetailValue(destination);
+
+    }
 
 
-    document.getElementById(
-        'detailQuantity'
-    ).textContent =
-        cleanDetailValue(quantity);
+    const detailQuantity =
+        document.getElementById(
+            'detailQuantity'
+        );
+
+    if (detailQuantity) {
+
+        detailQuantity.textContent =
+            cleanDetailValue(quantity);
+
+    }
 
 
-    document.getElementById(
-        'detailQuantityType'
-    ).textContent =
-        cleanDetailValue(quantityType);
+    const detailQuantityType =
+        document.getElementById(
+            'detailQuantityType'
+        );
+
+    if (detailQuantityType) {
+
+        detailQuantityType.textContent =
+            cleanDetailValue(quantityType);
+
+    }
 
 
-    document.getElementById(
-        'detailCompany'
-    ).textContent =
-        cleanDetailValue(companyName);
+    const detailCompany =
+        document.getElementById(
+            'detailCompany'
+        );
+
+    if (detailCompany) {
+
+        detailCompany.textContent =
+            cleanDetailValue(companyName);
+
+    }
 
 
-    document.getElementById(
-        'detailDriver'
-    ).textContent =
-        cleanDetailValue(driverName);
+    const detailDriver =
+        document.getElementById(
+            'detailDriver'
+        );
+
+    if (detailDriver) {
+
+        detailDriver.textContent =
+            cleanDetailValue(driverName);
+
+    }
 
 
-    document.getElementById(
-        'detailTrailer'
-    ).textContent =
-        cleanDetailValue(trailerNumber);
+    const detailTrailer =
+        document.getElementById(
+            'detailTrailer'
+        );
+
+    if (detailTrailer) {
+
+        detailTrailer.textContent =
+            cleanDetailValue(trailerNumber);
+
+    }
 
 
-    document.getElementById(
-        'detailBroker'
-    ).textContent =
-        cleanDetailValue(brokerName);
+    const detailBroker =
+        document.getElementById(
+            'detailBroker'
+        );
+
+    if (detailBroker) {
+
+        detailBroker.textContent =
+            cleanDetailValue(brokerName);
+
+    }
 
 
-    document.getElementById(
-        'detailShipper'
-    ).textContent =
-        cleanDetailValue(shipperName);
+    const detailShipper =
+        document.getElementById(
+            'detailShipper'
+        );
+
+    if (detailShipper) {
+
+        detailShipper.textContent =
+            cleanDetailValue(shipperName);
+
+    }
 
 
-    document.getElementById(
-        'detailConsignee'
-    ).textContent =
-        cleanDetailValue(consigneeName);
+    const detailConsignee =
+        document.getElementById(
+            'detailConsignee'
+        );
+
+    if (detailConsignee) {
+
+        detailConsignee.textContent =
+            cleanDetailValue(consigneeName);
+
+    }
 
 
-    document.getElementById(
-        'detailRegisteredBy'
-    ).textContent =
-        cleanDetailValue(registeredBy);
+    const detailRegisteredBy =
+        document.getElementById(
+            'detailRegisteredBy'
+        );
+
+    if (detailRegisteredBy) {
+
+        detailRegisteredBy.textContent =
+            cleanDetailValue(registeredBy);
+
+    }
 
 
-    document.getElementById(
-        'detailCreatedAt'
-    ).textContent =
-        cleanDetailValue(createdAt);
+    const detailCreatedAt =
+        document.getElementById(
+            'detailCreatedAt'
+        );
+
+    if (detailCreatedAt) {
+
+        detailCreatedAt.textContent =
+            cleanDetailValue(createdAt);
+
+    }
 
 
-    document.getElementById(
-        'detailNotes'
-    ).textContent =
-        cleanDetailValue(notes);
+    const detailNotes =
+        document.getElementById(
+            'detailNotes'
+        );
+
+    if (detailNotes) {
+
+        detailNotes.textContent =
+            cleanDetailValue(notes);
+
+    }
 
 
     /* ========================================================
-       IMÁGENES
+       IMAGENES
     ======================================================== */
 
     const imageSection =
@@ -3548,10 +4450,8 @@ function openRecordDetailModal(
                 image.className =
                     'detail-image';
 
-
                 image.src =
                     imageData.url;
-
 
                 image.alt =
                     '{{ __('records.modal.current_image') }}';
@@ -3606,10 +4506,6 @@ function openRecordDetailModal(
     }
 
 
-    /* ========================================================
-       SERVICIOS
-    ======================================================== */
-
     renderServices(
         currentRecordServices
     );
@@ -3621,27 +4517,55 @@ function openRecordDetailModal(
         );
 
 
-    document.getElementById(
-        'recordViewMode'
-    ).style.display =
-        'block';
+    const recordViewMode =
+        document.getElementById(
+            'recordViewMode'
+        );
 
 
-    document.getElementById(
-        'editRecordForm'
-    ).style.display =
-        'none';
+    const editRecordForm =
+        document.getElementById(
+            'editRecordForm'
+        );
 
 
-    document.getElementById(
-        'detailModalFooter'
-    ).style.display =
-        'flex';
+    const detailModalFooter =
+        document.getElementById(
+            'detailModalFooter'
+        );
 
 
-    modal.classList.add(
-        'active'
-    );
+    if (recordViewMode) {
+
+        recordViewMode.style.display =
+            'block';
+
+    }
+
+
+    if (editRecordForm) {
+
+        editRecordForm.style.display =
+            'none';
+
+    }
+
+
+    if (detailModalFooter) {
+
+        detailModalFooter.style.display =
+            'flex';
+
+    }
+
+
+    if (modal) {
+
+        modal.classList.add(
+            'active'
+        );
+
+    }
 
 
     document.body.style.overflow =
@@ -3737,16 +4661,10 @@ function openEditRecordModal(
 
 
     /* ========================================================
-       LIMPIAR ARCHIVOS NUEVOS ANTERIORES
+       LIMPIAR ARCHIVOS NUEVOS
     ======================================================== */
 
     selectedEditFiles = [];
-
-
-    const editImagesInput =
-        document.getElementById(
-            'editImages'
-        );
 
 
     if (editImagesInput) {
@@ -3757,70 +4675,235 @@ function openEditRecordModal(
     }
 
 
-    document.getElementById(
-        'editDate'
-    ).value =
-        date ?? '';
+    if (editCameraInput) {
+
+        editCameraInput.value =
+            '';
+
+    }
 
 
-    document.getElementById(
-        'editRecordId'
-    ).value =
-        recordId;
+    if (editFileInput) {
+
+        editFileInput.value =
+            '';
+
+    }
 
 
-    document.getElementById(
-        'editInvoice'
-    ).value =
-        invoice ?? '';
+    /* ========================================================
+       DATOS
+    ======================================================== */
+
+    const editDate =
+        document.getElementById(
+            'editDate'
+        );
+
+    if (editDate) {
+
+        editDate.value =
+            convertDateToInput(date);
+
+    }
 
 
-    document.getElementById(
-        'editPaps'
-    ).value =
-        paps ?? '';
+    const editRecordId =
+        document.getElementById(
+            'editRecordId'
+        );
+
+    if (editRecordId) {
+
+        editRecordId.value =
+            recordId;
+
+    }
 
 
-    document.getElementById(
-        'editOrigin'
-    ).value =
-        origin ?? '';
+    const editInvoice =
+        document.getElementById(
+            'editInvoice'
+        );
+
+    if (editInvoice) {
+
+        editInvoice.value =
+            invoice ?? '';
+
+    }
 
 
-    document.getElementById(
-        'editDestination'
-    ).value =
-        destination ?? '';
+    const editPaps =
+        document.getElementById(
+            'editPaps'
+        );
+
+    if (editPaps) {
+
+        editPaps.value =
+            paps ?? '';
+
+    }
 
 
-    document.getElementById(
-        'editQuantity'
-    ).value =
-        quantity ?? '';
+    const editOrigin =
+        document.getElementById(
+            'editOrigin'
+        );
+
+    if (editOrigin) {
+
+        editOrigin.value =
+            origin ?? '';
+
+    }
 
 
-    document.getElementById(
-        'editQuantityType'
-    ).value =
-        quantityType ?? '';
+    const editDestination =
+        document.getElementById(
+            'editDestination'
+        );
+
+    if (editDestination) {
+
+        editDestination.value =
+            destination ?? '';
+
+    }
 
 
-    document.getElementById(
-        'editNotes'
-    ).value =
-        notes ?? '';
+    const editQuantity =
+        document.getElementById(
+            'editQuantity'
+        );
+
+    if (editQuantity) {
+
+        editQuantity.value =
+            quantity ?? '';
+
+    }
 
 
-    document.getElementById(
-        'editRegisteredBy'
-    ).value =
-        registeredBy ?? '';
+    /* ========================================================
+       TIPO DE CANTIDAD
+    ======================================================== */
+
+    const quantityTypeSelect =
+        document.getElementById(
+            'editQuantityType'
+        );
+
+    const quantityTypeHidden =
+        document.getElementById(
+            'editQuantityTypeValue'
+        );
+
+    const quantityTypeInput =
+        document.getElementById(
+            'editQuantityTypeInput'
+        );
 
 
-    document.getElementById(
-        'editCreatedAt'
-    ).value =
-        createdAt ?? '';
+    if (
+        quantityTypeSelect &&
+        quantityTypeHidden &&
+        quantityTypeInput
+    ) {
+
+        const currentQuantityType =
+            (quantityType ?? '')
+                .toString()
+                .trim();
+
+
+        quantityTypeHidden.value =
+            currentQuantityType;
+
+
+        const hasOption =
+            Array.from(
+                quantityTypeSelect.options
+            ).some(
+                function(option) {
+
+                    return (
+                        option.value ===
+                        currentQuantityType
+                    );
+
+                }
+            );
+
+
+        if (
+            currentQuantityType !== '' &&
+            !hasOption
+        ) {
+
+            quantityTypeSelect.value =
+                '__new__';
+
+            quantityTypeInput.style.display =
+                'block';
+
+            quantityTypeInput.value =
+                currentQuantityType;
+
+        } else {
+
+            quantityTypeSelect.value =
+                currentQuantityType;
+
+            quantityTypeInput.style.display =
+                'none';
+
+            quantityTypeInput.value =
+                '';
+
+        }
+
+    }
+
+
+    const editNotes =
+        document.getElementById(
+            'editNotes'
+        );
+
+    if (editNotes) {
+
+        editNotes.value =
+            notes ?? '';
+
+    }
+
+
+    const editRegisteredBy =
+        document.getElementById(
+            'editRegisteredBy'
+        );
+
+    if (editRegisteredBy) {
+
+        editRegisteredBy.value =
+            registeredBy ?? '';
+
+    }
+
+
+    const editCreatedAt =
+        document.getElementById(
+            'editCreatedAt'
+        );
+
+    if (editCreatedAt) {
+
+        editCreatedAt.value =
+            createdAt ?? '';
+
+    }
 
 
     /* ========================================================
@@ -3870,14 +4953,8 @@ function openEditRecordModal(
 
 
     /* ========================================================
-       IMÁGENES EXISTENTES
+       IMAGENES EXISTENTES
     ======================================================== */
-
-    const editImagesContainer =
-        document.getElementById(
-            'editImagesContainer'
-        );
-
 
     if (editImagesContainer) {
 
@@ -3885,168 +4962,169 @@ function openEditRecordModal(
             '';
 
 
-        if (
-            currentRecordImageUrls.length > 0
-        ) {
+        currentRecordImageUrls.forEach(
+            function(imageData) {
 
-            currentRecordImageUrls.forEach(
-                function(imageData) {
+                const item =
+                    document.createElement('div');
 
-                    const item =
-                        document.createElement('div');
+                item.className =
+                    'edit-image-item';
 
-                    item.className =
-                        'edit-image-item';
-
-                    item.style.position =
-                        'relative';
+                item.style.position =
+                    'relative';
 
 
-                    const image =
-                        document.createElement('img');
+                const image =
+                    document.createElement('img');
 
-                    image.className =
-                        'edit-image-gallery';
+                image.className =
+                    'edit-image-gallery';
 
-                    image.src =
-                        imageData.url;
+                image.src =
+                    imageData.url;
 
-                    image.alt =
-                        '{{ __('records.modal.current_image') }}';
+                image.alt =
+                    '{{ __('records.modal.current_image') }}';
 
 
-                    image.addEventListener(
-                        'click',
-                        function() {
+                image.addEventListener(
+                    'click',
+                    function() {
 
-                            window.open(
-                                imageData.url,
-                                '_blank'
+                        window.open(
+                            imageData.url,
+                            '_blank'
+                        );
+
+                    }
+                );
+
+
+                const deleteButton =
+                    document.createElement('button');
+
+                deleteButton.type =
+                    'button';
+
+                deleteButton.textContent =
+                    '🗑️';
+
+                deleteButton.title =
+                    'Eliminar imagen';
+
+                deleteButton.style.position =
+                    'absolute';
+
+                deleteButton.style.top =
+                    '8px';
+
+                deleteButton.style.right =
+                    '8px';
+
+                deleteButton.style.zIndex =
+                    '10';
+
+                deleteButton.style.cursor =
+                    'pointer';
+
+
+                deleteButton.addEventListener(
+                    'click',
+                    async function(event) {
+
+                        event.preventDefault();
+
+                        event.stopPropagation();
+
+
+                        const confirmed =
+                            confirm(
+                                '¿Deseas eliminar esta imagen?'
                             );
 
+
+                        if (!confirmed) {
+                            return;
                         }
-                    );
 
 
-                    const deleteButton =
-                        document.createElement('button');
+                        try {
 
-                    deleteButton.type =
-                        'button';
+                            const response =
+                                await fetch(
+                                    `/record-images/${imageData.id}`,
+                                    {
+                                        method: 'DELETE',
 
-                    deleteButton.textContent =
-                        '🗑️';
+                                        headers: {
+                                            'X-CSRF-TOKEN':
+                                                '{{ csrf_token() }}',
 
-                    deleteButton.title =
-                        'Eliminar imagen';
-
-                    deleteButton.style.position =
-                        'absolute';
-
-                    deleteButton.style.top =
-                        '8px';
-
-                    deleteButton.style.right =
-                        '8px';
-
-                    deleteButton.style.zIndex =
-                        '10';
-
-                    deleteButton.style.cursor =
-                        'pointer';
-
-
-                    deleteButton.addEventListener(
-                        'click',
-                        async function(event) {
-
-                            event.stopPropagation();
-
-
-                            const confirmed =
-                                confirm(
-                                    '¿Deseas eliminar esta imagen?'
+                                            'Accept':
+                                                'application/json'
+                                        }
+                                    }
                                 );
 
 
-                            if (!confirmed) {
-                                return;
-                            }
+                            if (!response.ok) {
 
-
-                            try {
-
-                                const response =
-                                    await fetch(
-                                        `/record-images/${imageData.id}`,
-                                        {
-                                            method: 'DELETE',
-
-                                            headers: {
-                                                'X-CSRF-TOKEN':
-                                                    '{{ csrf_token() }}',
-
-                                                'Accept':
-                                                    'application/json'
-                                            }
-                                        }
-                                    );
-
-
-                                if (!response.ok) {
-
-                                    throw new Error(
-                                        'No se pudo eliminar la imagen.'
-                                    );
-
-                                }
-
-
-                                currentRecordImageUrls =
-                                    currentRecordImageUrls.filter(
-                                        function(image) {
-
-                                            return image.id !==
-                                                imageData.id;
-
-                                        }
-                                    );
-
-
-                                item.remove();
-
-
-                            } catch (error) {
-
-                                console.error(error);
-
-                                alert(
+                                throw new Error(
                                     'No se pudo eliminar la imagen.'
                                 );
 
                             }
 
+
+                            currentRecordImageUrls =
+                                currentRecordImageUrls.filter(
+                                    function(image) {
+
+                                        return image.id !==
+                                            imageData.id;
+
+                                    }
+                                );
+
+
+                            item.remove();
+
+
+                        } catch (error) {
+
+                            console.error(
+                                error
+                            );
+
+                            alert(
+                                'No se pudo eliminar la imagen.'
+                            );
+
                         }
-                    );
+
+                    }
+                );
 
 
-                    item.appendChild(
-                        image
-                    );
+                item.appendChild(
+                    image
+                );
 
-                    item.appendChild(
-                        deleteButton
-                    );
+                item.appendChild(
+                    deleteButton
+                );
 
 
-                    editImagesContainer.appendChild(
-                        item
-                    );
+                editImagesContainer.appendChild(
+                    item
+                );
 
-                }
-            );
+            }
+        );
 
-        }
+
+        renderNewEditImages();
 
     }
 
@@ -4073,7 +5151,7 @@ function openEditRecordModal(
     if (!form) {
 
         console.error(
-            'No se encontró editRecordForm'
+            'No se encontró editRecordForm.'
         );
 
         return;
@@ -4083,6 +5161,12 @@ function openEditRecordModal(
 
     form.action =
         `/records/${recordId}`;
+
+
+    console.log(
+        'Formulario de edición preparado:',
+        form.action
+    );
 
 
     /* ========================================================
@@ -4141,201 +5225,238 @@ function openEditRecordModal(
 
 }
 
-
 /* ============================================================
-   NUEVAS IMÁGENES PARA EDITAR
+   ABRIR EDICION DESDE EL REGISTRO ACTUAL
+   USADO PARA AGREGAR SERVICIO
 ============================================================ */
 
-function initializeEditImages() {
+function openEditRecordFromCurrentRecord(
+    addNewService = false
+) {
 
-    const editImagesInput =
-        document.getElementById(
-            'editImages'
-        );
-
-
-    const editImagesContainer =
-        document.getElementById(
-            'editImagesContainer'
-        );
-
-
-    if (!editImagesInput) {
+    if (!currentRecordId) {
         return;
     }
 
 
-    editImagesInput.addEventListener(
-        'change',
-        function() {
-
-            const newFiles =
-                Array.from(
-                    this.files || []
-                );
+    const date =
+        document.getElementById(
+            'detailDate'
+        )?.textContent || '';
 
 
-            /*
-            |--------------------------------------------------
-            | GUARDAMOS LOS ARCHIVOS ANTES DE LIMPIAR INPUT
-            |--------------------------------------------------
-            */
-
-            this.value = '';
+    const invoice =
+        getDetailValue(
+            'detailInvoice'
+        );
 
 
-            const allowedTypes = [
-                'image/jpeg',
-                'image/png',
-                'image/webp'
-            ];
+    const paps =
+        getDetailValue(
+            'detailPaps'
+        );
 
 
-            newFiles.forEach(
-                function(file) {
-
-                    if (
-                        !allowedTypes.includes(
-                            file.type
-                        )
-                    ) {
-
-                        alert(
-                            '{{ __('records.modal.image_jpg_png_webp') }}'
-                        );
-
-                        return;
-
-                    }
+    const origin =
+        getDetailValue(
+            'detailOrigin'
+        );
 
 
-                    if (
-                        file.size >
-                        10 * 1024 * 1024
-                    ) {
-
-                        alert(
-                            '{{ __('records.modal.image_mb') }}'
-                        );
-
-                        return;
-
-                    }
+    const destination =
+        getDetailValue(
+            'detailDestination'
+        );
 
 
-                    selectedEditFiles.push(
-                        file
-                    );
-
-                }
-            );
+    const quantity =
+        getDetailValue(
+            'detailQuantity'
+        );
 
 
-            /*
-            |--------------------------------------------------
-            | RECONSTRUIR FILELIST
-            |--------------------------------------------------
-            */
-
-            const dataTransfer =
-                new DataTransfer();
+    const quantityType =
+        getDetailValue(
+            'detailQuantityType'
+        );
 
 
-            selectedEditFiles.forEach(
-                function(file) {
-
-                    dataTransfer.items.add(
-                        file
-                    );
-
-                }
-            );
+    const notes =
+        getDetailValue(
+            'detailNotes'
+        );
 
 
-            editImagesInput.files =
-                dataTransfer.files;
+    const registeredBy =
+        getDetailValue(
+            'detailRegisteredBy'
+        );
 
 
-            /*
-            |--------------------------------------------------
-            | MOSTRAR PREVISUALIZACIONES
-            |--------------------------------------------------
-            */
-
-            if (!editImagesContainer) {
-                return;
-            }
+    const createdAt =
+        getDetailValue(
+            'detailCreatedAt'
+        );
 
 
-            editImagesContainer
-                .querySelectorAll(
-                    '.new-edit-image'
-                )
-                .forEach(
-                    function(element) {
+    openEditRecordModal(
 
-                        element.remove();
+        currentRecordId,
 
-                    }
-                );
+        convertDateToInput(
+            date
+        ),
 
+        invoice,
 
-            selectedEditFiles.forEach(
-                function(file) {
-
-                    const item =
-                        document.createElement(
-                            'div'
-                        );
+        paps,
 
 
-                    item.className =
-                        'edit-image-item new-edit-image';
+        currentRecordCompanyId,
+        currentRecordCompanyName,
 
 
-                    const image =
-                        document.createElement(
-                            'img'
-                        );
+        currentRecordDriverId,
+        currentRecordDriverName,
 
 
-                    image.className =
-                        'edit-image-gallery';
+        currentRecordTrailerId,
+        currentRecordTrailerNumber,
 
 
-                    const reader =
-                        new FileReader();
+        currentRecordBrokerId,
+        currentRecordBrokerName,
 
 
-                    reader.onload =
-                        function(event) {
-
-                            image.src =
-                                event.target.result;
-
-                        };
+        currentRecordShipperId,
+        currentRecordShipperName,
 
 
-                    reader.readAsDataURL(
-                        file
-                    );
+        currentRecordConsigneeId,
+        currentRecordConsigneeName,
 
 
-                    item.appendChild(
-                        image
-                    );
+        origin,
 
+        destination,
 
-                    editImagesContainer.appendChild(
-                        item
-                    );
+        quantity,
 
-                }
-            );
+        quantityType,
 
-        }
+        notes,
+
+        currentRecordServices,
+
+        registeredBy,
+
+        createdAt,
+
+        currentRecordImageUrls
+
     );
 
+
+    if (addNewService) {
+
+        addEditServiceRow();
+
+        updateEditServicesTotal();
+
+    }
+
+}
+
+/* ============================================================
+   AGREGAR SERVICIO DESDE EL INDICE
+============================================================ */
+
+function openServiceFromIndex(
+    recordId,
+    date,
+    invoice,
+    paps,
+    companyId,
+    companyName,
+    driverId,
+    driverName,
+    trailerId,
+    trailerNumber,
+    brokerId,
+    brokerName,
+    shipperId,
+    shipperName,
+    consigneeId,
+    consigneeName,
+    origin,
+    destination,
+    quantity,
+    quantityType,
+    notes,
+    services,
+    registeredBy,
+    createdAt,
+    imageUrls
+) {
+
+    if (!recordId) {
+        console.error('No se recibió el ID del registro.');
+        return;
+    }
+
+    openEditRecordModal(
+        recordId,
+        date,
+        invoice,
+        paps,
+
+        companyId,
+        companyName,
+
+        driverId,
+        driverName,
+
+        trailerId,
+        trailerNumber,
+
+        brokerId,
+        brokerName,
+
+        shipperId,
+        shipperName,
+
+        consigneeId,
+        consigneeName,
+
+        origin,
+        destination,
+
+        quantity,
+        quantityType,
+
+        notes,
+
+        Array.isArray(services)
+            ? services
+            : [],
+
+        registeredBy,
+        createdAt,
+
+        Array.isArray(imageUrls)
+            ? imageUrls
+            : []
+    );
+
+    /*
+     * Agregamos una nueva fila de servicio
+     * utilizando EXACTAMENTE la misma función
+     * que utiliza el botón "+ Servicio" de Editar.
+     */
+
+    addEditServiceRow();
+
+    updateEditServicesTotal();
 }
 
 
@@ -4435,25 +5556,15 @@ function addEditServiceRow(
         );
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | OBTENER TIPO DE SERVICIO
-    |--------------------------------------------------------------------------
-    */
-
     const selectedServiceType =
         getServiceType(
             serviceTypeId
         );
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | PESO DEL SERVICIO
-    |--------------------------------------------------------------------------
-    | Solamente informativo.
-    | NO participa en ningún cálculo.
-    */
+    /* ========================================================
+       PESO SOLO INFORMATIVO
+    ======================================================== */
 
     const serviceWeight =
         selectedServiceType?.weight !== null &&
@@ -4466,17 +5577,14 @@ function addEditServiceRow(
         selectedServiceType?.weight_unit ?? '';
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | IVA
-    |--------------------------------------------------------------------------
-    | tax_enabled determina si se aplica el IVA general.
-    */
+    /* ========================================================
+       IVA
+    ======================================================== */
 
     const taxEnabled =
         service.tax_enabled !== undefined
-            ? Boolean(service.tax_enabled)
-            : Boolean(
+            ? toBoolean(service.tax_enabled)
+            : toBoolean(
                 selectedServiceType?.tax_enabled
             );
 
@@ -4503,10 +5611,6 @@ function addEditServiceRow(
         service.notes ?? '';
 
 
-    /* ========================================================
-       OPCIONES DE SERVICIOS
-    ======================================================== */
-
     let serviceOptions = `
         <option value="">
             {{ __('records.modal.select') }}
@@ -4524,7 +5628,7 @@ function addEditServiceRow(
 
 
         const serviceTaxEnabled =
-            Boolean(
+            toBoolean(
                 serviceType.tax_enabled
             );
 
@@ -4553,10 +5657,6 @@ function addEditServiceRow(
     });
 
 
-    /* ========================================================
-       CREAR FILA
-    ======================================================== */
-
     const row =
         document.createElement(
             'div'
@@ -4575,13 +5675,11 @@ function addEditServiceRow(
             value="${escapeHtml(serviceId)}"
         >
 
-
         <div class="service-row-field">
 
             <label>
                 {{ __('records.service') }}
             </label>
-
 
             <select
                 name="services[${index}][service_type_id]"
@@ -4591,7 +5689,6 @@ function addEditServiceRow(
                 ${serviceOptions}
 
             </select>
-
 
             ${
                 serviceWeight !== null &&
@@ -4622,7 +5719,6 @@ function addEditServiceRow(
                 {{ __('records.modal.quantity') }}
             </label>
 
-
             <input
                 type="number"
                 name="services[${index}][quantity]"
@@ -4640,7 +5736,6 @@ function addEditServiceRow(
             <label>
                 {{ __('records.modal.unit_price') }}
             </label>
-
 
             <input
                 type="number"
@@ -4672,7 +5767,6 @@ function addEditServiceRow(
                 {{ __('records.modal.notes') }}
             </label>
 
-
             <input
                 type="text"
                 name="services[${index}][notes]"
@@ -4688,10 +5782,6 @@ function addEditServiceRow(
         row
     );
 
-
-    /* ========================================================
-       ELEMENTOS
-    ======================================================== */
 
     const serviceTypeSelect =
         row.querySelector(
@@ -4717,10 +5807,6 @@ function addEditServiceRow(
         );
 
 
-    /* ========================================================
-       CAMBIO DE SERVICIO
-    ======================================================== */
-
     serviceTypeSelect.addEventListener(
         'change',
         function() {
@@ -4731,12 +5817,6 @@ function addEditServiceRow(
                 );
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | ACTUALIZAR PRECIO
-            |--------------------------------------------------------------------------
-            */
-
             if (serviceType) {
 
                 priceInput.value =
@@ -4746,13 +5826,6 @@ function addEditServiceRow(
 
             }
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | ACTUALIZAR PESO
-            |--------------------------------------------------------------------------
-            | El peso es únicamente informativo.
-            */
 
             const weightInfo =
                 row.querySelector(
@@ -4782,12 +5855,6 @@ function addEditServiceRow(
             }
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | ACTUALIZAR SUBTOTAL
-            |--------------------------------------------------------------------------
-            */
-
             updateServiceRowSubtotal(
                 row
             );
@@ -4795,10 +5862,6 @@ function addEditServiceRow(
         }
     );
 
-
-    /* ========================================================
-       CAMBIO CANTIDAD
-    ======================================================== */
 
     quantityInput.addEventListener(
         'input',
@@ -4812,10 +5875,6 @@ function addEditServiceRow(
     );
 
 
-    /* ========================================================
-       CAMBIO PRECIO
-    ======================================================== */
-
     priceInput.addEventListener(
         'input',
         function() {
@@ -4827,10 +5886,6 @@ function addEditServiceRow(
         }
     );
 
-
-    /* ========================================================
-       ELIMINAR SERVICIO
-    ======================================================== */
 
     removeButton.addEventListener(
         'click',
@@ -4899,14 +5954,8 @@ function updateServiceRowSubtotal(
         unitPrice;
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | IVA GENERAL
-    |--------------------------------------------------------------------------
-    */
-
     const taxEnabled =
-        Boolean(
+        toBoolean(
             serviceType?.tax_enabled
         );
 
@@ -5016,16 +6065,7 @@ function updateEditServicesTotal() {
     }
 
 
-    let subtotalTotal =
-        0;
-
-
-    let serviceTaxTotal =
-        0;
-
-
-    let grandTotal =
-        0;
+    let grandTotal = 0;
 
 
     container.querySelectorAll(
@@ -5060,14 +6100,8 @@ function updateEditServicesTotal() {
             );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | IVA GENERAL
-        |--------------------------------------------------------------------------
-        */
-
         const taxEnabled =
-            Boolean(
+            toBoolean(
                 serviceType?.tax_enabled
             );
 
@@ -5090,18 +6124,14 @@ function updateEditServicesTotal() {
             );
 
 
-        subtotalTotal +=
-            subtotal;
-
-
-        serviceTaxTotal +=
-            tax;
-
-
         grandTotal +=
             subtotal + tax;
 
     });
+
+
+    totalElement.textContent =
+        `Total: ${formatMoney(grandTotal)}`;
 
 }
 
@@ -5200,18 +6230,6 @@ function renderServices(
     }
 
 
-    let serviceSubtotalTotal =
-        0;
-
-
-    let serviceTaxTotal =
-        0;
-
-
-    let serviceGrandTotal =
-        0;
-
-
     services.forEach(function(service) {
 
         const item =
@@ -5246,25 +6264,11 @@ function renderServices(
             );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | TIPO DE SERVICIO
-        |--------------------------------------------------------------------------
-        */
-
         const serviceType =
             getServiceType(
                 service.service_type_id
             );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | PESO
-        |--------------------------------------------------------------------------
-        | El peso viene de la configuración del servicio.
-        | No participa en ningún cálculo.
-        */
 
         const serviceWeight =
             service.weight !== null &&
@@ -5284,16 +6288,10 @@ function renderServices(
             '';
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | IVA GENERAL
-        |--------------------------------------------------------------------------
-        */
-
         const taxEnabled =
             service.tax_enabled !== undefined
-                ? Boolean(service.tax_enabled)
-                : Boolean(
+                ? toBoolean(service.tax_enabled)
+                : toBoolean(
                     serviceType?.tax_enabled
                 );
 
@@ -5321,18 +6319,6 @@ function renderServices(
                     service.total || 0
                 )
                 : subtotal + taxAmount;
-
-
-        serviceSubtotalTotal +=
-            subtotal;
-
-
-        serviceTaxTotal +=
-            taxAmount;
-
-
-        serviceGrandTotal +=
-            total;
 
 
         item.innerHTML = `
@@ -5416,25 +6402,6 @@ function renderServices(
         );
 
     });
-
-
-    /* ========================================================
-       TOTALES
-    ======================================================== */
-
-    const totals =
-        document.createElement(
-            'div'
-        );
-
-
-    totals.className =
-        'service-view-totals';
-
-
-    container.appendChild(
-        totals
-    );
 
 }
 
@@ -5608,12 +6575,6 @@ function cancelEditRecord() {
     selectedEditFiles = [];
 
 
-    const editImagesInput =
-        document.getElementById(
-            'editImages'
-        );
-
-
     if (editImagesInput) {
 
         editImagesInput.value =
@@ -5622,13 +6583,190 @@ function cancelEditRecord() {
     }
 
 
-    document.querySelectorAll(
-        '.new-edit-image'
-    ).forEach(function(element) {
+    if (editCameraInput) {
 
-        element.remove();
+        editCameraInput.value =
+            '';
 
-    });
+    }
+
+
+    if (editFileInput) {
+
+        editFileInput.value =
+            '';
+
+    }
+
+
+    if (editImagesContainer) {
+
+        editImagesContainer
+            .querySelectorAll(
+                '.new-edit-image'
+            )
+            .forEach(function(element) {
+
+                element.remove();
+
+            });
+
+    }
+
+}
+
+
+/* ============================================================
+   PREPARAR FORMULARIO DE EDICION
+============================================================ */
+
+function prepareEditFormSubmit() {
+
+    const form =
+        document.getElementById(
+            'editRecordForm'
+        );
+
+
+    if (!form) {
+
+        console.error(
+            'No se encontró editRecordForm al intentar guardar.'
+        );
+
+        return false;
+
+    }
+
+
+    /* ========================================================
+       VERIFICAR ID
+    ======================================================== */
+
+    if (!currentRecordId) {
+
+        alert(
+            'No se pudo identificar el registro que se desea actualizar.'
+        );
+
+        return false;
+
+    }
+
+
+    /* ========================================================
+       ASEGURAR ACTION
+    ======================================================== */
+
+    form.action =
+        `/records/${currentRecordId}`;
+
+
+    /* ========================================================
+       PREPARAR TIPO DE CANTIDAD
+    ======================================================== */
+
+    if (!prepareEditQuantityType()) {
+
+        return false;
+
+    }
+
+
+    /* ========================================================
+       SINCRONIZAR IMAGENES
+    ======================================================== */
+
+    syncEditFiles();
+
+
+    /* ========================================================
+       REINDEXAR SERVICIOS
+    ======================================================== */
+
+    reindexEditServices();
+
+
+    console.log(
+        'Guardando registro:',
+        currentRecordId
+    );
+
+    console.log(
+        'URL:',
+        form.action
+    );
+
+    console.log(
+        'Imágenes nuevas:',
+        selectedEditFiles.length
+    );
+
+
+    return true;
+
+}
+
+
+/* ============================================================
+   INICIALIZAR FORMULARIO DE EDICION
+============================================================ */
+
+function initializeEditForm() {
+
+    if (editFormInitialized) {
+        return;
+    }
+
+
+    const form =
+        document.getElementById(
+            'editRecordForm'
+        );
+
+
+    if (!form) {
+
+        console.warn(
+            'No se encontró editRecordForm para inicializar.'
+        );
+
+        return;
+
+    }
+
+
+    editFormInitialized = true;
+
+
+    form.addEventListener(
+        'submit',
+        function(event) {
+
+            const valid =
+                prepareEditFormSubmit();
+
+
+            if (!valid) {
+
+                event.preventDefault();
+
+                return;
+
+            }
+
+
+            /*
+             * IMPORTANTE:
+             *
+             * NO hacemos preventDefault aquí.
+             *
+             * Laravel recibirá el formulario normalmente
+             * mediante POST + _method=PUT.
+             */
+
+        }
+    );
 
 }
 
@@ -5700,8 +6838,12 @@ function convertDateToInput(
     }
 
 
+    const stringValue =
+        String(value).trim();
+
+
     const match =
-        String(value).match(
+        stringValue.match(
             /^(\d{2})\/(\d{2})\/(\d{4})$/
         );
 
@@ -5713,7 +6855,7 @@ function convertDateToInput(
     }
 
 
-    return value;
+    return stringValue;
 
 }
 
@@ -5727,233 +6869,330 @@ document.addEventListener(
     function() {
 
         /* ====================================================
-           IMÁGENES NUEVAS DE EDICIÓN
+           INICIALIZAR AUTOCOMPLETE
+        ==================================================== */
+
+        initializeAutocomplete();
+
+
+        /* ====================================================
+           INICIALIZAR IMAGENES
         ==================================================== */
 
         initializeEditImages();
 
 
         /* ====================================================
+           INICIALIZAR TIPO DE CANTIDAD
+        ==================================================== */
+
+        initializeEditQuantityType();
+
+
+        /* ====================================================
+           INICIALIZAR FORMULARIO
+        ==================================================== */
+
+        initializeEditForm();
+
+
+        /* ====================================================
            CERRAR MODAL
         ==================================================== */
 
-        document.getElementById(
-            'closeRecordDetailModal'
-        )?.addEventListener(
-            'click',
-            closeRecordDetailModal
-        );
+        const closeRecordDetailModalButton =
+            document.getElementById(
+                'closeRecordDetailModal'
+            );
 
 
-        document.getElementById(
-            'closeDetailButton'
-        )?.addEventListener(
-            'click',
-            closeRecordDetailModal
-        );
+        if (closeRecordDetailModalButton) {
+
+            closeRecordDetailModalButton.addEventListener(
+                'click',
+                closeRecordDetailModal
+            );
+
+        }
+
+
+        const closeDetailButton =
+            document.getElementById(
+                'closeDetailButton'
+            );
+
+
+        if (closeDetailButton) {
+
+            closeDetailButton.addEventListener(
+                'click',
+                closeRecordDetailModal
+            );
+
+        }
 
 
         /* ====================================================
            EDITAR DESDE DETALLE
         ==================================================== */
 
-        document.getElementById(
-            'editDetailButton'
-        )?.addEventListener(
-            'click',
-            function() {
-
-                openEditRecordModal(
-
-                    currentRecordId,
-
-                    convertDateToInput(
-                        document.getElementById(
-                            'detailDate'
-                        ).textContent
-                    ),
-
-                    getDetailValue(
-                        'detailInvoice'
-                    ),
-
-                    getDetailValue(
-                        'detailPaps'
-                    ),
+        const editDetailButton =
+            document.getElementById(
+                'editDetailButton'
+            );
 
 
-                    currentRecordCompanyId,
-                    currentRecordCompanyName,
+        if (editDetailButton) {
 
-                    currentRecordDriverId,
-                    currentRecordDriverName,
+            editDetailButton.addEventListener(
+                'click',
+                function() {
 
-                    currentRecordTrailerId,
-                    currentRecordTrailerNumber,
+                    openEditRecordModal(
 
-                    currentRecordBrokerId,
-                    currentRecordBrokerName,
+                        currentRecordId,
 
-                    currentRecordShipperId,
-                    currentRecordShipperName,
+                        convertDateToInput(
+                            document.getElementById(
+                                'detailDate'
+                            )?.textContent || ''
+                        ),
 
-                    currentRecordConsigneeId,
-                    currentRecordConsigneeName,
+                        getDetailValue(
+                            'detailInvoice'
+                        ),
 
+                        getDetailValue(
+                            'detailPaps'
+                        ),
 
-                    getDetailValue(
-                        'detailOrigin'
-                    ),
+                        currentRecordCompanyId,
+                        currentRecordCompanyName,
 
-                    getDetailValue(
-                        'detailDestination'
-                    ),
+                        currentRecordDriverId,
+                        currentRecordDriverName,
 
-                    getDetailValue(
-                        'detailQuantity'
-                    ),
+                        currentRecordTrailerId,
+                        currentRecordTrailerNumber,
 
-                    getDetailValue(
-                        'detailQuantityType'
-                    ),
+                        currentRecordBrokerId,
+                        currentRecordBrokerName,
 
-                    getDetailValue(
-                        'detailNotes'
-                    ),
+                        currentRecordShipperId,
+                        currentRecordShipperName,
 
+                        currentRecordConsigneeId,
+                        currentRecordConsigneeName,
 
-                    currentRecordServices,
+                        getDetailValue(
+                            'detailOrigin'
+                        ),
 
+                        getDetailValue(
+                            'detailDestination'
+                        ),
 
-                    getDetailValue(
-                        'detailRegisteredBy'
-                    ),
+                        getDetailValue(
+                            'detailQuantity'
+                        ),
 
-                    getDetailValue(
-                        'detailCreatedAt'
-                    ),
+                        getDetailValue(
+                            'detailQuantityType'
+                        ),
 
+                        getDetailValue(
+                            'detailNotes'
+                        ),
 
-                    currentRecordImageUrls
+                        currentRecordServices,
 
-                );
+                        getDetailValue(
+                            'detailRegisteredBy'
+                        ),
 
-            }
-        );
+                        getDetailValue(
+                            'detailCreatedAt'
+                        ),
+
+                        currentRecordImageUrls
+
+                    );
+
+                }
+            );
+
+        }
 
 
         /* ====================================================
            CANCELAR EDICIÓN
         ==================================================== */
 
-        document.getElementById(
-            'cancelEditButton'
-        )?.addEventListener(
-            'click',
-            cancelEditRecord
-        );
+        const cancelEditButton =
+            document.getElementById(
+                'cancelEditButton'
+            );
+
+
+        if (cancelEditButton) {
+
+            cancelEditButton.addEventListener(
+                'click',
+                cancelEditRecord
+            );
+
+        }
 
 
         /* ====================================================
            AGREGAR SERVICIO
         ==================================================== */
 
-        document.getElementById(
-            'addEditServiceButton'
-        )?.addEventListener(
-            'click',
-            function() {
+        const addEditServiceButton =
+            document.getElementById(
+                'addEditServiceButton'
+            );
 
-                addEditServiceRow();
 
-            }
-        );
+        if (addEditServiceButton) {
+
+            addEditServiceButton.addEventListener(
+                'click',
+                function() {
+
+                    addEditServiceRow();
+
+                }
+            );
+
+        }
 
 
         /* ====================================================
            SERVICIO DESDE DETALLE
         ==================================================== */
 
-        document.getElementById(
-            'detailServiceButton'
-        )?.addEventListener(
-            'click',
-            function() {
+        const detailServiceButton =
+            document.getElementById(
+                'detailServiceButton'
+            );
 
-                if (currentRecordId) {
 
-                    openServiceModal(
-                        currentRecordId
+        if (detailServiceButton) {
+
+            detailServiceButton.addEventListener(
+                'click',
+                function() {
+
+                    if (!currentRecordId) {
+                        return;
+                    }
+
+
+                    openEditRecordFromCurrentRecord(
+                        true
                     );
 
                 }
+            );
 
-            }
-        );
+        }
 
 
         /* ====================================================
            CERRAR SERVICIO
         ==================================================== */
 
-        document.getElementById(
-            'closeServiceModal'
-        )?.addEventListener(
-            'click',
-            closeServiceModal
-        );
+        const closeServiceModalButton =
+            document.getElementById(
+                'closeServiceModal'
+            );
 
 
-        document.getElementById(
-            'cancelServiceButton'
-        )?.addEventListener(
-            'click',
-            closeServiceModal
-        );
+        if (closeServiceModalButton) {
+
+            closeServiceModalButton.addEventListener(
+                'click',
+                closeServiceModal
+            );
+
+        }
+
+
+        const cancelServiceButton =
+            document.getElementById(
+                'cancelServiceButton'
+            );
+
+
+        if (cancelServiceButton) {
+
+            cancelServiceButton.addEventListener(
+                'click',
+                closeServiceModal
+            );
+
+        }
 
 
         /* ====================================================
            CLICK FUERA MODAL REGISTRO
         ==================================================== */
 
-        document.getElementById(
-            'recordDetailModal'
-        )?.addEventListener(
-            'click',
-            function(event) {
+        const recordDetailModal =
+            document.getElementById(
+                'recordDetailModal'
+            );
 
-                if (
-                    event.target === this
-                ) {
 
-                    closeRecordDetailModal();
+        if (recordDetailModal) {
+
+            recordDetailModal.addEventListener(
+                'click',
+                function(event) {
+
+                    if (
+                        event.target === this
+                    ) {
+
+                        closeRecordDetailModal();
+
+                    }
 
                 }
+            );
 
-            }
-        );
+        }
 
 
         /* ====================================================
            CLICK FUERA MODAL SERVICIO
         ==================================================== */
 
-        document.getElementById(
-            'serviceModal'
-        )?.addEventListener(
-            'click',
-            function(event) {
+        const serviceModal =
+            document.getElementById(
+                'serviceModal'
+            );
 
-                if (
-                    event.target === this
-                ) {
 
-                    closeServiceModal();
+        if (serviceModal) {
+
+            serviceModal.addEventListener(
+                'click',
+                function(event) {
+
+                    if (
+                        event.target === this
+                    ) {
+
+                        closeServiceModal();
+
+                    }
 
                 }
+            );
 
-            }
-        );
+        }
 
 
         /* ====================================================
@@ -5973,20 +7212,21 @@ document.addEventListener(
                 }
 
 
-                const serviceModal =
+                const currentServiceModal =
                     document.getElementById(
                         'serviceModal'
                     );
 
 
-                const detailModal =
+                const currentDetailModal =
                     document.getElementById(
                         'recordDetailModal'
                     );
 
 
                 if (
-                    serviceModal?.classList.contains(
+                    currentServiceModal &&
+                    currentServiceModal.classList.contains(
                         'active'
                     )
                 ) {
@@ -5999,7 +7239,8 @@ document.addEventListener(
 
 
                 if (
-                    detailModal?.classList.contains(
+                    currentDetailModal &&
+                    currentDetailModal.classList.contains(
                         'active'
                     )
                 ) {

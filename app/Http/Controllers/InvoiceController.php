@@ -14,6 +14,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Broker;
 use App\Models\Consignee;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Storage;
 
 
 class InvoiceController extends Controller
@@ -149,180 +150,183 @@ class InvoiceController extends Controller
                 'totalAmount'
             )
         );
-
-        
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | FORMULARIO DE ENVÍO MASIVO
+    |--------------------------------------------------------------------------
+    */
+
     public function bulkEmail(Request $request)
-{
-    /*
-    |--------------------------------------------------------------------------
-    | VALIDAR DATOS
-    |--------------------------------------------------------------------------
-    */
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDAR DATOS
+        |--------------------------------------------------------------------------
+        */
 
-    $validated = $request->validate([
+        $validated = $request->validate([
 
-        'invoice_ids' => [
-            'required',
-            'array',
-            'min:1',
-        ],
+            'invoice_ids' => [
+                'required',
+                'array',
+                'min:1',
+            ],
 
-        'invoice_ids.*' => [
-            'required',
-            'integer',
-            'exists:invoices,id',
-        ],
+            'invoice_ids.*' => [
+                'required',
+                'integer',
+                'exists:invoices,id',
+            ],
 
-        'payment_status' => [
-            'required',
-            'in:pending,in_process,paid',
-        ],
+            'payment_status' => [
+                'required',
+                'in:pending,in_process,paid',
+            ],
 
-    ]);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ESTADO DEL FILTRO
-    |--------------------------------------------------------------------------
-    */
-
-    $paymentStatus =
-        $validated['payment_status'];
+        ]);
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | IDS DE FACTURAS
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | ESTADO DEL FILTRO
+        |--------------------------------------------------------------------------
+        */
 
-    $invoiceIds = collect(
-        $validated['invoice_ids']
-    )
-    ->map(fn ($id) => (int) $id)
-    ->unique()
-    ->values();
+        $paymentStatus =
+            $validated['payment_status'];
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | OBTENER FACTURAS
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | IDS DE FACTURAS
+        |--------------------------------------------------------------------------
+        */
 
-    $invoices = Invoice::with([
-        'company.emails',
-        'generatedBy',
-        'broker',
-        'consignee',
-        'records.company',
-        'records.services.serviceType',
-    ])
-    ->whereIn(
-        'id',
-        $invoiceIds
-    )
-    ->orderBy('id')
-    ->get();
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | VALIDAR QUE TODAS LAS FACTURAS PERTENEZCAN
-    | AL ESTADO DEL FILTRO
-    |--------------------------------------------------------------------------
-    */
-
-    $invalidInvoices = $invoices
-        ->filter(function ($invoice) use ($paymentStatus) {
-
-            /*
-             * En el filtro "pending", las facturas con
-             * payment_status NULL se consideran pendientes
-             * en el sistema actual.
-             */
-
-            if ($paymentStatus === 'pending') {
-
-                return !in_array(
-                    $invoice->payment_status,
-                    [
-                        'pending',
-                        null,
-                    ],
-                    true
-                );
-            }
-
-
-            return $invoice->payment_status !== $paymentStatus;
-        })
+        $invoiceIds = collect(
+            $validated['invoice_ids']
+        )
+        ->map(fn ($id) => (int) $id)
+        ->unique()
         ->values();
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | SI HAY FACTURAS DE OTRO ESTADO
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | OBTENER FACTURAS
+        |--------------------------------------------------------------------------
+        */
 
-    if ($invalidInvoices->isNotEmpty()) {
-
-        return redirect()
-            ->route(
-                'invoices.index',
-                [
-                    'payment_status' =>
-                        $paymentStatus,
-                ]
-            )
-            ->with(
-                'error',
-                'Una o más facturas seleccionadas ya no pertenecen al estado seleccionado. Actualiza la página e inténtalo nuevamente.'
-            );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | VALIDAR QUE EXISTAN FACTURAS
-    |--------------------------------------------------------------------------
-    */
-
-    if ($invoices->isEmpty()) {
-
-        return redirect()
-            ->route(
-                'invoices.index',
-                [
-                    'payment_status' =>
-                        $paymentStatus,
-                ]
-            )
-            ->with(
-                'error',
-                'No se encontraron facturas para enviar.'
-            );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ENVIAR A LA VISTA
-    |--------------------------------------------------------------------------
-    */
-
-    return view(
-        'invoices.bulk-email',
-        compact(
-            'invoices',
-            'paymentStatus'
+        $invoices = Invoice::with([
+            'company.emails',
+            'generatedBy',
+            'broker',
+            'consignee',
+            'records.company',
+            'records.services.serviceType',
+        ])
+        ->whereIn(
+            'id',
+            $invoiceIds
         )
-    );
-}
+        ->orderBy('id')
+        ->get();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDAR QUE TODAS LAS FACTURAS PERTENEZCAN
+        | AL ESTADO DEL FILTRO
+        |--------------------------------------------------------------------------
+        */
+
+        $invalidInvoices = $invoices
+            ->filter(function ($invoice) use ($paymentStatus) {
+
+                /*
+                 * En el filtro "pending", las facturas con
+                 * payment_status NULL se consideran pendientes.
+                 */
+
+                if ($paymentStatus === 'pending') {
+
+                    return !in_array(
+                        $invoice->payment_status,
+                        [
+                            'pending',
+                            null,
+                        ],
+                        true
+                    );
+                }
+
+                return $invoice->payment_status !== $paymentStatus;
+            })
+            ->values();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SI HAY FACTURAS DE OTRO ESTADO
+        |--------------------------------------------------------------------------
+        */
+
+        if ($invalidInvoices->isNotEmpty()) {
+
+            return redirect()
+                ->route(
+                    'invoices.index',
+                    [
+                        'payment_status' =>
+                            $paymentStatus,
+                    ]
+                )
+                ->with(
+                    'error',
+                    'Una o más facturas seleccionadas ya no pertenecen al estado seleccionado. Actualiza la página e inténtalo nuevamente.'
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDAR QUE EXISTAN FACTURAS
+        |--------------------------------------------------------------------------
+        */
+
+        if ($invoices->isEmpty()) {
+
+            return redirect()
+                ->route(
+                    'invoices.index',
+                    [
+                        'payment_status' =>
+                            $paymentStatus,
+                    ]
+                )
+                ->with(
+                    'error',
+                    'No se encontraron facturas para enviar.'
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ENVIAR A LA VISTA
+        |--------------------------------------------------------------------------
+        */
+
+        return view(
+            'invoices.bulk-email',
+            compact(
+                'invoices',
+                'paymentStatus'
+            )
+        );
+    }
 
 
     /*
@@ -398,24 +402,35 @@ class InvoiceController extends Controller
             'services.serviceType',
             'invoices'
         ])
-        ->where('company_id', $request->company_id)
+        ->where(
+            'company_id',
+            $request->company_id
+        )
         ->whereBetween('date', [
             $request->period_start,
             $request->period_end
         ])
         ->whereDoesntHave('invoices', function ($query) {
+
             $query->where(function ($q) {
-                $q->where('payment_status', '!=', 'cancelled')
-                  ->orWhereNull('payment_status');
+
+                $q->where(
+                    'payment_status',
+                    '!=',
+                    'cancelled'
+                )
+                ->orWhereNull(
+                    'payment_status'
+                );
+
             });
+
         })
         ->orderBy('date')
         ->get();
 
         return response()->json([
-
             'records' => $records,
-
         ]);
     }
 
@@ -599,17 +614,40 @@ class InvoiceController extends Controller
              |--------------------------------------------------------------------------
              */
 
-             $records = Record::with('services.serviceType')
-             ->whereIn('id', $recordIds)
-             ->whereIn('company_id', $recordCompanyIds)
-             ->whereDoesntHave('invoices', function ($query) {
-                 $query->where(function ($q) {
-                     $q->where('payment_status', '!=', 'cancelled')
-                       ->orWhereNull('payment_status');
-                 });
-             })
-             ->lockForUpdate()
-             ->get();
+            $records = Record::with(
+                'services.serviceType'
+            )
+            ->whereIn(
+                'id',
+                $recordIds
+            )
+            ->whereIn(
+                'company_id',
+                $recordCompanyIds
+            )
+            ->whereDoesntHave(
+                'invoices',
+                function ($query) {
+
+                    $query->where(
+                        function ($q) {
+
+                            $q->where(
+                                'payment_status',
+                                '!=',
+                                'cancelled'
+                            )
+                            ->orWhereNull(
+                                'payment_status'
+                            );
+
+                        }
+                    );
+
+                }
+            )
+            ->lockForUpdate()
+            ->get();
 
 
             /*
@@ -618,7 +656,10 @@ class InvoiceController extends Controller
              |--------------------------------------------------------------------------
              */
 
-            if ($records->count() !== $recordIds->count()) {
+            if (
+                $records->count() !==
+                $recordIds->count()
+            ) {
 
                 abort(
                     422,
@@ -627,205 +668,195 @@ class InvoiceController extends Controller
             }
 
 
-  /*
-|--------------------------------------------------------------------------
-| CÁLCULO DE SERVICIOS E IVA POR SERVICIO
-|--------------------------------------------------------------------------
-*/
+            /*
+             |--------------------------------------------------------------------------
+             | CÁLCULO DE SERVICIOS E IVA POR SERVICIO
+             |--------------------------------------------------------------------------
+             */
 
-$servicesSubtotal = 0;
-$serviceTaxTotal = 0;
+            $servicesSubtotal = 0;
+            $serviceTaxTotal = 0;
 
-/*
- * El IVA de los servicios solamente se calcula
- * cuando el usuario activó Taxes en Create.
- *
- * tax_rate > 0 significa que el usuario activó
- * el Sales Tax.
- *
- * IMPORTANTE:
- * El IVA de servicios depende del checkbox
- * taxEnabled enviado desde Create.
- */
+            /*
+             * El IVA de los servicios solamente se calcula
+             * cuando el usuario activó Taxes en Create.
+             */
 
-$serviceTaxEnabled =
-    ((float) ($validated['tax_rate'] ?? 0)) > 0;
+            $serviceTaxEnabled =
+                ((float) (
+                    $validated['tax_rate'] ?? 0
+                )) > 0;
 
-foreach ($records as $record) {
+            foreach ($records as $record) {
 
-    foreach ($record->services as $service) {
+                foreach ($record->services as $service) {
 
-        /*
-         * SUBTOTAL BASE DEL SERVICIO
-         */
+                    /*
+                     * SUBTOTAL BASE DEL SERVICIO
+                     */
 
-        $serviceSubtotal = round(
-            (float) $service->subtotal,
-            2
-        );
+                    $serviceSubtotal = round(
+                        (float) $service->subtotal,
+                        2
+                    );
 
-        $servicesSubtotal += $serviceSubtotal;
+                    $servicesSubtotal +=
+                        $serviceSubtotal;
 
 
-        /*
-         * IVA DEL SERVICIO
-         *
-         * Solamente se calcula si Taxes
-         * estaba activado.
-         */
+                    /*
+                     * IVA DEL SERVICIO
+                     */
 
-        $serviceTaxRate = 0;
+                    $serviceTaxRate = 0;
 
-        $serviceTaxAmount = 0;
+                    $serviceTaxAmount = 0;
 
-        if ($serviceTaxEnabled) {
+                    if ($serviceTaxEnabled) {
 
-            $serviceTaxRate = (float) (
-                $service->serviceType?->tax_rate ?? 0
+                        $serviceTaxRate = (float) (
+                            $service->serviceType?->tax_rate
+                            ?? 0
+                        );
+
+                        if ($serviceTaxRate > 0) {
+
+                            $serviceTaxAmount = round(
+                                $serviceSubtotal *
+                                ($serviceTaxRate / 100),
+                                2
+                            );
+                        }
+                    }
+
+
+                    /*
+                     * ACUMULAR IVA
+                     */
+
+                    $serviceTaxTotal +=
+                        $serviceTaxAmount;
+                }
+            }
+
+
+            /*
+             |--------------------------------------------------------------------------
+             | CARGOS ADICIONALES
+             |--------------------------------------------------------------------------
+             */
+
+            $additionalTotal = 0;
+
+            foreach (
+                $validated['records']
+                as $billingRecord
+            ) {
+
+                $quantity = (float) (
+                    $billingRecord[
+                        'additional_charge_quantity'
+                    ] ?? 0
+                );
+
+                $unitPrice = (float) (
+                    $billingRecord[
+                        'additional_charge_unit_price'
+                    ] ?? 0
+                );
+
+                $additionalAmount = round(
+                    $quantity * $unitPrice,
+                    2
+                );
+
+                $additionalTotal +=
+                    $additionalAmount;
+            }
+
+
+            /*
+             |--------------------------------------------------------------------------
+             | SUBTOTAL DE FACTURA
+             |--------------------------------------------------------------------------
+             */
+
+            $subtotal = round(
+                $servicesSubtotal +
+                $additionalTotal,
+                2
             );
 
-            if ($serviceTaxRate > 0) {
 
-                $serviceTaxAmount = round(
-                    $serviceSubtotal *
-                    ($serviceTaxRate / 100),
+            /*
+             |--------------------------------------------------------------------------
+             | SHIPPING / HANDLING
+             |--------------------------------------------------------------------------
+             */
+
+            $shippingRate = (float) (
+                $validated[
+                    'shipping_handling_rate'
+                ] ?? 0
+            );
+
+            $shippingEnabled =
+                $shippingRate > 0;
+
+            $shippingAmount = 0;
+
+            if ($shippingEnabled) {
+
+                $shippingAmount = round(
+                    $subtotal *
+                    ($shippingRate / 100),
                     2
                 );
             }
-        }
 
 
-        /*
-         * ACUMULAR IVA
-         */
+            /*
+             |--------------------------------------------------------------------------
+             | SALES TAX DE LA FACTURA
+             |--------------------------------------------------------------------------
+             */
 
-        $serviceTaxTotal += $serviceTaxAmount;
-    }
-}
+            $taxRate = (float) (
+                $validated['tax_rate'] ?? 0
+            );
 
-/*
- |--------------------------------------------------------------------------
- | CARGOS ADICIONALES
- |--------------------------------------------------------------------------
- */
+            $taxEnabled =
+                $taxRate > 0;
 
-$additionalTotal = 0;
+            $tax = 0;
 
-foreach ($validated['records'] as $billingRecord) {
+            if ($taxEnabled) {
 
-    $quantity = (float) (
-        $billingRecord['additional_charge_quantity'] ?? 0
-    );
+                $taxBase =
+                    $subtotal +
+                    $shippingAmount;
 
-    $unitPrice = (float) (
-        $billingRecord['additional_charge_unit_price'] ?? 0
-    );
-
-    $additionalAmount = round(
-        $quantity * $unitPrice,
-        2
-    );
-
-    $additionalTotal += $additionalAmount;
-}
+                $tax = round(
+                    $taxBase *
+                    ($taxRate / 100),
+                    2
+                );
+            }
 
 
-/*
- |--------------------------------------------------------------------------
- | SUBTOTAL DE FACTURA
- |--------------------------------------------------------------------------
- |
- | El subtotal continúa representando:
- |
- | servicios sin IVA
- | +
- | cargos adicionales
- |
- */
+            /*
+             |--------------------------------------------------------------------------
+             | TOTAL
+             |--------------------------------------------------------------------------
+             */
 
-$subtotal = round(
-    $servicesSubtotal +
-    $additionalTotal,
-    2
-);
-
-
-/*
- |--------------------------------------------------------------------------
- | SHIPPING / HANDLING
- |--------------------------------------------------------------------------
- */
-
-$shippingRate = (float) (
-    $validated['shipping_handling_rate'] ?? 0
-);
-
-$shippingEnabled = $shippingRate > 0;
-
-$shippingAmount = 0;
-
-if ($shippingEnabled) {
-
-    $shippingAmount = round(
-        $subtotal *
-        ($shippingRate / 100),
-        2
-    );
-}
-
-
-/*
- |--------------------------------------------------------------------------
- | SALES TAX DE LA FACTURA
- |--------------------------------------------------------------------------
- */
-
-$taxRate = (float) (
-    $validated['tax_rate'] ?? 0
-);
-
-$taxEnabled = $taxRate > 0;
-
-$tax = 0;
-
-if ($taxEnabled) {
-
-    /*
-     * El Sales Tax se calcula sobre:
-     *
-     * subtotal
-     * +
-     * shipping / handling
-     *
-     * El IVA propio de los servicios NO se vuelve
-     * a utilizar como base para el Sales Tax.
-     */
-
-    $taxBase =
-        $subtotal +
-        $shippingAmount;
-
-    $tax = round(
-        $taxBase *
-        ($taxRate / 100),
-        2
-    );
-}
-
-
-/*
- |--------------------------------------------------------------------------
- | TOTAL
- |--------------------------------------------------------------------------
- */
-
-$total = round(
-    $subtotal +
-    $serviceTaxTotal +
-    $shippingAmount +
-    $tax,
-    2
-);
+            $total = round(
+                $subtotal +
+                $serviceTaxTotal +
+                $shippingAmount +
+                $tax,
+                2
+            );
 
 
             /*
@@ -834,7 +865,8 @@ $total = round(
              |--------------------------------------------------------------------------
              */
 
-            $lastInvoice = Invoice::latest('id')->first();
+            $lastInvoice =
+                Invoice::latest('id')->first();
 
             $nextNumber = $lastInvoice
                 ? $lastInvoice->id + 1
@@ -878,18 +910,18 @@ $total = round(
                 'period_end' =>
                     $validated['period_end'],
 
-                    'subtotal' =>
+                'subtotal' =>
                     $subtotal,
-                
+
                 'service_tax' =>
                     $serviceTaxTotal,
-                
+
                 'tax_enabled' =>
                     $taxEnabled,
-                
+
                 'tax_rate' =>
                     $taxRate,
-                
+
                 'tax' =>
                     $tax,
 
@@ -939,13 +971,15 @@ $total = round(
                 );
 
                 $quantity = (float) (
-                    $billingData['additional_charge_quantity']
-                    ?? 0
+                    $billingData[
+                        'additional_charge_quantity'
+                    ] ?? 0
                 );
 
                 $unitPrice = (float) (
-                    $billingData['additional_charge_unit_price']
-                    ?? 0
+                    $billingData[
+                        'additional_charge_unit_price'
+                    ] ?? 0
                 );
 
                 $additionalAmount = round(
@@ -958,20 +992,24 @@ $total = round(
                     [
 
                         'billing_invoice' =>
-                            $billingData['billing_invoice']
-                            ?? null,
+                            $billingData[
+                                'billing_invoice'
+                            ] ?? null,
 
                         'billing_paps' =>
-                            $billingData['billing_paps']
-                            ?? null,
+                            $billingData[
+                                'billing_paps'
+                            ] ?? null,
 
                         'pallets' =>
-                            $billingData['pallets']
-                            ?? null,
+                            $billingData[
+                                'pallets'
+                            ] ?? null,
 
                         'additional_charge_type' =>
-                            $billingData['additional_charge_type']
-                            ?? null,
+                            $billingData[
+                                'additional_charge_type'
+                            ] ?? null,
 
                         'additional_charge_quantity' =>
                             $quantity,
@@ -1018,31 +1056,39 @@ $total = round(
     public function storeBroker(Request $request)
     {
         $validated = $request->validate([
+
             'name' => [
                 'required',
                 'string',
                 'max:255'
             ],
+
         ]);
 
         $broker = Broker::create([
+
             'name' =>
                 trim($validated['name']),
 
             'active' =>
                 true,
+
         ]);
 
         return response()->json([
+
             'success' => true,
 
             'broker' => [
+
                 'id' =>
                     $broker->id,
 
                 'name' =>
                     $broker->name,
+
             ],
+
         ]);
     }
 
@@ -1056,31 +1102,39 @@ $total = round(
     public function storeConsignee(Request $request)
     {
         $validated = $request->validate([
+
             'name' => [
                 'required',
                 'string',
                 'max:255'
             ],
+
         ]);
 
         $consignee = Consignee::create([
+
             'name' =>
                 trim($validated['name']),
 
             'active' =>
                 true,
+
         ]);
 
         return response()->json([
+
             'success' => true,
 
             'consignee' => [
+
                 'id' =>
                     $consignee->id,
 
                 'name' =>
                     $consignee->name,
+
             ],
+
         ]);
     }
 
@@ -1094,6 +1148,7 @@ $total = round(
     public function storeCompany(Request $request)
     {
         $validated = $request->validate([
+
             'name' => [
                 'required',
                 'string',
@@ -1112,9 +1167,11 @@ $total = round(
                 'string',
                 'max:50'
             ],
+
         ]);
 
         $company = Company::create([
+
             'name' =>
                 trim($validated['name']),
 
@@ -1126,12 +1183,15 @@ $total = round(
 
             'active' =>
                 true,
+
         ]);
 
         return response()->json([
+
             'success' => true,
 
             'company' => [
+
                 'id' =>
                     $company->id,
 
@@ -1143,7 +1203,9 @@ $total = round(
 
                 'tax_id' =>
                     $company->tax_id,
+
             ],
+
         ]);
     }
 
@@ -1155,21 +1217,24 @@ $total = round(
     */
 
     public function show(Invoice $invoice)
-{
-    $invoice->load([
-        'company.emails',
-        'broker',
-        'consignee',
-        'generatedBy',
-        'records.company',
-        'records.services.serviceType',
-    ]);
+    {
+        $invoice->load([
 
-    return view(
-        'invoices.show',
-        compact('invoice')
-    );
-}
+            'company.emails',
+            'broker',
+            'consignee',
+            'generatedBy',
+            'records.company',
+            'records.services.serviceType',
+
+        ]);
+
+        return view(
+            'invoices.show',
+            compact('invoice')
+        );
+    }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -1177,112 +1242,115 @@ $total = round(
     |--------------------------------------------------------------------------
     */
 
-    /*
-|--------------------------------------------------------------------------
-| CAMBIAR ESTADO DE PAGO
-|--------------------------------------------------------------------------
-*/
-
-public function updatePaymentStatus(
-    Request $request,
-    Invoice $invoice
-) {
-    $validated = $request->validate([
-        'payment_status' => [
-            'required',
-            'in:pending,in_process,paid,cancelled',
-        ],
-
-        'cancellation_reason' => [
-            'required_if:payment_status,cancelled',
-            'nullable',
-            'string',
-            'max:2000',
-        ],
-    ]);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ESTADO ANTERIOR
-    |--------------------------------------------------------------------------
-    */
-
-    $previousStatus = $invoice->payment_status;
-
-    $newStatus = $validated['payment_status'];
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ACTUALIZAR FACTURA
-    |--------------------------------------------------------------------------
-    */
-
-    $invoice->update([
-        'payment_status' => $newStatus,
-
-        'cancellation_reason' =>
-            $newStatus === 'cancelled'
-                ? $validated['cancellation_reason']
-                : null,
-    ]);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ENVIAR AVISO DE PAGO RECIBIDO
-    |--------------------------------------------------------------------------
-    |
-    | Solamente se envía cuando la factura CAMBIA a paid.
-    |
-    */
-
-    if (
-        $newStatus === 'paid' &&
-        $previousStatus !== 'paid'
+    public function updatePaymentStatus(
+        Request $request,
+        Invoice $invoice
     ) {
 
-        try {
+        $validated = $request->validate([
 
-            $this->sendPaymentReceivedEmail(
-                $invoice
-            );
+            'payment_status' => [
+                'required',
+                'in:pending,in_process,paid,cancelled',
+            ],
 
-        } catch (\Throwable $e) {
+            'cancellation_reason' => [
+                'required_if:payment_status,cancelled',
+                'nullable',
+                'string',
+                'max:2000',
+            ],
 
-            \Log::error(
-                'Error al enviar correo de pago recibido.',
-                [
-                    'invoice_id' =>
-                        $invoice->id,
+        ]);
 
-                    'invoice_number' =>
-                        $invoice->invoice_number,
 
-                    'error' =>
-                        $e->getMessage(),
-                ]
-            );
+        /*
+        |--------------------------------------------------------------------------
+        | ESTADO ANTERIOR
+        |--------------------------------------------------------------------------
+        */
+
+        $previousStatus =
+            $invoice->payment_status;
+
+        $newStatus =
+            $validated['payment_status'];
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ACTUALIZAR FACTURA
+        |--------------------------------------------------------------------------
+        */
+
+        $invoice->update([
+
+            'payment_status' =>
+                $newStatus,
+
+            'cancellation_reason' =>
+                $newStatus === 'cancelled'
+                    ? $validated[
+                        'cancellation_reason'
+                    ]
+                    : null,
+
+        ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ENVIAR AVISO DE PAGO RECIBIDO
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $newStatus === 'paid' &&
+            $previousStatus !== 'paid'
+        ) {
+
+            try {
+
+                $this->sendPaymentReceivedEmail(
+                    $invoice
+                );
+
+            } catch (\Throwable $e) {
+
+                \Log::error(
+                    'Error al enviar correo de pago recibido.',
+                    [
+
+                        'invoice_id' =>
+                            $invoice->id,
+
+                        'invoice_number' =>
+                            $invoice->invoice_number,
+
+                        'error' =>
+                            $e->getMessage(),
+
+                    ]
+                );
+            }
         }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESPUESTA
+        |--------------------------------------------------------------------------
+        */
+
+        return redirect()
+            ->back()
+            ->with(
+                'success',
+                $newStatus === 'cancelled'
+                    ? 'Factura cancelada correctamente.'
+                    : 'Estado de pago actualizado correctamente.'
+            );
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | RESPUESTA
-    |--------------------------------------------------------------------------
-    */
-
-    return redirect()
-        ->back()
-        ->with(
-            'success',
-            $newStatus === 'cancelled'
-                ? 'Factura cancelada correctamente.'
-                : 'Estado de pago actualizado correctamente.'
-        );
-}
 
 
     /*
@@ -1292,40 +1360,55 @@ public function updatePaymentStatus(
     */
 
     public function pdf(Invoice $invoice)
-{
-    $pdfContent = $this->generatePdfContent($invoice);
+    {
+        $pdfContent =
+            $this->generatePdfContent(
+                $invoice
+            );
 
-    return response($pdfContent, 200, [
-        'Content-Type' => 'application/pdf',
-        'Content-Disposition' =>
-            'attachment; filename="' .
-            $invoice->invoice_number .
-            '.pdf"',
-    ]);
-}
+        return response(
+            $pdfContent,
+            200,
+            [
+
+                'Content-Type' =>
+                    'application/pdf',
+
+                'Content-Disposition' =>
+                    'attachment; filename="' .
+                    $invoice->invoice_number .
+                    '.pdf"',
+
+            ]
+        );
+    }
 
 
-private function generatePdfContent(Invoice $invoice): string
-{
-    $invoice->load([
-        'company',
-        'generatedBy',
-        'records.company',
-        'records.services.serviceType',
-    ]);
+    private function generatePdfContent(
+        Invoice $invoice
+    ): string {
 
-    $pdf = Pdf::loadView(
-        'invoices.pdf',
-        compact('invoice')
-    );
+        $invoice->load([
 
-    $pdf->setPaper(
-        'letter',
-        'portrait'
-    );
+            'company',
+            'generatedBy',
+            'records.company',
+            'records.services.serviceType',
 
-    return $pdf->output();
-}
+        ]);
+
+        $pdf = Pdf::loadView(
+            'invoices.pdf',
+            compact('invoice')
+        );
+
+        $pdf->setPaper(
+            'letter',
+            'portrait'
+        );
+
+        return $pdf->output();
+    }
 
 
     /*
@@ -1334,53 +1417,47 @@ private function generatePdfContent(Invoice $invoice): string
     |--------------------------------------------------------------------------
     |
     | GENERA UN XML GENÉRICO DE LA FACTURA
-    |
-    | Este XML contiene:
-    |
-    | - Información de la factura
-    | - Empresa / Bill To
-    | - Broker
-    | - Consignee
-    | - Periodo
-    | - Registros
-    | - Invoice/PAPS de cada registro
-    | - Servicios
-    | - Cargos adicionales
-    | - Subtotal
-    | - Shipping / Handling
-    | - Tax
-    | - Total
-    |
     |--------------------------------------------------------------------------
     */
+
     public function xml(Invoice $invoice)
-{
-    $xmlContent = $this->generateXmlContent($invoice);
+    {
+        $xmlContent =
+            $this->generateXmlContent(
+                $invoice
+            );
 
-    return Response::make(
-        $xmlContent,
-        200,
-        [
-            'Content-Type' =>
-                'application/xml; charset=UTF-8',
+        return Response::make(
+            $xmlContent,
+            200,
+            [
 
-            'Content-Disposition' =>
-                'attachment; filename="' .
-                $invoice->invoice_number .
-                '.xml"',
-        ]
-    );
-}
+                'Content-Type' =>
+                    'application/xml; charset=UTF-8',
 
-    private function generateXmlContent(Invoice $invoice): string
-{
+                'Content-Disposition' =>
+                    'attachment; filename="' .
+                    $invoice->invoice_number .
+                    '.xml"',
+
+            ]
+        );
+    }
+
+
+    private function generateXmlContent(
+        Invoice $invoice
+    ): string {
+
         $invoice->load([
+
             'company',
             'broker',
             'consignee',
             'generatedBy',
             'records.company',
             'records.services.serviceType',
+
         ]);
 
 
@@ -1429,9 +1506,10 @@ private function generatePdfContent(Invoice $invoice): string
         |--------------------------------------------------------------------------
         */
 
-        $information = $xml->createElement(
-            'InvoiceInformation'
-        );
+        $information =
+            $xml->createElement(
+                'InvoiceInformation'
+            );
 
         $root->appendChild(
             $information
@@ -1482,16 +1560,18 @@ private function generatePdfContent(Invoice $invoice): string
         |--------------------------------------------------------------------------
         */
 
-        $billTo = $xml->createElement(
-            'BillTo'
-        );
+        $billTo =
+            $xml->createElement(
+                'BillTo'
+            );
 
         $root->appendChild(
             $billTo
         );
 
 
-        $company = $invoice->company;
+        $company =
+            $invoice->company;
 
         $this->appendXmlElement(
             $xml,
@@ -1586,9 +1666,10 @@ private function generatePdfContent(Invoice $invoice): string
 
         if ($invoice->broker) {
 
-            $broker = $xml->createElement(
-                'Broker'
-            );
+            $broker =
+                $xml->createElement(
+                    'Broker'
+                );
 
             $root->appendChild(
                 $broker
@@ -1618,9 +1699,10 @@ private function generatePdfContent(Invoice $invoice): string
 
         if ($invoice->consignee) {
 
-            $consignee = $xml->createElement(
-                'Consignee'
-            );
+            $consignee =
+                $xml->createElement(
+                    'Consignee'
+                );
 
             $root->appendChild(
                 $consignee
@@ -1648,9 +1730,10 @@ private function generatePdfContent(Invoice $invoice): string
         |--------------------------------------------------------------------------
         */
 
-        $billingPeriod = $xml->createElement(
-            'BillingPeriod'
-        );
+        $billingPeriod =
+            $xml->createElement(
+                'BillingPeriod'
+            );
 
         $root->appendChild(
             $billingPeriod
@@ -1679,9 +1762,10 @@ private function generatePdfContent(Invoice $invoice): string
         |--------------------------------------------------------------------------
         */
 
-        $recordsElement = $xml->createElement(
-            'Records'
-        );
+        $recordsElement =
+            $xml->createElement(
+                'Records'
+            );
 
         $root->appendChild(
             $recordsElement
@@ -1690,9 +1774,10 @@ private function generatePdfContent(Invoice $invoice): string
 
         foreach ($invoice->records as $record) {
 
-            $recordElement = $xml->createElement(
-                'Record'
-            );
+            $recordElement =
+                $xml->createElement(
+                    'Record'
+                );
 
             $recordsElement->appendChild(
                 $recordElement
@@ -1727,7 +1812,8 @@ private function generatePdfContent(Invoice $invoice): string
             |--------------------------------------------------------------------------
             */
 
-            $recordCompany = $record->company;
+            $recordCompany =
+                $record->company;
 
             if ($recordCompany) {
 
@@ -1769,9 +1855,10 @@ private function generatePdfContent(Invoice $invoice): string
             |--------------------------------------------------------------------------
             */
 
-            $billing = $xml->createElement(
-                'BillingInformation'
-            );
+            $billing =
+                $xml->createElement(
+                    'BillingInformation'
+                );
 
             $recordElement->appendChild(
                 $billing
@@ -1807,9 +1894,10 @@ private function generatePdfContent(Invoice $invoice): string
             |--------------------------------------------------------------------------
             */
 
-            $servicesElement = $xml->createElement(
-                'Services'
-            );
+            $servicesElement =
+                $xml->createElement(
+                    'Services'
+                );
 
             $recordElement->appendChild(
                 $servicesElement
@@ -1818,11 +1906,15 @@ private function generatePdfContent(Invoice $invoice): string
 
             $servicesTotal = 0;
 
-            foreach ($record->services as $service) {
+            foreach (
+                $record->services
+                as $service
+            ) {
 
-                $serviceElement = $xml->createElement(
-                    'Service'
-                );
+                $serviceElement =
+                    $xml->createElement(
+                        'Service'
+                    );
 
                 $servicesElement->appendChild(
                     $serviceElement
@@ -1993,9 +2085,10 @@ private function generatePdfContent(Invoice $invoice): string
         |--------------------------------------------------------------------------
         */
 
-        $totals = $xml->createElement(
-            'Totals'
-        );
+        $totals =
+            $xml->createElement(
+                'Totals'
+            );
 
         $root->appendChild(
             $totals
@@ -2077,9 +2170,10 @@ private function generatePdfContent(Invoice $invoice): string
         |--------------------------------------------------------------------------
         */
 
-        $tax = $xml->createElement(
-            'Tax'
-        );
+        $tax =
+            $xml->createElement(
+                'Tax'
+            );
 
         $totals->appendChild(
             $tax
@@ -2229,9 +2323,10 @@ private function generatePdfContent(Invoice $invoice): string
             return;
         }
 
-        $element = $xml->createElement(
-            $name
-        );
+        $element =
+            $xml->createElement(
+                $name
+            );
 
         $element->appendChild(
             $xml->createTextNode(
@@ -2244,77 +2339,211 @@ private function generatePdfContent(Invoice $invoice): string
         );
     }
 
-    /*
-|--------------------------------------------------------------------------
-| ENVIAR FACTURA POR CORREO
-|--------------------------------------------------------------------------
-*/
 
-public function sendEmail(
-    Request $request,
-    Invoice $invoice
-) {
     /*
     |--------------------------------------------------------------------------
-    | VALIDAR DATOS
+    | ENVIAR FACTURA POR CORREO
     |--------------------------------------------------------------------------
     */
 
-    $validated = $request->validate([
+    public function sendEmail(
+        Request $request,
+        Invoice $invoice
+    ) {
 
-        'subject' => [
-            'required',
-            'string',
-            'max:255',
-        ],
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDAR DATOS
+        |--------------------------------------------------------------------------
+        */
 
-        'documents' => [
-            'required',
-            'array',
-            'min:1',
-        ],
+        $validated = $request->validate([
 
-        'documents.*' => [
-            'required',
-            'in:pdf,xml',
-        ],
+            'subject' => [
+                'required',
+                'string',
+                'max:255',
+            ],
 
-    ]);
+            'documents' => [
+                'required',
+                'array',
+                'min:1',
+            ],
+
+            'documents.*' => [
+                'required',
+                'in:pdf,xml',
+            ],
+
+            /*
+             * DESTINATARIOS
+             *
+             * Los correos seleccionados desde la pantalla
+             * se utilizan únicamente para este envío.
+             *
+             * Los correos nuevos tampoco se guardan
+             * en la compañía.
+             */
+
+            'recipients' => [
+                'required',
+                'array',
+                'min:1',
+            ],
+
+            'recipients.*' => [
+                'required',
+                'email',
+                'max:255',
+            ],
+
+        ]);
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | CARGAR EMPRESA Y CORREOS
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | CARGAR EMPRESA Y CORREOS
+        |--------------------------------------------------------------------------
+        */
 
-    $invoice->load([
-        'company.emails',
-        'broker',
-        'consignee',
-        'generatedBy',
-        'records.company',
-        'records.services.serviceType',
-    ]);
+        $invoice->load([
+
+            'company.emails',
+            'broker',
+            'consignee',
+            'generatedBy',
+            'records.company',
+            'records.services.serviceType',
+
+        ]);
 
 
-    $emails = $invoice->company
-        ?->emails
-        ?->pluck('email')
-        ->map(fn ($email) => strtolower(trim($email)))
+        /*
+        |--------------------------------------------------------------------------
+        | OBTENER DESTINATARIOS SELECCIONADOS
+        |--------------------------------------------------------------------------
+        |
+        | IMPORTANTE:
+        |
+        | Aquí NO obtenemos automáticamente todos los correos
+        | de la compañía.
+        |
+        | Utilizamos únicamente los correos que el usuario
+        | seleccionó o agregó desde el formulario.
+        |
+        | Los correos agregados son temporales y no modifican
+        | la información de la compañía.
+        |
+        */
+
+        $emails = collect(
+            $validated['recipients'] ?? []
+        )
+        ->map(
+            fn ($email) =>
+                strtolower(
+                    trim($email)
+                )
+        )
         ->filter()
         ->unique()
         ->values()
         ->all();
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | VALIDAR QUE EXISTAN DESTINATARIOS
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDAR QUE EXISTAN DESTINATARIOS
+        |--------------------------------------------------------------------------
+        */
 
-    if (empty($emails)) {
+        if (empty($emails)) {
+
+            return redirect()
+                ->route(
+                    'invoices.show',
+                    $invoice
+                )
+                ->with(
+                    'error',
+                    'Debes seleccionar o agregar al menos un correo electrónico.'
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DOCUMENTOS
+        |--------------------------------------------------------------------------
+        */
+
+        $pdfContent = null;
+        $xmlContent = null;
+
+
+        if (
+            in_array(
+                'pdf',
+                $validated['documents'],
+                true
+            )
+        ) {
+
+            $pdfContent =
+                $this->generatePdfContent(
+                    $invoice
+                );
+        }
+
+
+        if (
+            in_array(
+                'xml',
+                $validated['documents'],
+                true
+            )
+        ) {
+
+            $xmlContent =
+                $this->generateXmlContent(
+                    $invoice
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ENVIAR CORREO
+        |--------------------------------------------------------------------------
+        */
+
+        Mail::to($emails)->send(
+
+            new InvoiceMail(
+
+                emailSubject:
+                    $validated['subject'],
+
+                pdfContent:
+                    $pdfContent,
+
+                xmlContent:
+                    $xmlContent,
+
+                invoiceNumber:
+                    $invoice->invoice_number,
+
+            )
+
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | REGRESAR A LA FACTURA
+        |--------------------------------------------------------------------------
+        */
 
         return redirect()
             ->route(
@@ -2322,305 +2551,244 @@ public function sendEmail(
                 $invoice
             )
             ->with(
-                'error',
-                'La empresa no tiene correos registrados.'
+                'success',
+                'La factura fue enviada correctamente por correo.'
             );
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | DOCUMENTOS
+    | ENVÍO MASIVO DE FACTURAS POR CORREO
     |--------------------------------------------------------------------------
     */
 
-    $pdfContent = null;
-    $xmlContent = null;
+    public function sendBulkEmail(Request $request)
+    {
+        $validated = $request->validate([
+
+            'invoice_ids' => [
+                'required',
+                'array',
+                'min:1',
+            ],
+
+            'invoice_ids.*' => [
+                'required',
+                'integer',
+                'exists:invoices,id',
+            ],
+
+            'payment_status' => [
+                'required',
+                'in:pending,in_process,paid',
+            ],
+
+            'documents' => [
+                'required',
+                'array',
+                'min:1',
+            ],
+
+            'documents.*' => [
+                'required',
+                'in:pdf,xml',
+            ],
+
+            'recipients' => [
+                'required',
+                'array',
+            ],
+
+            'recipients.*' => [
+                'nullable',
+                'array',
+            ],
+
+            'recipients.*.*' => [
+                'required',
+                'email',
+                'max:255',
+            ],
+
+        ]);
 
 
-    if (
-        in_array(
-            'pdf',
-            $validated['documents'],
-            true
+        /*
+        |--------------------------------------------------------------------------
+        | ESTADO DEL FILTRO
+        |--------------------------------------------------------------------------
+        */
+
+        $paymentStatus =
+            $validated['payment_status'];
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | FACTURAS SELECCIONADAS
+        |--------------------------------------------------------------------------
+        */
+
+        $invoiceIds = collect(
+            $validated['invoice_ids']
         )
-    ) {
-
-        $pdfContent =
-            $this->generatePdfContent(
-                $invoice
-            );
-    }
-
-
-    if (
-        in_array(
-            'xml',
-            $validated['documents'],
-            true
-        )
-    ) {
-
-        $xmlContent =
-            $this->generateXmlContent(
-                $invoice
-            );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ENVIAR CORREO
-    |--------------------------------------------------------------------------
-    */
-
-    Mail::to($emails)->send(
-
-        new InvoiceMail(
-            emailSubject:
-                $validated['subject'],
-
-            pdfContent:
-                $pdfContent,
-
-            xmlContent:
-                $xmlContent,
-
-            invoiceNumber:
-                $invoice->invoice_number,
-        )
-
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | REGRESAR A LA FACTURA
-    |--------------------------------------------------------------------------
-    */
-
-    return redirect()
-        ->route(
-            'invoices.show',
-            $invoice
-        )
-        ->with(
-            'success',
-            'La factura fue enviada correctamente por correo.'
-        );
-}
-
-/*
-|--------------------------------------------------------------------------
-| ENVÍO MASIVO DE FACTURAS POR CORREO
-|--------------------------------------------------------------------------
-*/
-
-public function sendBulkEmail(Request $request)
-{
-    $validated = $request->validate([
-        'invoice_ids' => [
-            'required',
-            'array',
-            'min:1',
-        ],
-
-        'invoice_ids.*' => [
-            'required',
-            'integer',
-            'exists:invoices,id',
-        ],
-
-        'payment_status' => [
-            'required',
-            'in:pending,in_process,paid',
-        ],
-
-        'documents' => [
-            'required',
-            'array',
-            'min:1',
-        ],
-
-        'documents.*' => [
-            'required',
-            'in:pdf,xml',
-        ],
-
-        'recipients' => [
-            'required',
-            'array',
-        ],
-
-        'recipients.*' => [
-            'nullable',
-            'array',
-        ],
-
-        'recipients.*.*' => [
-            'required',
-            'email',
-            'max:255',
-        ],
-    ]);
-
-    /*
-    |--------------------------------------------------------------------------
-    | ESTADO DEL FILTRO
-    |--------------------------------------------------------------------------
-    */
-
-    $paymentStatus = $validated['payment_status'];
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | FACTURAS SELECCIONADAS
-    |--------------------------------------------------------------------------
-    */
-
-    $invoiceIds = collect($validated['invoice_ids'])
         ->map(fn ($id) => (int) $id)
         ->unique()
         ->values();
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | OBTENER FACTURAS
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | OBTENER FACTURAS
+        |--------------------------------------------------------------------------
+        */
 
-    $invoicesQuery = Invoice::with([
-        'company.emails',
-        'generatedBy',
-        'broker',
-        'consignee',
-        'records.company',
-        'records.services.serviceType',
-    ])
-        ->whereIn('id', $invoiceIds)
+        $invoicesQuery = Invoice::with([
+
+            'company.emails',
+            'generatedBy',
+            'broker',
+            'consignee',
+            'records.company',
+            'records.services.serviceType',
+
+        ])
+        ->whereIn(
+            'id',
+            $invoiceIds
+        )
         ->orderBy('id');
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | EL ESTADO DEBE COINCIDIR CON EL FILTRO
-    |--------------------------------------------------------------------------
-    */
-
-    if ($paymentStatus === 'pending') {
-
-        $invoicesQuery->where(function ($query) {
-
-            $query
-                ->where('payment_status', 'pending')
-                ->orWhereNull('payment_status');
-
-        });
-
-    } else {
-
-        $invoicesQuery->where(
-            'payment_status',
-            $paymentStatus
-        );
-
-    }
-
-
-    $invoices = $invoicesQuery->get();
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | EVITAR FACTURAS QUE NO PERTENECEN AL FILTRO
-    |--------------------------------------------------------------------------
-    */
-
-    if (
-        $invoices->count() !==
-        $invoiceIds->count()
-    ) {
-
-        return redirect()
-            ->route(
-                'invoices.index',
-                [
-                    'payment_status' => $paymentStatus,
-                ]
-            )
-            ->with(
-                'error',
-                'Una o más facturas seleccionadas ya no pertenecen al estado actual y no pueden enviarse.'
-            );
-    }
-
-
-    if ($invoices->isEmpty()) {
-
-        return redirect()
-            ->route(
-                'invoices.index',
-                [
-                    'payment_status' => $paymentStatus,
-                ]
-            )
-            ->with(
-                'error',
-                'No se encontraron facturas para enviar.'
-            );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | AGRUPAR POR COMPAÑÍA
-    |--------------------------------------------------------------------------
-    */
-
-    $invoicesByCompany = $invoices
-        ->groupBy('company_id');
-
-
-    $sent = [];
-
-    $errors = [];
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | RECORRER CADA COMPAÑÍA
-    |--------------------------------------------------------------------------
-    */
-
-    foreach (
-        $invoicesByCompany
-        as $companyId => $companyInvoices
-    ) {
-
-        $firstInvoice =
-            $companyInvoices->first();
-
-
-        $company =
-            $firstInvoice->company;
 
 
         /*
         |--------------------------------------------------------------------------
-        | DESTINATARIOS DE ESTA COMPAÑÍA
+        | EL ESTADO DEBE COINCIDIR CON EL FILTRO
         |--------------------------------------------------------------------------
         */
 
-        $submittedEmails =
-            $validated['recipients'][$companyId]
-            ?? [];
+        if ($paymentStatus === 'pending') {
+
+            $invoicesQuery->where(
+                function ($query) {
+
+                    $query
+                        ->where(
+                            'payment_status',
+                            'pending'
+                        )
+                        ->orWhereNull(
+                            'payment_status'
+                        );
+
+                }
+            );
+
+        } else {
+
+            $invoicesQuery->where(
+                'payment_status',
+                $paymentStatus
+            );
+        }
 
 
-        $emails = collect(
-            $submittedEmails
-        )
+        $invoices =
+            $invoicesQuery->get();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | EVITAR FACTURAS QUE NO PERTENECEN AL FILTRO
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $invoices->count() !==
+            $invoiceIds->count()
+        ) {
+
+            return redirect()
+                ->route(
+                    'invoices.index',
+                    [
+                        'payment_status' =>
+                            $paymentStatus,
+                    ]
+                )
+                ->with(
+                    'error',
+                    'Una o más facturas seleccionadas ya no pertenecen al estado actual y no pueden enviarse.'
+                );
+        }
+
+
+        if ($invoices->isEmpty()) {
+
+            return redirect()
+                ->route(
+                    'invoices.index',
+                    [
+                        'payment_status' =>
+                            $paymentStatus,
+                    ]
+                )
+                ->with(
+                    'error',
+                    'No se encontraron facturas para enviar.'
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | AGRUPAR POR COMPAÑÍA
+        |--------------------------------------------------------------------------
+        */
+
+        $invoicesByCompany =
+            $invoices->groupBy(
+                'company_id'
+            );
+
+
+        $sent = [];
+
+        $errors = [];
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | RECORRER CADA COMPAÑÍA
+        |--------------------------------------------------------------------------
+        */
+
+        foreach (
+            $invoicesByCompany
+            as $companyId => $companyInvoices
+        ) {
+
+            $firstInvoice =
+                $companyInvoices->first();
+
+            $company =
+                $firstInvoice->company;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DESTINATARIOS DE ESTA COMPAÑÍA
+            |--------------------------------------------------------------------------
+            */
+
+            $submittedEmails =
+                $validated['recipients'][$companyId]
+                ?? [];
+
+
+            $emails = collect(
+                $submittedEmails
+            )
             ->map(
                 fn ($email) =>
                     strtolower(
@@ -2633,835 +2801,966 @@ public function sendBulkEmail(Request $request)
             ->all();
 
 
-        if (empty($emails)) {
-
-            $errors[] =
-                'La compañía ' .
-                ($company?->name ?? 'sin nombre') .
-                ' no tiene destinatarios seleccionados.';
-
-            continue;
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | ASUNTO Y MENSAJE SEGÚN EL FILTRO
-        |--------------------------------------------------------------------------
-        */
-
-        $invoiceNumbers =
-            $companyInvoices
-                ->pluck('invoice_number')
-                ->map(fn ($number) => (string) $number)
-                ->values();
-
-
-        if (
-            $invoiceNumbers->count() === 1
-        ) {
-
-            $invoiceList =
-                $invoiceNumbers->first();
-
-        } elseif (
-            $invoiceNumbers->count() === 2
-        ) {
-
-            $invoiceList =
-                $invoiceNumbers[0] .
-                ' y ' .
-                $invoiceNumbers[1];
-
-        } else {
-
-            $lastInvoice =
-                $invoiceNumbers->last();
-
-            $otherInvoices =
-                $invoiceNumbers
-                    ->slice(
-                        0,
-                        $invoiceNumbers->count() - 1
-                    )
-                    ->implode(', ');
-
-            $invoiceList =
-                $otherInvoices .
-                ' y ' .
-                $lastInvoice;
-        }
-
-
-        switch ($paymentStatus) {
-
-            case 'pending':
-
-                $emailSubject =
-                    'Pago pendiente – Facturas ' .
-                    $invoiceList .
-                    ' – Documentos adjuntos';
-
-                $emailMessage =
-                    'El pago correspondiente a las facturas ' .
-                    $invoiceList .
-                    ' se encuentra pendiente.';
-
-                break;
-
-
-            case 'in_process':
-
-                $emailSubject =
-                    'Pago en proceso – Facturas ' .
-                    $invoiceList .
-                    ' – Documentos adjuntos';
-
-                $emailMessage =
-                    'El pago correspondiente a las facturas ' .
-                    $invoiceList .
-                    ' se encuentra en proceso.';
-
-                break;
-
-
-            case 'paid':
-
-                $emailSubject =
-                    'Pago recibido – Facturas ' .
-                    $invoiceList .
-                    ' – Documentos adjuntos';
-
-                $emailMessage =
-                    'El pago correspondiente a las facturas ' .
-                    $invoiceList .
-                    ' ha sido recibido correctamente.';
-
-                break;
-
-
-            default:
+            if (empty($emails)) {
 
                 $errors[] =
                     'La compañía ' .
                     ($company?->name ?? 'sin nombre') .
-                    ': estado de pago no válido.';
+                    ' no tiene destinatarios seleccionados.';
 
-                continue 2;
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | ARCHIVOS ADJUNTOS
-        |--------------------------------------------------------------------------
-        */
-
-        $attachmentsData = [];
-
-
-        foreach (
-            $companyInvoices
-            as $invoice
-        ) {
-
-            /*
-            |--------------------------------------------------------------------------
-            | PDF
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                in_array(
-                    'pdf',
-                    $validated['documents'],
-                    true
-                )
-            ) {
-
-                try {
-
-                    $pdfContent =
-                        $this->generatePdfContent(
-                            $invoice
-                        );
-
-
-                    $attachmentsData[] = [
-
-                        'content' =>
-                            $pdfContent,
-
-                        'filename' =>
-                            $invoice->invoice_number .
-                            '.pdf',
-
-                        'mime' =>
-                            'application/pdf',
-
-                    ];
-
-                } catch (\Throwable $e) {
-
-                    \Log::error(
-                        'Error generando PDF para envío masivo.',
-                        [
-                            'invoice_id' =>
-                                $invoice->id,
-
-                            'invoice_number' =>
-                                $invoice->invoice_number,
-
-                            'error' =>
-                                $e->getMessage(),
-                        ]
-                    );
-
-
-                    $errors[] =
-                        'Factura ' .
-                        $invoice->invoice_number .
-                        ': no fue posible generar el PDF.';
-
-                }
+                continue;
             }
 
 
             /*
             |--------------------------------------------------------------------------
-            | XML
+            | ASUNTO Y MENSAJE SEGÚN EL FILTRO
             |--------------------------------------------------------------------------
             */
 
+            $invoiceNumbers =
+                $companyInvoices
+                    ->pluck('invoice_number')
+                    ->map(
+                        fn ($number) =>
+                            (string) $number
+                    )
+                    ->values();
+
+
             if (
-                in_array(
-                    'xml',
-                    $validated['documents'],
-                    true
-                )
+                $invoiceNumbers->count() === 1
             ) {
 
-                try {
+                $invoiceList =
+                    $invoiceNumbers->first();
 
-                    $xmlContent =
-                        $this->generateXmlContent(
-                            $invoice
-                        );
+            } elseif (
+                $invoiceNumbers->count() === 2
+            ) {
 
+                $invoiceList =
+                    $invoiceNumbers[0] .
+                    ' y ' .
+                    $invoiceNumbers[1];
 
-                    $attachmentsData[] = [
+            } else {
 
-                        'content' =>
-                            $xmlContent,
+                $lastInvoice =
+                    $invoiceNumbers->last();
 
-                        'filename' =>
-                            $invoice->invoice_number .
-                            '.xml',
-
-                        'mime' =>
-                            'application/xml',
-
-                    ];
-
-                } catch (\Throwable $e) {
-
-                    \Log::error(
-                        'Error generando XML para envío masivo.',
-                        [
-                            'invoice_id' =>
-                                $invoice->id,
-
-                            'invoice_number' =>
-                                $invoice->invoice_number,
-
-                            'error' =>
-                                $e->getMessage(),
-                        ]
-                    );
-
-
-                    $errors[] =
-                        'Factura ' .
-                        $invoice->invoice_number .
-                        ': no fue posible generar el XML.';
-
-                }
-            }
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | VERIFICAR QUE HAYA ARCHIVOS
-        |--------------------------------------------------------------------------
-        */
-
-        if (empty($attachmentsData)) {
-
-            $errors[] =
-                'La compañía ' .
-                ($company?->name ?? 'sin nombre') .
-                ': no se pudieron generar documentos para enviar.';
-
-            continue;
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | ENVIAR UN SOLO CORREO A LA COMPAÑÍA
-        |--------------------------------------------------------------------------
-        */
-
-        try {
-
-            Mail::to($emails)->send(
-
-                new BulkInvoiceMail(
-
-                    emailSubject:
-                        $emailSubject,
-
-                    emailMessage:
-                        $emailMessage,
-
-                    invoices:
-                        $companyInvoices
-                            ->values()
-                            ->all(),
-
-                    attachmentsData:
-                        $attachmentsData,
-
-                )
-
-            );
-
-
-            $sent[] = [
-
-                'company' =>
-                    $company?->name
-                    ?? 'Sin compañía',
-
-                'invoices' =>
-                    $companyInvoices
-                        ->pluck(
-                            'invoice_number'
+                $otherInvoices =
+                    $invoiceNumbers
+                        ->slice(
+                            0,
+                            $invoiceNumbers->count() - 1
                         )
-                        ->values()
-                        ->all(),
+                        ->implode(', ');
 
-                'emails' =>
-                    $emails,
+                $invoiceList =
+                    $otherInvoices .
+                    ' y ' .
+                    $lastInvoice;
+            }
 
-            ];
 
-        } catch (\Throwable $e) {
+            switch ($paymentStatus) {
 
-            \Log::error(
-                'Error en envío masivo de facturas por compañía.',
-                [
-                    'company_id' =>
-                        $companyId,
+                case 'pending':
+
+                    $emailSubject =
+                        'Pago pendiente – Facturas ' .
+                        $invoiceList .
+                        ' – Documentos adjuntos';
+
+                    $emailMessage =
+                        'El pago correspondiente a las facturas ' .
+                        $invoiceList .
+                        ' se encuentra pendiente.';
+
+                    break;
+
+
+                case 'in_process':
+
+                    $emailSubject =
+                        'Pago en proceso – Facturas ' .
+                        $invoiceList .
+                        ' – Documentos adjuntos';
+
+                    $emailMessage =
+                        'El pago correspondiente a las facturas ' .
+                        $invoiceList .
+                        ' se encuentra en proceso.';
+
+                    break;
+
+
+                case 'paid':
+
+                    $emailSubject =
+                        'Pago recibido – Facturas ' .
+                        $invoiceList .
+                        ' – Documentos adjuntos';
+
+                    $emailMessage =
+                        'El pago correspondiente a las facturas ' .
+                        $invoiceList .
+                        ' ha sido recibido correctamente.';
+
+                    break;
+
+
+                default:
+
+                    $errors[] =
+                        'La compañía ' .
+                        ($company?->name ?? 'sin nombre') .
+                        ': estado de pago no válido.';
+
+                    continue 2;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ARCHIVOS ADJUNTOS
+            |--------------------------------------------------------------------------
+            */
+
+            $attachmentsData = [];
+
+
+            foreach (
+                $companyInvoices
+                as $invoice
+            ) {
+
+                /*
+                |--------------------------------------------------------------------------
+                | PDF
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    in_array(
+                        'pdf',
+                        $validated['documents'],
+                        true
+                    )
+                ) {
+
+                    try {
+
+                        $pdfContent =
+                            $this->generatePdfContent(
+                                $invoice
+                            );
+
+                        $attachmentsData[] = [
+
+                            'content' =>
+                                $pdfContent,
+
+                            'filename' =>
+                                $invoice->invoice_number .
+                                '.pdf',
+
+                            'mime' =>
+                                'application/pdf',
+
+                        ];
+
+                    } catch (\Throwable $e) {
+
+                        \Log::error(
+                            'Error generando PDF para envío masivo.',
+                            [
+
+                                'invoice_id' =>
+                                    $invoice->id,
+
+                                'invoice_number' =>
+                                    $invoice->invoice_number,
+
+                                'error' =>
+                                    $e->getMessage(),
+
+                            ]
+                        );
+
+                        $errors[] =
+                            'Factura ' .
+                            $invoice->invoice_number .
+                            ': no fue posible generar el PDF.';
+                    }
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | XML
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    in_array(
+                        'xml',
+                        $validated['documents'],
+                        true
+                    )
+                ) {
+
+                    try {
+
+                        $xmlContent =
+                            $this->generateXmlContent(
+                                $invoice
+                            );
+
+                        $attachmentsData[] = [
+
+                            'content' =>
+                                $xmlContent,
+
+                            'filename' =>
+                                $invoice->invoice_number .
+                                '.xml',
+
+                            'mime' =>
+                                'application/xml',
+
+                        ];
+
+                    } catch (\Throwable $e) {
+
+                        \Log::error(
+                            'Error generando XML para envío masivo.',
+                            [
+
+                                'invoice_id' =>
+                                    $invoice->id,
+
+                                'invoice_number' =>
+                                    $invoice->invoice_number,
+
+                                'error' =>
+                                    $e->getMessage(),
+
+                            ]
+                        );
+
+                        $errors[] =
+                            'Factura ' .
+                            $invoice->invoice_number .
+                            ': no fue posible generar el XML.';
+                    }
+                }
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | VERIFICAR QUE HAYA ARCHIVOS
+            |--------------------------------------------------------------------------
+            */
+
+            if (empty($attachmentsData)) {
+
+                $errors[] =
+                    'La compañía ' .
+                    ($company?->name ?? 'sin nombre') .
+                    ': no se pudieron generar documentos para enviar.';
+
+                continue;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ENVIAR UN SOLO CORREO A LA COMPAÑÍA
+            |--------------------------------------------------------------------------
+            */
+
+            try {
+
+                Mail::to($emails)->send(
+
+                    new BulkInvoiceMail(
+
+                        emailSubject:
+                            $emailSubject,
+
+                        emailMessage:
+                            $emailMessage,
+
+                        invoices:
+                            $companyInvoices
+                                ->values()
+                                ->all(),
+
+                        attachmentsData:
+                            $attachmentsData,
+
+                    )
+
+                );
+
+
+                $sent[] = [
 
                     'company' =>
-                        $company?->name,
+                        $company?->name
+                        ?? 'Sin compañía',
 
-                    'invoice_ids' =>
+                    'invoices' =>
                         $companyInvoices
-                            ->pluck('id')
+                            ->pluck(
+                                'invoice_number'
+                            )
                             ->values()
                             ->all(),
 
                     'emails' =>
                         $emails,
 
-                    'error' =>
-                        $e->getMessage(),
+                ];
+
+            } catch (\Throwable $e) {
+
+                \Log::error(
+                    'Error en envío masivo de facturas por compañía.',
+                    [
+
+                        'company_id' =>
+                            $companyId,
+
+                        'company' =>
+                            $company?->name,
+
+                        'invoice_ids' =>
+                            $companyInvoices
+                                ->pluck('id')
+                                ->values()
+                                ->all(),
+
+                        'emails' =>
+                            $emails,
+
+                        'error' =>
+                            $e->getMessage(),
+
+                    ]
+                );
+
+
+                $errors[] =
+                    'La compañía ' .
+                    ($company?->name ?? 'sin nombre') .
+                    ': no fue posible enviar el correo.';
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | MENSAJES DE RESULTADO
+        |--------------------------------------------------------------------------
+        */
+
+        $messageParts = [];
+
+
+        if (!empty($sent)) {
+
+            $sentCount =
+                count($sent);
+
+            $messageParts[] =
+                $sentCount .
+                (
+                    $sentCount === 1
+                        ? ' correo enviado correctamente.'
+                        : ' correos enviados correctamente.'
+                );
+        }
+
+
+        if (!empty($errors)) {
+
+            $messageParts[] =
+                count($errors) .
+                (
+                    count($errors) === 1
+                        ? ' incidencia encontrada.'
+                        : ' incidencias encontradas.'
+                );
+        }
+
+
+        $response =
+            redirect()->route(
+                'invoices.index',
+                [
+                    'payment_status' =>
+                        $paymentStatus,
                 ]
             );
 
 
-            $errors[] =
-                'La compañía ' .
-                ($company?->name ?? 'sin nombre') .
-                ': no fue posible enviar el correo.';
+        if (!empty($sent)) {
+
+            $response->with(
+                'success',
+                implode(
+                    ' ',
+                    $messageParts
+                )
+            );
+
+        } else {
+
+            $response->with(
+                'error',
+                implode(
+                    ' ',
+                    $messageParts
+                )
+            );
         }
+
+
+        if (!empty($errors)) {
+
+            $response->with(
+                'bulk_email_errors',
+                $errors
+            );
+        }
+
+
+        return $response;
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | MENSAJES DE RESULTADO
+    | ENVIAR RECORDATORIO DE PAGO
     |--------------------------------------------------------------------------
     */
 
-    $messageParts = [];
-
-
-    if (!empty($sent)) {
-
-        $sentCount =
-            count($sent);
-
-        $messageParts[] =
-            $sentCount .
-            (
-                $sentCount === 1
-                    ? ' correo enviado correctamente.'
-                    : ' correos enviados correctamente.'
-            );
-    }
-
-
-    if (!empty($errors)) {
-
-        $messageParts[] =
-            count($errors) .
-            (
-                count($errors) === 1
-                    ? ' incidencia encontrada.'
-                    : ' incidencias encontradas.'
-            );
-    }
-
-
-    $response =
-        redirect()->route(
-            'invoices.index',
-            [
-                'payment_status' =>
-                    $paymentStatus,
-            ]
-        );
-
-
-    if (!empty($sent)) {
-
-        $response->with(
-            'success',
-            implode(
-                ' ',
-                $messageParts
-            )
-        );
-
-    } else {
-
-        $response->with(
-            'error',
-            implode(
-                ' ',
-                $messageParts
-            )
-        );
-    }
-
-
-    if (!empty($errors)) {
-
-        $response->with(
-            'bulk_email_errors',
-            $errors
-        );
-    }
-
-
-    return $response;
-}
-
-/*
-|--------------------------------------------------------------------------
-| ENVIAR RECORDATORIO DE PAGO
-|--------------------------------------------------------------------------
-*/
-
-public function sendPaymentReminder(
-    Request $request,
-    Invoice $invoice
-) {
-
-    /*
-    |--------------------------------------------------------------------------
-    | VALIDAR ESTADO
-    |--------------------------------------------------------------------------
-    */
-
-    if (
-        !in_array(
-            $invoice->payment_status,
-            [
-                'pending',
-                'in_process',
-            ],
-            true
-        )
+    public function sendPaymentReminder(
+        Request $request,
+        Invoice $invoice
     ) {
 
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDAR ESTADO
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            !in_array(
+                $invoice->payment_status,
+                [
+                    'pending',
+                    'in_process',
+                ],
+                true
+            )
+        ) {
+
+            return redirect()
+                ->back()
+                ->with(
+                    'error',
+                    'El recordatorio solo puede enviarse para facturas pendientes o en trámite.'
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CARGAR EMPRESA
+        |--------------------------------------------------------------------------
+        */
+
+        $invoice->load([
+            'company.emails',
+        ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | OBTENER CORREOS
+        |--------------------------------------------------------------------------
+        */
+
+        $emails = $invoice->company
+            ?->emails
+            ?->pluck('email')
+            ->map(
+                fn ($email) =>
+                    strtolower(
+                        trim($email)
+                    )
+            )
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDAR DESTINATARIOS
+        |--------------------------------------------------------------------------
+        */
+
+        if (empty($emails)) {
+
+            return redirect()
+                ->back()
+                ->with(
+                    'error',
+                    'La empresa no tiene correos registrados.'
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | GENERAR PDF
+        |--------------------------------------------------------------------------
+        */
+
+        $pdfContent =
+            $this->generatePdfContent(
+                $invoice
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DATOS DEL CORREO
+        |--------------------------------------------------------------------------
+        */
+
+        $companyName =
+            $invoice->company?->name
+            ?? 'Cliente';
+
+
+        $invoiceNumber =
+            $invoice->invoice_number;
+
+
+        $total =
+            number_format(
+                (float) $invoice->total,
+                2
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ENVIAR CORREO
+        |--------------------------------------------------------------------------
+        */
+
+        Mail::html(
+
+            '
+            <div style="
+                font-family: Arial, sans-serif;
+                color: #374151;
+                line-height: 1.6;
+            ">
+
+                <h2 style="color:#1f2937;">
+                    Recordatorio de pago
+                </h2>
+
+                <p>
+                    Estimado/a
+                    <strong>' .
+                        e($companyName) .
+                    '</strong>,
+                </p>
+
+                <p>
+                    Por medio del presente correo le recordamos
+                    que la factura
+                    <strong>' .
+                        e($invoiceNumber) .
+                    '</strong>
+                    se encuentra pendiente de pago.
+                </p>
+
+                <p>
+                    <strong>Total de la factura:</strong>
+                    $' .
+                        e($total) .
+                    '
+                </p>
+
+                <p>
+                    Adjuntamos nuevamente el PDF de la factura
+                    para su referencia.
+                </p>
+
+                <p>
+                    Agradecemos su atención y quedamos atentos
+                    a cualquier comentario.
+                </p>
+
+                <p>
+                    Saludos cordiales.
+                </p>
+
+            </div>
+            ',
+
+            function ($message) use (
+                $emails,
+                $invoice,
+                $pdfContent
+            ) {
+
+                $message
+                    ->to($emails)
+                    ->subject(
+                        'Recordatorio de pago - ' .
+                        $invoice->invoice_number
+                    );
+
+                $message->attachData(
+                    $pdfContent,
+                    $invoice->invoice_number . '.pdf',
+                    [
+                        'mime' =>
+                            'application/pdf',
+                    ]
+                );
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESPUESTA
+        |--------------------------------------------------------------------------
+        */
+
         return redirect()
             ->back()
             ->with(
-                'error',
-                'El recordatorio solo puede enviarse para facturas pendientes o en trámite.'
+                'success',
+                'El recordatorio de pago fue enviado correctamente.'
             );
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | CARGAR EMPRESA
+    | ENVIAR CONFIRMACIÓN DE PAGO RECIBIDO
     |--------------------------------------------------------------------------
     */
 
-    $invoice->load([
-        'company.emails',
-    ]);
+    private function sendPaymentReceivedEmail(
+        Invoice $invoice
+    ): void {
+
+        /*
+        |--------------------------------------------------------------------------
+        | CARGAR EMPRESA Y CORREOS
+        |--------------------------------------------------------------------------
+        */
+
+        $invoice->load([
+            'company.emails',
+        ]);
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | OBTENER CORREOS
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | OBTENER CORREOS
+        |--------------------------------------------------------------------------
+        */
 
-    $emails = $invoice->company
-        ?->emails
-        ?->pluck('email')
-        ->map(
-            fn ($email) =>
-                strtolower(trim($email))
-        )
-        ->filter()
-        ->unique()
-        ->values()
-        ->all();
+        $emails = $invoice->company
+            ?->emails
+            ?->pluck('email')
+            ->map(
+                fn ($email) =>
+                    strtolower(
+                        trim($email)
+                    )
+            )
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | VALIDAR DESTINATARIOS
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | SI NO HAY CORREOS
+        |--------------------------------------------------------------------------
+        */
 
-    if (empty($emails)) {
+        if (empty($emails)) {
 
-        return redirect()
-            ->back()
-            ->with(
-                'error',
+            throw new \RuntimeException(
                 'La empresa no tiene correos registrados.'
             );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | GENERAR PDF
-    |--------------------------------------------------------------------------
-    */
-
-    $pdfContent =
-        $this->generatePdfContent(
-            $invoice
-        );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | DATOS DEL CORREO
-    |--------------------------------------------------------------------------
-    */
-
-    $companyName =
-        $invoice->company?->name
-        ?? 'Cliente';
-
-
-    $invoiceNumber =
-        $invoice->invoice_number;
-
-
-    $total =
-        number_format(
-            (float) $invoice->total,
-            2
-        );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ENVIAR CORREO
-    |--------------------------------------------------------------------------
-    */
-
-    Mail::html(
-
-        '
-        <div style="
-            font-family: Arial, sans-serif;
-            color: #374151;
-            line-height: 1.6;
-        ">
-
-            <h2 style="color:#1f2937;">
-                Recordatorio de pago
-            </h2>
-
-            <p>
-                Estimado/a
-                <strong>' .
-                    e($companyName) .
-                '</strong>,
-            </p>
-
-            <p>
-                Por medio del presente correo le recordamos
-                que la factura
-                <strong>' .
-                    e($invoiceNumber) .
-                '</strong>
-                se encuentra pendiente de pago.
-            </p>
-
-            <p>
-                <strong>Total de la factura:</strong>
-                $' .
-                    e($total) .
-                '
-            </p>
-
-            <p>
-                Adjuntamos nuevamente el PDF de la factura
-                para su referencia.
-            </p>
-
-            <p>
-                Agradecemos su atención y quedamos atentos
-                a cualquier comentario.
-            </p>
-
-            <p>
-                Saludos cordiales.
-            </p>
-
-        </div>
-        ',
-
-        function ($message) use (
-            $emails,
-            $invoice,
-            $pdfContent
-        ) {
-
-            $message
-                ->to($emails)
-                ->subject(
-                    'Recordatorio de pago - ' .
-                    $invoice->invoice_number
-                );
-
-            $message->attachData(
-                $pdfContent,
-                $invoice->invoice_number . '.pdf',
-                [
-                    'mime' =>
-                        'application/pdf',
-                ]
-            );
         }
-    );
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | RESPUESTA
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | GENERAR PDF
+        |--------------------------------------------------------------------------
+        */
 
-    return redirect()
-        ->back()
-        ->with(
-            'success',
-            'El recordatorio de pago fue enviado correctamente.'
-        );
-}
-
-/*
-|--------------------------------------------------------------------------
-| ENVIAR CONFIRMACIÓN DE PAGO RECIBIDO
-|--------------------------------------------------------------------------
-*/
-
-private function sendPaymentReceivedEmail(
-    Invoice $invoice
-): void {
-
-    /*
-    |--------------------------------------------------------------------------
-    | CARGAR EMPRESA Y CORREOS
-    |--------------------------------------------------------------------------
-    */
-
-    $invoice->load([
-        'company.emails',
-    ]);
+        $pdfContent =
+            $this->generatePdfContent(
+                $invoice
+            );
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | OBTENER CORREOS
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | DATOS
+        |--------------------------------------------------------------------------
+        */
 
-    $emails = $invoice->company
-        ?->emails
-        ?->pluck('email')
-        ->map(
-            fn ($email) =>
-                strtolower(trim($email))
-        )
-        ->filter()
-        ->unique()
-        ->values()
-        ->all();
+        $companyName =
+            $invoice->company?->name
+            ?? 'Cliente';
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | SI NO HAY CORREOS
-    |--------------------------------------------------------------------------
-    */
+        $invoiceNumber =
+            $invoice->invoice_number;
 
-    if (empty($emails)) {
 
-        throw new \RuntimeException(
-            'La empresa no tiene correos registrados.'
+        $total =
+            number_format(
+                (float) $invoice->total,
+                2
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ENVIAR CORREO
+        |--------------------------------------------------------------------------
+        */
+
+        Mail::html(
+
+            '
+            <div style="
+                font-family: Arial, sans-serif;
+                color: #374151;
+                line-height: 1.6;
+            ">
+
+                <h2 style="color:#166534;">
+                    Pago recibido
+                </h2>
+
+                <p>
+                    Estimado/a
+                    <strong>' .
+                        e($companyName) .
+                    '</strong>,
+                </p>
+
+                <p>
+                    Le confirmamos que hemos recibido
+                    correctamente el pago correspondiente
+                    a la factura
+                    <strong>' .
+                        e($invoiceNumber) .
+                    '</strong>.
+                </p>
+
+                <p>
+                    <strong>Total recibido:</strong>
+                    $' .
+                        e($total) .
+                    '
+                </p>
+
+                <p>
+                    El estado de la factura ha sido actualizado
+                    a <strong>Pagada</strong>.
+                </p>
+
+                <p>
+                    Adjuntamos el documento PDF de la factura
+                    para su referencia.
+                </p>
+
+                <p>
+                    Gracias por su pago.
+                </p>
+
+                <p>
+                    Saludos cordiales.
+                </p>
+
+            </div>
+            ',
+
+            function ($message) use (
+                $emails,
+                $invoice,
+                $pdfContent
+            ) {
+
+                $message
+                    ->to($emails)
+                    ->subject(
+                        'Pago recibido - ' .
+                        $invoice->invoice_number
+                    );
+
+                $message->attachData(
+                    $pdfContent,
+                    $invoice->invoice_number . '.pdf',
+                    [
+                        'mime' =>
+                            'application/pdf',
+                    ]
+                );
+            }
         );
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | GENERAR PDF
+    | ACTUALIZAR COMPROBANTE DE PAGO
     |--------------------------------------------------------------------------
     */
 
-    $pdfContent =
-        $this->generatePdfContent(
-            $invoice
-        );
+    public function updatePaymentProof(
+        Request $request,
+        Invoice $invoice
+    ) {
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | DATOS
-    |--------------------------------------------------------------------------
-    */
-
-    $companyName =
-        $invoice->company?->name
-        ?? 'Cliente';
-
-
-    $invoiceNumber =
-        $invoice->invoice_number;
-
-
-    $total =
-        number_format(
-            (float) $invoice->total,
-            2
-        );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ENVIAR CORREO
-    |--------------------------------------------------------------------------
-    */
-
-    Mail::html(
-
-        '
-        <div style="
-            font-family: Arial, sans-serif;
-            color: #374151;
-            line-height: 1.6;
-        ">
-
-            <h2 style="color:#166534;">
-                Pago recibido
-            </h2>
-
-            <p>
-                Estimado/a
-                <strong>' .
-                    e($companyName) .
-                '</strong>,
-            </p>
-
-            <p>
-                Le confirmamos que hemos recibido
-                correctamente el pago correspondiente
-                a la factura
-                <strong>' .
-                    e($invoiceNumber) .
-                '</strong>.
-            </p>
-
-            <p>
-                <strong>Total recibido:</strong>
-                $' .
-                    e($total) .
-                '
-            </p>
-
-            <p>
-                El estado de la factura ha sido actualizado
-                a <strong>Pagada</strong>.
-            </p>
-
-            <p>
-                Adjuntamos el documento PDF de la factura
-                para su referencia.
-            </p>
-
-            <p>
-                Gracias por su pago.
-            </p>
-
-            <p>
-                Saludos cordiales.
-            </p>
-
-        </div>
-        ',
-
-        function ($message) use (
-            $emails,
-            $invoice,
-            $pdfContent
+        if (
+            $invoice->payment_status !==
+            'paid'
         ) {
 
-            $message
-                ->to($emails)
-                ->subject(
-                    'Pago recibido - ' .
-                    $invoice->invoice_number
+            return redirect()
+                ->back()
+                ->with(
+                    'error',
+                    'El comprobante de pago solo puede registrarse en facturas pagadas.'
                 );
+        }
 
-            $message->attachData(
-                $pdfContent,
-                $invoice->invoice_number . '.pdf',
-                [
-                    'mime' =>
-                        'application/pdf',
-                ]
+
+        $validated = $request->validate([
+
+            'payment_proof' => [
+                'nullable',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:10240',
+            ],
+
+            'payment_notes' => [
+                'nullable',
+                'string',
+                'max:5000',
+            ],
+
+        ]);
+
+
+        $data = [
+
+            'payment_notes' =>
+                $validated['payment_notes']
+                ?? null,
+
+        ];
+
+
+        $oldProof =
+            $invoice->payment_proof;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NUEVO COMPROBANTE
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->hasFile(
+            'payment_proof'
+        )) {
+
+            $newProof =
+                $request
+                    ->file('payment_proof')
+                    ->store(
+                        'payment-proofs/invoices/' .
+                        $invoice->id,
+                        'public'
+                    );
+
+            $data['payment_proof'] =
+                $newProof;
+
+            $invoice->update(
+                $data
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ELIMINAR COMPROBANTE ANTERIOR
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                $oldProof &&
+                $oldProof !== $newProof
+            ) {
+
+                Storage::disk(
+                    'public'
+                )->delete(
+                    $oldProof
+                );
+            }
+
+        } else {
+
+            /*
+            |--------------------------------------------------------------------------
+            | SOLO ACTUALIZAR NOTAS
+            |--------------------------------------------------------------------------
+            */
+
+            $invoice->update(
+                $data
             );
         }
-    );
-}
 
 
+        return redirect()
+            ->back()
+            ->with(
+                'success',
+                'Comprobante de pago guardado correctamente.'
+            );
+    }
 }

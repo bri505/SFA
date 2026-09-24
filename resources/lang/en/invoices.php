@@ -9,7 +9,7 @@ return [
     */
 
     'title' => 'Invoicing',
-    'subtitle' => 'Invoice and payment management',
+    'subtitle' => 'Invoice and payment control',
     'new_invoice' => 'New invoice',
 
     /*
@@ -22,7 +22,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | PAYMENT STATUS
+    | PAYMENT STATUSES
     |--------------------------------------------------------------------------
     */
 
@@ -232,6 +232,42 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | PAYMENT PROOF
+    |--------------------------------------------------------------------------
+    */
+
+    'payment_proof' => [
+
+        'title' => 'Payment proof',
+
+        'close' => 'Close',
+
+        'current' => 'Current proof',
+
+        'image_alt' => 'Payment proof',
+
+        'photo' => 'Proof photo',
+
+        'take-photo' => 'Take photo',
+
+        'choose_file' => 'Choose file',
+
+
+        'file_help' => 'JPG, JPEG, PNG or WEBP. Maximum 10 MB.',
+
+        'notes' => 'Notes / comments',
+
+        'notes_placeholder' =>
+            'Write comments related to the payment here...',
+
+        'cancel' => 'Cancel',
+
+        'save' => 'Save proof',
+
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | CREATE INVOICE
     |--------------------------------------------------------------------------
     */
@@ -252,13 +288,13 @@ return [
 
         'broker' => 'Broker',
 
-        'without_broker' => 'Without broker',
+        'without_broker' => 'No broker',
 
         'add_broker' => 'Add broker',
 
         'consignee' => 'Consignee',
 
-        'without_consignee' => 'Without consignee',
+        'without_consignee' => 'No consignee',
 
         'add_consignee' => 'Add consignee',
 
@@ -300,7 +336,8 @@ return [
 
         'available_records' => 'Available records',
 
-        'select_company_period' => 'Select a company and a period to search for records.',
+        'select_company_period' =>
+            'Select a company and a period to search for records.',
 
         /*
         |--------------------------------------------------------------------------
@@ -362,7 +399,8 @@ return [
 
         'comments' => 'Comments',
 
-        'comments_placeholder' => 'Additional comments for the invoice...',
+        'comments_placeholder' =>
+            'Additional comments for the invoice...',
 
         /*
         |--------------------------------------------------------------------------
@@ -376,7 +414,7 @@ return [
 
         /*
         |--------------------------------------------------------------------------
-        | NEW COMPANY MODAL
+        | COMPANY MODAL
         |--------------------------------------------------------------------------
         */
 
@@ -435,19 +473,19 @@ return [
         'js' => [
 
             'company_create_error' =>
-                'Unable to create the company.',
+                'The company could not be created.',
 
             'company_create_exception' =>
                 'An error occurred while creating the company.',
 
             'broker_create_error' =>
-                'Unable to create the broker.',
+                'The broker could not be created.',
 
             'broker_create_exception' =>
                 'An error occurred while creating the broker.',
 
             'consignee_create_error' =>
-                'Unable to create the consignee.',
+                'The consignee could not be created.',
 
             'consignee_create_exception' =>
                 'An error occurred while creating the consignee.',
@@ -462,10 +500,10 @@ return [
                 'Searching records...',
 
             'get_records_error' =>
-                'Unable to retrieve the records.',
+                'The records could not be retrieved.',
 
             'no_records_found' =>
-                'No records were found for the selected period.',
+                'No records were found in the selected period.',
 
             'service' =>
                 'Service',
@@ -505,7 +543,7 @@ return [
 
         'invoice_number' => 'INVOICE #',
 
-        'bill_to' => 'Bill To',
+        'bill_to' => 'Bill to',
 
         'invoice_information' => 'Invoice information',
 
@@ -557,14 +595,29 @@ return [
 
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | EMAIL
+    |--------------------------------------------------------------------------
+    */
+
     'send_email' => 'Send by email',
-'send_invoice' => 'Send invoice by email',
-'email_subject' => 'Email subject',
-'default_email_subject' => 'Invoice :invoice - SFA',
-'recipients' => 'Recipients',
-'no_company_emails' => 'This company has no registered email addresses.',
-'documents_to_send' => 'Documents to send',
-'pdf_document' => 'Invoice PDF document',
-'xml_document' => 'Invoice XML document',
+
+    'send_invoice' => 'Send invoice by email',
+
+    'email_subject' => 'Email subject',
+
+    'default_email_subject' => 'Invoice :invoice - SFA',
+
+    'recipients' => 'Recipients',
+
+    'no_company_emails' =>
+        'This company has no registered email addresses.',
+
+    'documents_to_send' => 'Documents to send',
+
+    'pdf_document' => 'Invoice PDF document',
+
+    'xml_document' => 'Invoice XML document',
 
 ];

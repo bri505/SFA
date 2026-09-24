@@ -340,17 +340,6 @@
 .service-name {
     font-weight: 700;
     color: #374151;
-    margin-bottom: 3px;
-}
-
-.service-base {
-    font-size: 11px;
-    color: #6b7280;
-}
-
-.service-tax {
-    font-size: 11px;
-    color: #92400e;
 }
 
 .service-total {
@@ -399,7 +388,7 @@
 
 .summary-grid {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
 }
 
@@ -420,10 +409,6 @@
     font-size: 18px;
     font-weight: 700;
     color: #111827;
-}
-
-.summary-service-tax {
-    color: #92400e;
 }
 
 .summary-tax {
@@ -665,6 +650,10 @@
     </div>
 
 
+    {{-- =====================================================
+         CONFIGURACIÓN
+    ====================================================== --}}
+
     <div class="panel">
 
         <div class="panel-header">
@@ -679,9 +668,14 @@
 
             <div class="form-grid">
 
+                {{-- EMPRESA DE FACTURACIÓN --}}
+
                 <div class="form-group">
 
-                    <label class="form-label">
+                    <label
+                        class="form-label"
+                        for="billingCompany"
+                    >
                         {{ __('invoices.create.billing_company') }}
                     </label>
 
@@ -726,9 +720,14 @@
                 </div>
 
 
+                {{-- BROKER --}}
+
                 <div class="form-group">
 
-                    <label class="form-label">
+                    <label
+                        class="form-label"
+                        for="billingBroker"
+                    >
                         {{ __('invoices.create.broker') }}
                     </label>
 
@@ -767,9 +766,14 @@
                 </div>
 
 
+                {{-- CONSIGNATARIO --}}
+
                 <div class="form-group">
 
-                    <label class="form-label">
+                    <label
+                        class="form-label"
+                        for="billingConsignee"
+                    >
                         {{ __('invoices.create.consignee') }}
                     </label>
 
@@ -809,6 +813,8 @@
 
             </div>
 
+
+            {{-- TIPO DE FACTURACIÓN --}}
 
             <div style="margin-top:16px;">
 
@@ -855,6 +861,8 @@
             </div>
 
 
+            {{-- EMPRESA DE LOS REGISTROS --}}
+
             <div
                 id="singleCompanyGroup"
                 style="margin-top:15px;"
@@ -862,7 +870,10 @@
 
                 <div class="form-group">
 
-                    <label class="form-label">
+                    <label
+                        class="form-label"
+                        for="recordCompany"
+                    >
                         {{ __('invoices.create.record_company') }}
                     </label>
 
@@ -895,6 +906,8 @@
 
             </div>
 
+
+            {{-- MÚLTIPLES EMPRESAS --}}
 
             <div
                 id="multipleCompaniesGroup"
@@ -931,6 +944,8 @@
             </div>
 
 
+            {{-- PERIODO --}}
+
             <div
                 class="form-grid-2"
                 style="margin-top:15px;"
@@ -938,7 +953,10 @@
 
                 <div class="form-group">
 
-                    <label class="form-label">
+                    <label
+                        class="form-label"
+                        for="periodStart"
+                    >
                         {{ __('invoices.create.period_start') }}
                     </label>
 
@@ -954,7 +972,10 @@
 
                 <div class="form-group">
 
-                    <label class="form-label">
+                    <label
+                        class="form-label"
+                        for="periodEnd"
+                    >
                         {{ __('invoices.create.period_end') }}
                     </label>
 
@@ -974,6 +995,10 @@
     </div>
 
 
+    {{-- =====================================================
+         OPCIONES DE FACTURA
+    ====================================================== --}}
+
     <div class="panel">
 
         <div class="panel-header">
@@ -988,31 +1013,7 @@
 
             <div class="form-grid-2">
 
-                {{-- =====================================================
-                     IVA SERVICIOS
-                ====================================================== --}}
-
-                <div>
-
-                    <div class="option-row">
-
-                        <input
-                            type="checkbox"
-                            id="serviceTaxEnabled"
-                        >
-
-                        <label for="serviceTaxEnabled">
-                            IVA servicios
-                        </label>
-
-                    </div>
-
-                </div>
-
-
-                {{-- =====================================================
-                     SALES TAX
-                ====================================================== --}}
+                {{-- SALES TAX --}}
 
                 <div>
 
@@ -1044,9 +1045,7 @@
                 </div>
 
 
-                {{-- =====================================================
-                     SHIPPING / HANDLING
-                ====================================================== --}}
+                {{-- SHIPPING / HANDLING --}}
 
                 <div>
 
@@ -1084,6 +1083,10 @@
     </div>
 
 
+    {{-- =====================================================
+         BUSCAR REGISTROS
+    ====================================================== --}}
+
     <div class="panel">
 
         <div class="panel-header">
@@ -1108,6 +1111,10 @@
 
     </div>
 
+
+    {{-- =====================================================
+         REGISTROS DISPONIBLES
+    ====================================================== --}}
 
     <div class="panel">
 
@@ -1219,6 +1226,10 @@
     </div>
 
 
+    {{-- =====================================================
+         RESUMEN
+    ====================================================== --}}
+
     <div class="panel">
 
         <div class="panel-header">
@@ -1268,22 +1279,6 @@
                 <div class="summary-box">
 
                     <div class="summary-label">
-                        IVA servicios
-                    </div>
-
-                    <div
-                        class="summary-value summary-service-tax"
-                        id="summaryServiceTax"
-                    >
-                        $0.00
-                    </div>
-
-                </div>
-
-
-                <div class="summary-box">
-
-                    <div class="summary-label">
                         Sales Tax
                     </div>
 
@@ -1319,6 +1314,10 @@
     </div>
 
 
+    {{-- =====================================================
+         COMENTARIOS
+    ====================================================== --}}
+
     <div class="panel">
 
         <div class="panel-header">
@@ -1341,6 +1340,10 @@
 
     </div>
 
+
+    {{-- =====================================================
+         ACCIONES
+    ====================================================== --}}
 
     <div class="actions">
 
@@ -1406,12 +1409,16 @@
 
                 <div class="form-group modal-full">
 
-                    <label class="form-label">
+                    <label
+                        class="form-label"
+                        for="companyName"
+                    >
                         {{ __('invoices.create.company_modal.name') }}
                     </label>
 
                     <input
                         type="text"
+                        id="companyName"
                         name="name"
                         class="form-input"
                         maxlength="255"
@@ -1423,12 +1430,16 @@
 
                 <div class="form-group">
 
-                    <label class="form-label">
+                    <label
+                        class="form-label"
+                        for="companyCode"
+                    >
                         {{ __('invoices.create.company_modal.code') }}
                     </label>
 
                     <input
                         type="text"
+                        id="companyCode"
                         name="code"
                         class="form-input"
                         maxlength="50"
@@ -1439,12 +1450,16 @@
 
                 <div class="form-group">
 
-                    <label class="form-label">
+                    <label
+                        class="form-label"
+                        for="companyTaxId"
+                    >
                         {{ __('invoices.create.company_modal.tax_id') }}
                     </label>
 
                     <input
                         type="text"
+                        id="companyTaxId"
                         name="tax_id"
                         class="form-input"
                         maxlength="50"
@@ -1520,12 +1535,16 @@
 
             <div class="form-group">
 
-                <label class="form-label">
+                <label
+                    class="form-label"
+                    for="brokerName"
+                >
                     {{ __('invoices.create.broker_modal.name') }}
                 </label>
 
                 <input
                     type="text"
+                    id="brokerName"
                     name="name"
                     class="form-input"
                     maxlength="255"
@@ -1600,12 +1619,16 @@
 
             <div class="form-group">
 
-                <label class="form-label">
+                <label
+                    class="form-label"
+                    for="consigneeName"
+                >
                     {{ __('invoices.create.consignee_modal.name') }}
                 </label>
 
                 <input
                     type="text"
+                    id="consigneeName"
                     name="name"
                     class="form-input"
                     maxlength="255"
@@ -1687,12 +1710,6 @@
 
 <input
     type="hidden"
-    name="service_tax_enabled"
-    id="formServiceTaxEnabled"
->
-
-<input
-    type="hidden"
     name="tax_rate"
     id="formTaxRate"
 >
@@ -1764,16 +1781,10 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('selectAllRecords');
 
 
-    /*
-     * IVA DE SERVICIOS
-     */
-    const serviceTaxEnabled =
-        document.getElementById('serviceTaxEnabled');
+    /* =====================================================
+       SALES TAX
+    ===================================================== */
 
-
-    /*
-     * SALES TAX
-     */
     const taxEnabled =
         document.getElementById('taxEnabled');
 
@@ -1781,15 +1792,20 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('taxRate');
 
 
-    /*
-     * SHIPPING
-     */
+    /* =====================================================
+       SHIPPING / HANDLING
+    ===================================================== */
+
     const shippingEnabled =
         document.getElementById('shippingEnabled');
 
     const shippingRate =
         document.getElementById('shippingRate');
 
+
+    /* =====================================================
+       RESTO DE ELEMENTOS
+    ===================================================== */
 
     const periodStart =
         document.getElementById('periodStart');
@@ -1817,9 +1833,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const formPeriodEnd =
         document.getElementById('formPeriodEnd');
-
-    const formServiceTaxEnabled =
-        document.getElementById('formServiceTaxEnabled');
 
     const formTaxRate =
         document.getElementById('formTaxRate');
@@ -2360,25 +2373,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     /* =====================================================
-       IVA DE SERVICIOS
-       
-       IMPORTANTE:
-       Este checkbox es independiente de Sales Tax.
-    ===================================================== */
-
-    serviceTaxEnabled.addEventListener(
-        'change',
-        function () {
-
-            updateDisplayedTaxValues();
-
-            calculateSummary();
-
-        }
-    );
-
-
-    /* =====================================================
        SALES TAX
     ===================================================== */
 
@@ -2409,7 +2403,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     /* =====================================================
-       SHIPPING
+       SHIPPING / HANDLING
     ===================================================== */
 
     shippingEnabled.addEventListener(
@@ -2638,215 +2632,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     /* =====================================================
-       CALCULAR IVA DE SERVICIO
-       
-       AHORA DEPENDE EXCLUSIVAMENTE DE:
-       serviceTaxEnabled
-    ===================================================== */
-
-    function getServiceTax(service) {
-
-        if (!serviceTaxEnabled.checked) {
-
-            return {
-                rate: 0,
-                amount: 0
-            };
-
-        }
-
-
-        const base =
-            Number(
-                service.subtotal || 0
-            );
-
-
-        const rate =
-            Number(
-                service.service_type?.tax_rate ??
-                service.serviceType?.tax_rate ??
-                0
-            );
-
-
-        const amount =
-            Math.round(
-                (
-                    base *
-                    (rate / 100)
-                ) * 100
-            ) / 100;
-
-
-        return {
-            rate,
-            amount
-        };
-
-    }
-
-
-    /* =====================================================
-       ACTUALIZAR IVA MOSTRADO EN TABLA
-    ===================================================== */
-
-    function updateDisplayedTaxValues() {
-
-        document
-            .querySelectorAll(
-                'tr[data-record-id]'
-            )
-            .forEach(row => {
-
-                const recordId =
-                    parseInt(
-                        row.dataset.recordId
-                    );
-
-
-                const record =
-                    loadedRecords.find(
-                        item =>
-                            parseInt(item.id) === recordId
-                    );
-
-
-                if (!record) return;
-
-
-                const services =
-                    Array.isArray(record.services)
-                        ? record.services
-                        : [];
-
-
-                const serviceElements =
-                    row.querySelectorAll(
-                        '.service-item'
-                    );
-
-
-                services.forEach(
-                    (service, index) => {
-
-                        const element =
-                            serviceElements[index];
-
-                        if (!element) return;
-
-
-                        const base =
-                            Number(
-                                service.subtotal || 0
-                            );
-
-
-                        const tax =
-                            getServiceTax(
-                                service
-                            );
-
-
-                        const taxElement =
-                            element.querySelector(
-                                '.service-tax'
-                            );
-
-
-                        const totalElement =
-                            element.querySelector(
-                                '.service-total'
-                            );
-
-
-                        if (taxElement) {
-
-                            if (serviceTaxEnabled.checked) {
-
-                                taxElement.textContent =
-                                    `IVA ${formatMoney(tax.rate)}%: $${formatMoney(tax.amount)}`;
-
-                                taxElement.style.display =
-                                    '';
-
-                            } else {
-
-                                taxElement.textContent =
-                                    '';
-
-                                taxElement.style.display =
-                                    'none';
-
-                            }
-
-                        }
-
-
-                        if (totalElement) {
-
-                            const total =
-                                Math.round(
-                                    (
-                                        base +
-                                        tax.amount
-                                    ) * 100
-                                ) / 100;
-
-
-                            totalElement.textContent =
-                                `Total: $${formatMoney(total)}`;
-
-                        }
-
-                    }
-                );
-
-
-                const totalServices =
-                    services.reduce(
-                        (sum, service) => {
-
-                            const base =
-                                Number(
-                                    service.subtotal || 0
-                                );
-
-
-                            const tax =
-                                getServiceTax(
-                                    service
-                                );
-
-
-                            return sum +
-                                base +
-                                tax.amount;
-
-                        },
-                        0
-                    );
-
-
-                const servicesLabel =
-                    row.querySelector(
-                        'td:last-child div'
-                    );
-
-
-                if (servicesLabel) {
-
-                    servicesLabel.textContent =
-                        `${@json(__('invoices.create.js.services_label'))} $${formatMoney(totalServices)}`;
-
-                }
-
-            });
-
-    }
-
-
-    /* =====================================================
        RENDERIZAR REGISTROS
     ===================================================== */
 
@@ -2902,6 +2687,30 @@ document.addEventListener('DOMContentLoaded', function () {
                         '';
 
 
+                    /*
+                     * TOTAL DE TODOS LOS SERVICIOS
+                     */
+                    const serviceTotal =
+                        services.reduce(
+                            (sum, service) => {
+
+                                return sum +
+                                    Number(
+                                        service.subtotal || 0
+                                    );
+
+                            },
+                            0
+                        );
+
+
+                    /*
+                     * SERVICIOS
+                     *
+                     * Solo nombre + total.
+                     * Sin IVA.
+                     * Sin base individual.
+                     */
                     const servicesHtml =
                         services.length
                             ? services.map(service => {
@@ -2913,53 +2722,32 @@ document.addEventListener('DOMContentLoaded', function () {
                                     @json(__('invoices.create.js.service'));
 
 
-                                const base =
+                                const serviceAmount =
                                     Number(
                                         service.subtotal || 0
                                     );
 
 
-                                const tax =
-                                    getServiceTax(
-                                        service
-                                    );
-
-
-                                const serviceTotal =
-                                    Math.round(
-                                        (
-                                            base +
-                                            tax.amount
-                                        ) * 100
-                                    ) / 100;
-
-
                                 return `
                                     <div class="service-item">
 
-                                        <div class="service-name">
-                                            ${escapeHtml(serviceName)}
-                                        </div>
-
-                                        <div class="service-base">
-                                            Base:
-                                            $${formatMoney(base)}
-                                        </div>
-
                                         <div
-                                            class="service-tax"
-                                            style="${serviceTaxEnabled.checked ? '' : 'display:none;'}"
+                                            style="
+                                                display:flex;
+                                                justify-content:space-between;
+                                                align-items:center;
+                                                gap:10px;
+                                            "
                                         >
-                                            ${
-                                                serviceTaxEnabled.checked
-                                                    ? `IVA ${formatMoney(tax.rate)}%: $${formatMoney(tax.amount)}`
-                                                    : ''
-                                            }
-                                        </div>
 
-                                        <div class="service-total">
-                                            Total:
-                                            $${formatMoney(serviceTotal)}
+                                            <div class="service-name">
+                                                ${escapeHtml(serviceName)}
+                                            </div>
+
+                                            <div class="service-total">
+                                                $${formatMoney(serviceAmount)}
+                                            </div>
+
                                         </div>
 
                                     </div>
@@ -2967,31 +2755,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                             }).join('')
                             : @json(__('invoices.create.js.no_services'));
-
-
-                    const serviceTotal =
-                        services.reduce(
-                            (sum, service) => {
-
-                                const base =
-                                    Number(
-                                        service.subtotal || 0
-                                    );
-
-
-                                const tax =
-                                    getServiceTax(
-                                        service
-                                    );
-
-
-                                return sum +
-                                    base +
-                                    tax.amount;
-
-                            },
-                            0
-                        );
 
 
                     return `
@@ -3173,8 +2936,11 @@ document.addEventListener('DOMContentLoaded', function () {
                                         color:#6b7280;
                                     "
                                 >
+
                                     ${@json(__('invoices.create.js.services_label'))}
+
                                     $${formatMoney(serviceTotal)}
+
                                 </div>
 
                             </td>
@@ -3342,8 +3108,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         let subtotal = 0;
 
-        let serviceTaxTotal = 0;
-
 
         selectedIds.forEach(id => {
 
@@ -3363,6 +3127,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     : [];
 
 
+            /*
+             * SERVICIOS
+             *
+             * Solo se suma el subtotal
+             * de cada servicio.
+             *
+             * NO existe IVA de servicios.
+             */
             services.forEach(service => {
 
                 const base =
@@ -3371,22 +3143,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     );
 
 
-                const tax =
-                    getServiceTax(
-                        service
-                    );
-
-
                 subtotal +=
                     base;
-
-
-                serviceTaxTotal +=
-                    tax.amount;
 
             });
 
 
+            /*
+             * CARGOS ADICIONALES
+             */
             const quantityInput =
                 document.querySelector(
                     `.additional-quantity[data-record-id="${id}"]`
@@ -3428,6 +3193,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         /* ==============================================
            SHIPPING / HANDLING
+           
+           Se calcula sobre el subtotal.
         ============================================== */
 
         const shippingRateValue =
@@ -3450,8 +3217,9 @@ document.addEventListener('DOMContentLoaded', function () {
         /* ==============================================
            SALES TAX
            
-           IMPORTANTE:
-           Sales Tax es independiente del IVA servicios.
+           Se calcula sobre:
+           
+           subtotal + Shipping / Handling
         ============================================== */
 
         const salesTaxRate =
@@ -3478,13 +3246,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
         /* ==============================================
            TOTAL
+           
+           subtotal
+           + Shipping / Handling
+           + Sales Tax
         ============================================== */
 
         const total =
             Math.round(
                 (
                     subtotal +
-                    serviceTaxTotal +
                     shipping +
                     salesTax
                 ) * 100
@@ -3502,13 +3273,6 @@ document.addEventListener('DOMContentLoaded', function () {
         ).textContent =
             '$' +
             formatMoney(subtotal);
-
-
-        document.getElementById(
-            'summaryServiceTax'
-        ).textContent =
-            '$' +
-            formatMoney(serviceTaxTotal);
 
 
         document.getElementById(
@@ -3604,21 +3368,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 periodEnd.value;
 
 
-            /*
-             * IVA SERVICIOS
-             *
-             * Se envía independientemente
-             * del Sales Tax.
-             */
-            formServiceTaxEnabled.value =
-                serviceTaxEnabled.checked
-                    ? '1'
-                    : '0';
+            /* ==============================================
+               SALES TAX
+            ============================================== */
 
-
-            /*
-             * SALES TAX
-             */
             formTaxRate.value =
                 taxEnabled.checked
                     ? parseFloat(
@@ -3627,9 +3380,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     : 0;
 
 
-            /*
-             * SHIPPING
-             */
+            /* ==============================================
+               SHIPPING / HANDLING
+            ============================================== */
+
             formShippingRate.value =
                 shippingEnabled.checked
                     ? parseFloat(
@@ -3648,6 +3402,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     : 'single';
 
 
+            /* ==============================================
+               EMPRESAS
+            ============================================== */
+
             formRecordCompanies.innerHTML =
                 '';
 
@@ -3663,6 +3421,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 });
 
+
+            /* ==============================================
+               REGISTROS
+            ============================================== */
 
             formRecords.innerHTML =
                 '';
@@ -3926,17 +3688,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     /*
-     * Shipping comienza desactivado.
+     * Shipping / Handling comienza desactivado.
      */
     shippingRate.disabled =
         !shippingEnabled.checked;
-
-
-    /*
-     * IVA servicios comienza desactivado.
-     */
-    serviceTaxEnabled.checked =
-        false;
 
 
     calculateSummary();

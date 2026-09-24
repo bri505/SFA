@@ -563,6 +563,238 @@
 
 
     /* =========================================================
+       MODAL COMPROBANTE
+    ========================================================= */
+
+    .payment-proof-modal {
+        display: none;
+
+        position: fixed;
+
+        inset: 0;
+
+        z-index: 9999;
+
+        background: rgba(0, 0, 0, .55);
+
+        align-items: center;
+
+        justify-content: center;
+
+        padding: 20px;
+    }
+
+    .payment-proof-modal-content {
+        width: 100%;
+
+        max-width: 600px;
+
+        max-height: 90vh;
+
+        overflow-y: auto;
+
+        background: #ffffff;
+
+        border-radius: 12px;
+
+        padding: 24px;
+
+        box-shadow:
+            0 10px 40px
+            rgba(0, 0, .25);
+    }
+
+    .payment-proof-header {
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 15px;
+
+        margin-bottom: 20px;
+    }
+
+    .payment-proof-title {
+        margin: 0;
+
+        font-size: 20px;
+
+        font-weight: 700;
+
+        color: #1f2937;
+    }
+
+    .payment-proof-invoice-label {
+        margin: 5px 0 0;
+
+        color: #666;
+
+        font-size: 14px;
+    }
+
+    .payment-proof-close {
+        border: none;
+
+        background: transparent;
+
+        font-size: 24px;
+
+        cursor: pointer;
+
+        line-height: 1;
+
+        color: #4b5563;
+    }
+
+    .payment-proof-section {
+        margin-bottom: 20px;
+    }
+
+    .payment-proof-label {
+        display: block;
+
+        margin-bottom: 8px;
+
+        font-weight: 600;
+
+        color: #1f2937;
+
+        font-size: 13px;
+    }
+
+    .payment-proof-current {
+        display: block;
+
+        border: 1px solid #ddd;
+
+        border-radius: 8px;
+
+        padding: 10px;
+
+        background: #f8f8f8;
+    }
+
+    .payment-proof-current img {
+        display: block;
+
+        width: 100%;
+
+        max-height: 300px;
+
+        object-fit: contain;
+
+        border-radius: 6px;
+
+        background: #ffffff;
+    }
+
+
+    /* =========================================================
+       VISTA PREVIA DE NUEVA FOTO
+    ========================================================= */
+
+    .payment-proof-preview {
+        display: none;
+
+        margin-top: 12px;
+
+        border: 1px solid #ddd;
+
+        border-radius: 8px;
+
+        padding: 10px;
+
+        background: #f8f8f8;
+    }
+
+    .payment-proof-preview img {
+        display: block;
+
+        width: 100%;
+
+        max-height: 300px;
+
+        object-fit: contain;
+
+        border-radius: 6px;
+
+        background: #ffffff;
+    }
+
+
+    /* =========================================================
+       INPUTS DE ARCHIVO
+    ========================================================= */
+
+    .payment-proof-camera-input,
+    .payment-proof-file-input,
+    .payment-proof-hidden-input {
+        display: none;
+    }
+
+
+    /* =========================================================
+       OPCIONES DE FOTO
+    ========================================================= */
+
+    .payment-proof-options {
+        display: flex;
+
+        gap: 10px;
+
+        flex-wrap: wrap;
+    }
+
+    .payment-proof-selected-file {
+        margin-top: 10px;
+
+        color: #555;
+
+        font-size: 14px;
+    }
+
+    .payment-proof-help {
+        display: block;
+
+        margin-top: 6px;
+
+        color: #777;
+
+        font-size: 11px;
+    }
+
+    .payment-proof-textarea {
+        width: 100%;
+
+        padding: 10px;
+
+        border: 1px solid #ccc;
+
+        border-radius: 6px;
+
+        resize: vertical;
+
+        box-sizing: border-box;
+
+        font-family: inherit;
+
+        font-size: 13px;
+    }
+
+    .payment-proof-actions {
+        display: flex;
+
+        justify-content: flex-end;
+
+        gap: 10px;
+
+        flex-wrap: wrap;
+    }
+
+
+    /* =========================================================
        RESPONSIVE
     ========================================================= */
 
@@ -612,6 +844,14 @@
             flex-direction: column;
         }
 
+        .payment-proof-modal {
+            padding: 12px;
+        }
+
+        .payment-proof-modal-content {
+            padding: 18px;
+        }
+
     }
 
 </style>
@@ -658,8 +898,6 @@
         <div class="summary-grid">
 
 
-            {{-- POR PAGAR --}}
-
             <div class="summary-card summary-pending">
 
                 <div class="summary-label">
@@ -672,8 +910,6 @@
 
             </div>
 
-
-            {{-- EN TRÁMITE --}}
 
             <div class="summary-card summary-process">
 
@@ -688,8 +924,6 @@
             </div>
 
 
-            {{-- PAGADAS --}}
-
             <div class="summary-card summary-paid">
 
                 <div class="summary-label">
@@ -702,8 +936,6 @@
 
             </div>
 
-
-            {{-- CANCELADAS --}}
 
             <div class="summary-card summary-cancelled">
 
@@ -727,8 +959,6 @@
         <div class="financial-grid">
 
 
-            {{-- PENDIENTE DE COBRO --}}
-
             <div class="financial-card">
 
                 <div class="financial-label">
@@ -738,6 +968,7 @@
                 <div class="financial-value">
 
                     $
+
                     {{ number_format(
                         $pendingAmount,
                         2
@@ -748,8 +979,6 @@
             </div>
 
 
-            {{-- COBRADO --}}
-
             <div class="financial-card">
 
                 <div class="financial-label">
@@ -759,6 +988,7 @@
                 <div class="financial-value">
 
                     $
+
                     {{ number_format(
                         $paidAmount,
                         2
@@ -769,8 +999,6 @@
             </div>
 
 
-            {{-- TOTAL FACTURADO --}}
-
             <div class="financial-card">
 
                 <div class="financial-label">
@@ -780,6 +1008,7 @@
                 <div class="financial-value">
 
                     $
+
                     {{ number_format(
                         $totalAmount,
                         2
@@ -886,11 +1115,6 @@
 
         {{-- =====================================================
              ENVÍO MASIVO
-             
-             SOLO SE MUESTRA EN:
-             - pending
-             - in_process
-             - paid
         ====================================================== --}}
 
         @if(
@@ -913,7 +1137,6 @@
 
                 @csrf
 
-                {{-- Estado activo del filtro --}}
                 <input
                     type="hidden"
                     name="payment_status"
@@ -923,36 +1146,39 @@
 
                 <div class="bulk-toolbar">
 
-                <div class="bulk-info">
+                    <div class="bulk-info">
 
-                    <strong id="selectedInvoicesCount">
-                        0
-                    </strong>
-
-                    factura(s) seleccionada(s)
-
-                    @if($paymentStatus === 'pending')
-
-                        · Se enviará como
-                        <strong>
-                            {{ __('invoices.payment_status.pending') }}
+                        <strong id="selectedInvoicesCount">
+                            0
                         </strong>
 
-                    @elseif($paymentStatus === 'in_process')
+                        factura(s) seleccionada(s)
 
-                        · Se enviará como
-                        <strong>
-                            {{ __('invoices.payment_status.in_process') }}
-                        </strong>
+                        @if($paymentStatus === 'pending')
 
-                    @elseif($paymentStatus === 'paid')
+                            · Se enviará como
 
-                        · Se enviará como
-                        <strong>
-                            {{ __('invoices.payment_status.paid') }}
-                        </strong>
+                            <strong>
+                                {{ __('invoices.payment_status.pending') }}
+                            </strong>
 
-                    @endif
+                        @elseif($paymentStatus === 'in_process')
+
+                            · Se enviará como
+
+                            <strong>
+                                {{ __('invoices.payment_status.in_process') }}
+                            </strong>
+
+                        @elseif($paymentStatus === 'paid')
+
+                            · Se enviará como
+
+                            <strong>
+                                {{ __('invoices.payment_status.paid') }}
+                            </strong>
+
+                        @endif
 
                     </div>
 
@@ -963,7 +1189,8 @@
                         class="bulk-email-button"
                         disabled
                     >
-                        📧 Enviar seleccionadas
+                        📧
+                        {{ __('invoices.send_email') }}
                     </button>
 
                 </div>
@@ -996,7 +1223,6 @@
 
                         <tr>
 
-                            {{-- CHECKBOX MASIVO --}}
 
                             @if(
                                 in_array(
@@ -1016,7 +1242,7 @@
                                         type="checkbox"
                                         id="selectAllInvoices"
                                         class="select-all-checkbox"
-                                        title="Seleccionar todas"
+                                        title="{{ __('invoices.table.actions') }}"
                                     >
 
                                 </th>
@@ -1076,8 +1302,6 @@
                             <tr>
 
 
-                                {{-- CHECKBOX FACTURA --}}
-
                                 @if(
                                     in_array(
                                         $paymentStatus,
@@ -1105,8 +1329,6 @@
                                 @endif
 
 
-                                {{-- FACTURA --}}
-
                                 <td>
 
                                     <a
@@ -1124,21 +1346,17 @@
                                 </td>
 
 
-                                {{-- EMPRESA --}}
-
                                 <td>
 
                                     {{
                                         $invoice
                                             ->company
                                             ->name
-                                        ?? '—'
+                                        ?? __('invoices.no_data')
                                     }}
 
                                 </td>
 
-
-                                {{-- PERIODO --}}
 
                                 <td>
 
@@ -1167,8 +1385,6 @@
                                 </td>
 
 
-                                {{-- SUBTOTAL --}}
-
                                 <td>
 
                                     $
@@ -1182,8 +1398,6 @@
 
                                 </td>
 
-
-                                {{-- IVA --}}
 
                                 <td>
 
@@ -1199,8 +1413,6 @@
                                 </td>
 
 
-                                {{-- TOTAL --}}
-
                                 <td class="total">
 
                                     $
@@ -1214,8 +1426,6 @@
 
                                 </td>
 
-
-                                {{-- ESTADO DE PAGO --}}
 
                                 <td>
 
@@ -1295,25 +1505,26 @@
                                 </td>
 
 
-                                {{-- USUARIO --}}
-
                                 <td>
 
                                     {{
                                         $invoice
                                             ->generatedBy
                                             ->name
-                                        ?? '—'
+                                        ?? __('invoices.no_data')
                                     }}
 
                                 </td>
 
 
-                                {{-- ACCIONES --}}
-
                                 <td>
 
                                     <div class="actions">
+
+
+                                        {{-- =====================================================
+                                             VER FACTURA
+                                        ====================================================== --}}
 
                                         <a
                                             href="{{ route(
@@ -1324,6 +1535,32 @@
                                         >
                                             {{ __('invoices.actions.view') }}
                                         </a>
+
+
+                                        {{-- =====================================================
+                                             COMPROBANTE DE PAGO
+                                             SOLO FACTURAS PAGADAS
+                                        ====================================================== --}}
+
+                                        @if(
+                                            $invoice->payment_status === 'paid'
+                                        )
+
+                                            <button
+                                                type="button"
+                                                class="btn-action"
+                                                onclick="openPaymentProofModal(
+                                                    {{ $invoice->id }},
+                                                    @js($invoice->invoice_number),
+                                                    @js($invoice->payment_proof),
+                                                    @js($invoice->payment_notes)
+                                                )"
+                                            >
+                                                💳
+                                                {{ __('invoices.payment_proof.title') }}
+                                            </button>
+
+                                        @endif
 
 
                                         {{-- =====================================================
@@ -1361,7 +1598,8 @@
                                                     class="btn-action"
                                                     title="Enviar recordatorio de pago"
                                                 >
-                                                    🔔 Recordatorio
+                                                    🔔
+                                                    Recordatorio
                                                 </button>
 
                                             </form>
@@ -1374,6 +1612,7 @@
 
 
                             </tr>
+
 
                         @empty
 
@@ -1412,6 +1651,275 @@
 
         </div>
 
+
+    </div>
+
+</div>
+
+
+{{-- ============================================================
+     MODAL — COMPROBANTE DE PAGO
+============================================================ --}}
+
+<div
+    id="paymentProofModal"
+    class="payment-proof-modal"
+>
+
+    <div class="payment-proof-modal-content">
+
+
+        {{-- =====================================================
+             ENCABEZADO
+        ====================================================== --}}
+
+        <div class="payment-proof-header">
+
+            <div>
+
+                <h2 class="payment-proof-title">
+
+                    {{ __('invoices.payment_proof.title') }}
+
+                </h2>
+
+
+                <p
+                    id="paymentProofInvoiceLabel"
+                    class="payment-proof-invoice-label"
+                ></p>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="payment-proof-close"
+                onclick="closePaymentProofModal()"
+                aria-label="{{ __('invoices.payment_proof.close') }}"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        {{-- =====================================================
+             FORMULARIO
+        ====================================================== --}}
+
+        <form
+            id="paymentProofForm"
+            method="POST"
+            enctype="multipart/form-data"
+        >
+
+            @csrf
+
+
+            {{-- =====================================================
+                 COMPROBANTE ACTUAL
+            ====================================================== --}}
+
+            <div
+                id="paymentProofCurrentContainer"
+                class="payment-proof-section"
+                style="display: none;"
+            >
+
+                <label class="payment-proof-label">
+
+                    {{ __('invoices.payment_proof.current') }}
+
+                </label>
+
+
+                <div class="payment-proof-current">
+
+                    <img
+                        id="paymentProofCurrentImage"
+                        src=""
+                        alt="{{ __('invoices.payment_proof.image_alt') }}"
+                    >
+
+                </div>
+
+            </div>
+
+
+            {{-- =====================================================
+                 NUEVO COMPROBANTE
+            ====================================================== --}}
+
+            <div class="payment-proof-section">
+
+                <label class="payment-proof-label">
+
+                    {{ __('invoices.payment_proof.photo') }}
+
+                </label>
+
+
+                <div class="payment-proof-options">
+
+
+                    {{-- =================================================
+                         BOTÓN CÁMARA
+                    ================================================== --}}
+
+                    <button
+                        type="button"
+                        class="btn-action"
+                        onclick="openPaymentCamera()"
+                    >
+                        📷
+                        {{ __('invoices.payment_proof.take-photo') }}
+                    </button>
+
+
+                    {{-- =================================================
+                         BOTÓN ARCHIVO
+                    ================================================== --}}
+
+                    <button
+                        type="button"
+                        class="btn-action"
+                        onclick="openPaymentFile()"
+                    >
+                        📁
+                        {{ __('invoices.payment_proof.choose_file') }}
+                    </button>
+
+                </div>
+
+
+                {{-- =====================================================
+                     INPUT CÁMARA
+                ====================================================== --}}
+
+                <input
+                    type="file"
+                    id="paymentProofCameraInput"
+                    class="payment-proof-camera-input"
+                    accept="image/jpeg,image/png,image/webp"
+                    capture="environment"
+                >
+
+
+                {{-- =====================================================
+                     INPUT ARCHIVO
+                ====================================================== --}}
+
+                <input
+                    type="file"
+                    id="paymentProofFileInput"
+                    class="payment-proof-file-input"
+                    accept="image/jpeg,image/png,image/webp"
+                >
+
+
+                {{-- =====================================================
+                     INPUT REAL QUE SE ENVÍA AL SERVIDOR
+                ====================================================== --}}
+
+                <input
+                    type="file"
+                    id="paymentProofInput"
+                    name="payment_proof"
+                    class="payment-proof-hidden-input"
+                    accept="image/jpeg,image/png,image/webp"
+                >
+
+
+                {{-- =====================================================
+                     ARCHIVO SELECCIONADO
+                ====================================================== --}}
+
+                <div
+                    id="paymentProofSelectedFile"
+                    class="payment-proof-selected-file"
+                ></div>
+
+
+                {{-- =====================================================
+                     VISTA PREVIA DE LA NUEVA FOTO
+                ====================================================== --}}
+
+                <div
+                    id="paymentProofPreview"
+                    class="payment-proof-preview"
+                >
+
+                    <img
+                        id="paymentProofPreviewImage"
+                        src=""
+                        alt="{{ __('invoices.payment_proof.image_alt') }}"
+                    >
+
+                </div>
+
+
+                <small class="payment-proof-help">
+                    {{ __('invoices.payment_proof.file_help') }}
+                </small>
+
+            </div>
+
+
+            {{-- =====================================================
+                 NOTAS
+            ====================================================== --}}
+
+            <div class="payment-proof-section">
+
+                <label
+                    for="paymentNotesInput"
+                    class="payment-proof-label"
+                >
+
+                    {{ __('invoices.payment_proof.notes') }}
+
+                </label>
+
+
+                <textarea
+                    id="paymentNotesInput"
+                    name="payment_notes"
+                    rows="5"
+                    maxlength="5000"
+                    class="payment-proof-textarea"
+                    placeholder="{{ __('invoices.payment_proof.notes_placeholder') }}"
+                ></textarea>
+
+            </div>
+
+
+            {{-- =====================================================
+                 BOTONES
+            ====================================================== --}}
+
+            <div class="payment-proof-actions">
+
+                <button
+                    type="button"
+                    onclick="closePaymentProofModal()"
+                    class="btn-action"
+                >
+                    {{ __('invoices.payment_proof.cancel') }}
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="btn-action"
+                >
+                    💾
+                    {{ __('invoices.payment_proof.save') }}
+                </button>
+
+            </div>
+
+        </form>
 
     </div>
 
@@ -1619,5 +2127,593 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 @endif
+
+
+{{-- =========================================================
+     JAVASCRIPT COMPROBANTE DE PAGO
+     
+     FUERA DEL IF DEL ENVÍO MASIVO
+     PARA QUE FUNCIONE EN CUALQUIER FILTRO.
+========================================================= --}}
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+
+    /* =========================================================
+       ELEMENTOS
+    ========================================================= */
+
+    const modal =
+        document.getElementById(
+            'paymentProofModal'
+        );
+
+
+    const form =
+        document.getElementById(
+            'paymentProofForm'
+        );
+
+
+    const currentContainer =
+        document.getElementById(
+            'paymentProofCurrentContainer'
+        );
+
+
+    const currentImage =
+        document.getElementById(
+            'paymentProofCurrentImage'
+        );
+
+
+    const notesInput =
+        document.getElementById(
+            'paymentNotesInput'
+        );
+
+
+    const cameraInput =
+        document.getElementById(
+            'paymentProofCameraInput'
+        );
+
+
+    const fileInput =
+        document.getElementById(
+            'paymentProofFileInput'
+        );
+
+
+    const paymentProofInput =
+        document.getElementById(
+            'paymentProofInput'
+        );
+
+
+    const selectedFile =
+        document.getElementById(
+            'paymentProofSelectedFile'
+        );
+
+
+    const previewContainer =
+        document.getElementById(
+            'paymentProofPreview'
+        );
+
+
+    const previewImage =
+        document.getElementById(
+            'paymentProofPreviewImage'
+        );
+
+
+    const invoiceLabel =
+        document.getElementById(
+            'paymentProofInvoiceLabel'
+        );
+
+
+    /* =========================================================
+       COPIAR ARCHIVO AL INPUT REAL
+    ========================================================= */
+
+    function setPaymentProofFile(file) {
+
+        if (
+            !file ||
+            !paymentProofInput
+        ) {
+            return;
+        }
+
+
+        /*
+        |----------------------------------------------------------
+        | VALIDAR QUE SEA UNA IMAGEN
+        |----------------------------------------------------------
+        */
+
+        const allowedTypes = [
+            'image/jpeg',
+            'image/png',
+            'image/webp'
+        ];
+
+
+        if (
+            !allowedTypes.includes(
+                file.type
+            )
+        ) {
+
+            alert(
+                'El archivo seleccionado no es una imagen válida.'
+            );
+
+            return;
+
+        }
+
+
+        /*
+        |----------------------------------------------------------
+        | VALIDAR TAMAÑO
+        | Máximo 10 MB
+        |----------------------------------------------------------
+        */
+
+        const maxSize =
+            10 * 1024 * 1024;
+
+
+        if (
+            file.size > maxSize
+        ) {
+
+            alert(
+                'La imagen no puede superar los 10 MB.'
+            );
+
+            return;
+
+        }
+
+
+        /*
+        |----------------------------------------------------------
+        | PREPARAR ARCHIVO PARA EL FORMULARIO
+        |----------------------------------------------------------
+        */
+
+        try {
+
+            const dataTransfer =
+                new DataTransfer();
+
+
+            dataTransfer.items.add(
+                file
+            );
+
+
+            paymentProofInput.files =
+                dataTransfer.files;
+
+
+        } catch (error) {
+
+            console.error(
+                'No fue posible preparar el archivo.',
+                error
+            );
+
+            return;
+
+        }
+
+
+        /*
+        |----------------------------------------------------------
+        | MOSTRAR NOMBRE DEL ARCHIVO
+        |----------------------------------------------------------
+        */
+
+        if (selectedFile) {
+
+            selectedFile.textContent =
+                file.name;
+
+        }
+
+
+        /*
+        |----------------------------------------------------------
+        | MOSTRAR VISTA PREVIA
+        |----------------------------------------------------------
+        */
+
+        if (
+            previewContainer &&
+            previewImage
+        ) {
+
+            const reader =
+                new FileReader();
+
+
+            reader.onload =
+                function (event) {
+
+                    previewImage.src =
+                        event.target.result;
+
+
+                    previewContainer.style.display =
+                        'block';
+
+                };
+
+
+            reader.onerror =
+                function () {
+
+                    previewImage.src =
+                        '';
+
+                    previewContainer.style.display =
+                        'none';
+
+                };
+
+
+            reader.readAsDataURL(
+                file
+            );
+
+        }
+
+    }
+
+
+    /* =========================================================
+       ABRIR CÁMARA
+    ========================================================= */
+
+    window.openPaymentCamera =
+        function () {
+
+            if (!cameraInput) {
+                return;
+            }
+
+
+            cameraInput.value =
+                '';
+
+
+            cameraInput.click();
+
+        };
+
+
+    /* =========================================================
+       ABRIR SELECTOR DE ARCHIVOS
+    ========================================================= */
+
+    window.openPaymentFile =
+        function () {
+
+            if (!fileInput) {
+                return;
+            }
+
+
+            fileInput.value =
+                '';
+
+
+            fileInput.click();
+
+        };
+
+
+    /* =========================================================
+       FOTO TOMADA CON CÁMARA
+    ========================================================= */
+
+    if (cameraInput) {
+
+        cameraInput.addEventListener(
+            'change',
+            function () {
+
+                if (
+                    this.files &&
+                    this.files.length > 0
+                ) {
+
+                    setPaymentProofFile(
+                        this.files[0]
+                    );
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* =========================================================
+       ARCHIVO ELEGIDO
+    ========================================================= */
+
+    if (fileInput) {
+
+        fileInput.addEventListener(
+            'change',
+            function () {
+
+                if (
+                    this.files &&
+                    this.files.length > 0
+                ) {
+
+                    setPaymentProofFile(
+                        this.files[0]
+                    );
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* =========================================================
+       ABRIR MODAL
+    ========================================================= */
+
+    window.openPaymentProofModal =
+        function (
+            invoiceId,
+            invoiceNumber,
+            paymentProof,
+            paymentNotes
+        ) {
+
+
+            if (
+                !modal ||
+                !form
+            ) {
+                return;
+            }
+
+
+            /*
+            |----------------------------------------------------------
+            | RUTA DEL FORMULARIO
+            |----------------------------------------------------------
+            */
+
+            form.action =
+                "{{ url('/invoices') }}/" +
+                invoiceId +
+                "/payment-proof";
+
+
+            /*
+            |----------------------------------------------------------
+            | FACTURA
+            |----------------------------------------------------------
+            */
+
+            invoiceLabel.textContent =
+                "{{ __('invoices.invoice') }} #" +
+                invoiceNumber;
+
+
+            /*
+            |----------------------------------------------------------
+            | NOTAS EXISTENTES
+            |----------------------------------------------------------
+            */
+
+            notesInput.value =
+                paymentNotes || '';
+
+
+            /*
+            |----------------------------------------------------------
+            | LIMPIAR INPUT DE CÁMARA
+            |----------------------------------------------------------
+            */
+
+            if (cameraInput) {
+
+                cameraInput.value =
+                    '';
+
+            }
+
+
+            /*
+            |----------------------------------------------------------
+            | LIMPIAR INPUT DE ARCHIVO
+            |----------------------------------------------------------
+            */
+
+            if (fileInput) {
+
+                fileInput.value =
+                    '';
+
+            }
+
+
+            /*
+            |----------------------------------------------------------
+            | LIMPIAR INPUT REAL
+            |----------------------------------------------------------
+            */
+
+            if (paymentProofInput) {
+
+                paymentProofInput.value =
+                    '';
+
+            }
+
+
+            /*
+            |----------------------------------------------------------
+            | LIMPIAR NOMBRE DE ARCHIVO
+            |----------------------------------------------------------
+            */
+
+            if (selectedFile) {
+
+                selectedFile.textContent =
+                    '';
+
+            }
+
+
+            /*
+            |----------------------------------------------------------
+            | LIMPIAR VISTA PREVIA
+            |----------------------------------------------------------
+            */
+
+            if (previewImage) {
+
+                previewImage.src =
+                    '';
+
+            }
+
+
+            if (previewContainer) {
+
+                previewContainer.style.display =
+                    'none';
+
+            }
+
+
+            /*
+            |----------------------------------------------------------
+            | MOSTRAR COMPROBANTE YA GUARDADO
+            |----------------------------------------------------------
+            */
+
+            if (paymentProof) {
+
+                currentImage.src =
+                    "{{ asset('storage') }}/" +
+                    paymentProof;
+
+
+                currentContainer.style.display =
+                    'block';
+
+            } else {
+
+                currentImage.src =
+                    '';
+
+
+                currentContainer.style.display =
+                    'none';
+
+            }
+
+
+            /*
+            |----------------------------------------------------------
+            | MOSTRAR MODAL
+            |----------------------------------------------------------
+            */
+
+            modal.style.display =
+                'flex';
+
+        };
+
+
+    /* =========================================================
+       CERRAR MODAL
+    ========================================================= */
+
+    window.closePaymentProofModal =
+        function () {
+
+            if (!modal) {
+                return;
+            }
+
+
+            modal.style.display =
+                'none';
+
+        };
+
+
+    /* =========================================================
+       CERRAR AL HACER CLIC FUERA
+    ========================================================= */
+
+    if (modal) {
+
+        modal.addEventListener(
+            'click',
+            function (event) {
+
+                if (
+                    event.target === modal
+                ) {
+
+                    closePaymentProofModal();
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* =========================================================
+       ESC PARA CERRAR
+    ========================================================= */
+
+    document.addEventListener(
+        'keydown',
+        function (event) {
+
+            if (
+                event.key === 'Escape' &&
+                modal &&
+                modal.style.display === 'flex'
+            ) {
+
+                closePaymentProofModal();
+
+            }
+
+        }
+    );
+
+
+});
+
+</script>
+
 
 </x-app-layout>

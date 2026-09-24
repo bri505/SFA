@@ -1639,37 +1639,68 @@
 
                         <div class="detail-item">
 
-                            <label
-                                for="editQuantityType"
-                                class="detail-label"
-                            >
-                                {{ __('dashboard.modal.type') }}
-                            </label>
+                        <label
+                            for="editQuantityType"
+                            class="detail-label"
+                        >
+                            {{ __('dashboard.modal.type') }}
+                        </label>
 
-                            <select
-                                id="editQuantityType"
-                                name="quantity_type"
-                                class="form-input"
-                            >
+                        <select
+                            id="editQuantityType"
+                            class="form-input"
+                        >
+                            <option value="">
+                                {{ __('dashboard.modal.select') }}
+                            </option>
 
-                                <option value="">
-                                    {{ __('dashboard.modal.select') }}
+                            @foreach($quantityTypes as $quantityType)
+
+                                <option value="{{ $quantityType }}">
+
+                                    @if($quantityType === 'palets')
+
+                                        {{ __('dashboard.modal.palets') }}
+
+                                    @elseif($quantityType === 'contenedores')
+
+                                        {{ __('dashboard.modal.containers') }}
+
+                                    @elseif($quantityType === 'piezas')
+
+                                        {{ __('dashboard.modal.pieces') }}
+
+                                    @else
+
+                                        {{ $quantityType }}
+
+                                    @endif
+
                                 </option>
 
-                                <option value="palets">
-                                    {{ __('dashboard.modal.palets') }}
-                                </option>
+                            @endforeach
 
-                                <option value="contenedores">
-                                    {{ __('dashboard.modal.containers') }}
-                                </option>
+                            <option value="__new__">
+                                + Agregar nuevo tipo
+                            </option>
 
-                                <option value="piezas">
-                                    {{ __('dashboard.modal.pieces') }}
-                                </option>
+                        </select>
 
-                            </select>
+                        <input
+                            type="hidden"
+                            name="quantity_type"
+                            id="editQuantityTypeValue"
+                            value=""
+                        >
 
+                        <input
+                            type="text"
+                            id="editQuantityTypeInput"
+                            class="form-input"
+                            placeholder="Escribe el nuevo tipo"
+                            maxlength="100"
+                            style="display:none; margin-top:8px;"
+                        >
                         </div>
 
                     </div>
@@ -2306,12 +2337,15 @@
 
                     <div class="form-group">
 
-                        <label class="form-label">
+                        <label
+                            for="newQuantityType"
+                            class="form-label"
+                        >
                             {{ __('dashboard.modal.type') }}
                         </label>
 
                         <select
-                            name="quantity_type"
+                            id="newQuantityType"
                             class="form-input"
                         >
 
@@ -2319,19 +2353,53 @@
                                 {{ __('dashboard.modal.select') }}
                             </option>
 
-                            <option value="palets">
-                                {{ __('dashboard.modal.palets') }}
-                            </option>
+                            @foreach($quantityTypes as $quantityType)
 
-                            <option value="contenedores">
-                                {{ __('dashboard.modal.containers') }}
-                            </option>
+                                <option value="{{ $quantityType }}">
 
-                            <option value="piezas">
-                                {{ __('dashboard.modal.pieces') }}
+                                    @if($quantityType === 'palets')
+
+                                        {{ __('dashboard.modal.palets') }}
+
+                                    @elseif($quantityType === 'contenedores')
+
+                                        {{ __('dashboard.modal.containers') }}
+
+                                    @elseif($quantityType === 'piezas')
+
+                                        {{ __('dashboard.modal.pieces') }}
+
+                                    @else
+
+                                        {{ $quantityType }}
+
+                                    @endif
+
+                                </option>
+
+                            @endforeach
+
+                            <option value="__new__">
+                                + Agregar nuevo tipo
                             </option>
 
                         </select>
+
+                        <input
+                            type="hidden"
+                            name="quantity_type"
+                            id="newQuantityTypeValue"
+                            value=""
+                        >
+
+                        <input
+                            type="text"
+                            id="newQuantityTypeInput"
+                            class="form-input"
+                            placeholder="Escribe el nuevo tipo"
+                            maxlength="100"
+                            style="display:none; margin-top:8px;"
+                        >
 
                     </div>
 
@@ -3491,7 +3559,172 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     );
 
+    /* =========================================================
+       TIPO DE CANTIDAD - NUEVO REGISTRO
+    ========================================================= */
 
+    const newQuantityType =
+        document.getElementById('newQuantityType');
+
+    const newQuantityTypeValue =
+        document.getElementById('newQuantityTypeValue');
+
+    const newQuantityTypeInput =
+        document.getElementById('newQuantityTypeInput');
+
+
+    newQuantityType?.addEventListener(
+        'change',
+        function () {
+
+            if (
+                this.value === '__new__'
+            ) {
+
+                if (newQuantityTypeInput) {
+
+                    newQuantityTypeInput.style.display =
+                        'block';
+
+                    newQuantityTypeInput.value =
+                        '';
+
+                    newQuantityTypeInput.focus();
+
+                }
+
+
+                if (newQuantityTypeValue) {
+
+                    newQuantityTypeValue.value =
+                        '';
+
+                }
+
+                return;
+
+            }
+
+
+            if (newQuantityTypeInput) {
+
+                newQuantityTypeInput.style.display =
+                    'none';
+
+                newQuantityTypeInput.value =
+                    '';
+
+            }
+
+
+            if (newQuantityTypeValue) {
+
+                newQuantityTypeValue.value =
+                    this.value || '';
+
+            }
+
+        }
+    );
+
+
+    newQuantityTypeInput?.addEventListener(
+        'input',
+        function () {
+
+            if (newQuantityTypeValue) {
+
+                newQuantityTypeValue.value =
+                    this.value.trim();
+
+            }
+
+        }
+    );
+
+
+    /* =========================================================
+       TIPO DE CANTIDAD - EDITAR REGISTRO
+    ========================================================= */
+
+    const editQuantityType =
+        document.getElementById('editQuantityType');
+
+    const editQuantityTypeValue =
+        document.getElementById('editQuantityTypeValue');
+
+    const editQuantityTypeInput =
+        document.getElementById('editQuantityTypeInput');
+
+
+    editQuantityType?.addEventListener(
+        'change',
+        function () {
+
+            if (
+                this.value === '__new__'
+            ) {
+
+                if (editQuantityTypeInput) {
+
+                    editQuantityTypeInput.style.display =
+                        'block';
+
+                    editQuantityTypeInput.value =
+                        '';
+
+                    editQuantityTypeInput.focus();
+
+                }
+
+
+                if (editQuantityTypeValue) {
+
+                    editQuantityTypeValue.value =
+                        '';
+
+                }
+
+                return;
+
+            }
+
+
+            if (editQuantityTypeInput) {
+
+                editQuantityTypeInput.style.display =
+                    'none';
+
+                editQuantityTypeInput.value =
+                    '';
+
+            }
+
+
+            if (editQuantityTypeValue) {
+
+                editQuantityTypeValue.value =
+                    this.value || '';
+
+            }
+
+        }
+    );
+
+
+    editQuantityTypeInput?.addEventListener(
+        'input',
+        function () {
+
+            if (editQuantityTypeValue) {
+
+                editQuantityTypeValue.value =
+                    this.value.trim();
+
+            }
+
+        }
+    );
     /* =========================================================
        CARGAR REGISTRO
     ========================================================= */
@@ -3783,10 +4016,103 @@ document.addEventListener('DOMContentLoaded', function () {
                         );
 
 
-                        setValue(
-                            'editQuantityType',
-                            row.dataset.quantityType
-                        );
+                        const currentQuantityType =
+                        row.dataset.quantityType || '';
+
+                    const editQuantityTypeElement =
+                        document.getElementById('editQuantityType');
+
+                    const editQuantityTypeValueElement =
+                        document.getElementById('editQuantityTypeValue');
+
+                    const editQuantityTypeInputElement =
+                        document.getElementById('editQuantityTypeInput');
+
+
+                    if (editQuantityTypeElement) {
+
+                        const optionExists =
+                            Array.from(
+                                editQuantityTypeElement.options
+                            ).some(
+                                function (option) {
+                                    return option.value === currentQuantityType;
+                                }
+                            );
+
+
+                        if (
+                            currentQuantityType &&
+                            optionExists
+                        ) {
+
+                            editQuantityTypeElement.value =
+                                currentQuantityType;
+
+                            if (editQuantityTypeValueElement) {
+
+                                editQuantityTypeValueElement.value =
+                                    currentQuantityType;
+
+                            }
+
+                            if (editQuantityTypeInputElement) {
+
+                                editQuantityTypeInputElement.style.display =
+                                    'none';
+
+                                editQuantityTypeInputElement.value =
+                                    '';
+
+                            }
+
+                        } else if (currentQuantityType) {
+
+                            editQuantityTypeElement.value =
+                                '__new__';
+
+                            if (editQuantityTypeValueElement) {
+
+                                editQuantityTypeValueElement.value =
+                                    currentQuantityType;
+
+                            }
+
+                            if (editQuantityTypeInputElement) {
+
+                                editQuantityTypeInputElement.style.display =
+                                    'block';
+
+                                editQuantityTypeInputElement.value =
+                                    currentQuantityType;
+
+                            }
+
+                        } else {
+
+                            editQuantityTypeElement.value =
+                                '';
+
+                            if (editQuantityTypeValueElement) {
+
+                                editQuantityTypeValueElement.value =
+                                    '';
+
+                            }
+
+                            if (editQuantityTypeInputElement) {
+
+                                editQuantityTypeInputElement.style.display =
+                                    'none';
+
+                                editQuantityTypeInputElement.value =
+                                    '';
+
+                            }
+
+                        }
+
+                    }
 
 
                         setValue(
