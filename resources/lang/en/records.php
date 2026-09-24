@@ -17,6 +17,7 @@ return [
     'not_found' => 'No existing record found. You can type the new value and save.',
     'capture_information' => 'Enter the shipment information',
     'return' => 'Back',
+    'create' => 'Create record',
 
     'table' => [
         'date' => 'Date',

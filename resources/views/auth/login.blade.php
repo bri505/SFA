@@ -319,35 +319,7 @@
                     </button>
 
                 </form>
-
-
-                <div class="sfa-divider">
-
-                    <div class="sfa-divider-line"></div>
-
-                    <div class="sfa-divider-text">
-                        {{ __('auth.or') }}
-                    </div>
-
-                    <div class="sfa-divider-line"></div>
-
-                </div>
-
-
-                <a
-                    href="{{ route('google.login') }}"
-                    class="sfa-google-button"
-                >
-
-                    <span class="sfa-google-icon">
-                        G
-                    </span>
-
-                    <span>
-                        {{ __('auth.continue_with_google') }}
-                    </span>
-
-                </a>
+                
 
             </div>
 

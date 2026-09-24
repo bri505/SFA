@@ -369,6 +369,17 @@
 
                             </x-dropdown-link>
 
+
+                            <!-- RESPALDOS -->
+
+                            <x-dropdown-link
+                                :href="route('backups.index')"
+                            >
+
+                                {{ __('backups.title') }}
+
+                            </x-dropdown-link>
+
                         @endif
 
 
@@ -579,6 +590,18 @@
                 >
 
                     {{ __('invoices.title') }}
+
+                </x-responsive-nav-link>
+
+
+                <!-- RESPALDOS -->
+
+                <x-responsive-nav-link
+                    :href="route('backups.index')"
+                    :active="request()->routeIs('backups.*')"
+                >
+
+                    {{ __('backups.title') }}
 
                 </x-responsive-nav-link>
 

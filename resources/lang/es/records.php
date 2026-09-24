@@ -17,6 +17,7 @@ return [
     'not_found' => 'No se encontró un registro existente. Puedes escribir el nuevo valor y guardar.',
     'capture_information' => 'Captura la información del embarque',
     'return' => 'Regresar',
+    'create' => 'Crear registro',
 
     'table' => [
         'date' => 'Fecha',

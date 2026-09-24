@@ -2,42 +2,72 @@
 
 return [
 
-    'title' => 'Respaldos',
+    /*
+    |--------------------------------------------------------------------------
+    | Página de respaldos
+    |--------------------------------------------------------------------------
+    */
 
-    'description' => 'Administra los respaldos de la base de datos del sistema SFA.',
+    'title'                 => 'Respaldos',
+    'subtitle'              => 'Administra los respaldos de la base de datos del sistema.',
 
-    'available' => 'Respaldos disponibles',
+    /*
+    |--------------------------------------------------------------------------
+    | Acciones principales
+    |--------------------------------------------------------------------------
+    */
 
-    'stored_locally' => 'Los respaldos se almacenan de forma local en el servidor.',
+    'create'                => 'Crear respaldo',
+    'creating'              => 'Creando respaldo...',
+    'diagnostic'            => 'Diagnóstico',
 
-    'create' => 'Crear respaldo',
+    'download'              => 'Descargar',
+    'delete'                => 'Eliminar',
 
-    'create_confirm' => '¿Deseas crear un nuevo respaldo de la base de datos?',
+    /*
+    |--------------------------------------------------------------------------
+    | Restauración
+    |--------------------------------------------------------------------------
+    */
 
-    'download' => 'Descargar',
+    'restore_title'         => 'Restaurar respaldo',
+    'restore_description'   => 'Restaura la base de datos utilizando un archivo .dump.',
+    'restore_button'        => 'Restaurar respaldo',
+    'restoring'             => 'Restaurando...',
+    'select_file'           => 'Seleccionar respaldo',
 
-    'delete' => 'Eliminar',
+    'warning_label'         => 'Advertencia:',
+    'restore_warning'       => 'restaurar un respaldo reemplazará los datos actuales de la base de datos. Asegúrate de tener un respaldo reciente antes de continuar.',
 
-    'delete_confirm' => '¿Seguro que deseas eliminar este respaldo? Esta acción no se puede deshacer.',
+    /*
+    |--------------------------------------------------------------------------
+    | Lista de respaldos
+    |--------------------------------------------------------------------------
+    */
 
-    'no_backups' => 'No hay respaldos',
+    'available'             => 'Respaldos disponibles',
+    'available_description' => 'Archivos de respaldo almacenados en el sistema.',
+    'no_backups'            => 'No hay respaldos disponibles.',
 
-    'create_first' => 'Crea el primer respaldo de la base de datos.',
+    'column_file'           => 'Archivo',
+    'column_date'           => 'Fecha',
+    'column_size'           => 'Tamaño',
+    'column_actions'        => 'Acciones',
 
-    'database' => 'Base de datos',
+    /*
+    |--------------------------------------------------------------------------
+    | Confirmaciones y mensajes JS
+    |--------------------------------------------------------------------------
+    */
 
-    'postgresql' => 'PostgreSQL',
+    'confirm_delete'        => "¿Eliminar este respaldo?\n\nEsta acción no se puede deshacer.",
 
-    'information_title' => 'Información sobre los respaldos',
+    'js_select_file'        => 'Selecciona un archivo de respaldo.',
 
-    'information_text' => 'Los archivos de respaldo contienen la información de la base de datos de SFA. Guárdalos en un lugar seguro y evita compartirlos con personas no autorizadas.',
-
-    'created_successfully' => 'Respaldo creado correctamente.',
-
-    'deleted_successfully' => 'Respaldo eliminado correctamente.',
-
-    'not_found' => 'El respaldo no existe.',
-
-    'creation_error' => 'No fue posible crear el respaldo.',
+    'confirm_restore_title'    => 'ADVERTENCIA',
+    'confirm_restore_body'     => 'La restauración reemplazará TODOS los datos actuales de la base de datos.',
+    'confirm_restore_file'     => 'Archivo seleccionado:',
+    'confirm_restore_duration' => "La operación puede tardar varios minutos.\nNO cierres esta ventana hasta que termine.",
+    'confirm_restore_question' => '¿Deseas continuar?',
 
 ];

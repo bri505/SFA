@@ -10,6 +10,7 @@ use App\Http\Controllers\ServiceTypeController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\LanguageController;
+use App\Http\Controllers\BackupController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -394,6 +395,54 @@ Route::middleware(['auth', 'verified'])->group(function () {
             '/invoices/{invoice}/send-payment-received',
             [InvoiceController::class, 'sendPaymentReceived']
         )->name('invoices.send-payment-received');
+
+                /*
+        |--------------------------------------------------------------------------
+        | RESPALDOS Y RESTAURACIÓN
+        |--------------------------------------------------------------------------
+        |
+        | Solo accesible para administradores. Estas rutas permiten crear,
+        | descargar, eliminar y restaurar respaldos completos de la base
+        | de datos PostgreSQL.
+        |
+        */
+
+        Route::middleware('throttle:5,1')->group(function () {
+
+            Route::get(
+                '/backups',
+                [BackupController::class, 'index']
+            )->name('backups.index');
+
+            Route::post(
+                '/backups',
+                [BackupController::class, 'store']
+            )->name('backups.store');
+
+            Route::post(
+                '/backups/restore',
+                [BackupController::class, 'restore']
+            )->name('backups.restore');
+
+            Route::get(
+                '/backups/{filename}/download',
+                [BackupController::class, 'download']
+            )
+                ->where('filename', '[A-Za-z0-9_\-]+\.dump')
+                ->name('backups.download');
+
+            Route::delete(
+                '/backups/{filename}',
+                [BackupController::class, 'destroy']
+            )
+                ->where('filename', '[A-Za-z0-9_\-]+\.dump')
+                ->name('backups.destroy');
+
+            Route::get(
+                '/backups/test',
+                [BackupController::class, 'testBackup']
+            )->name('backups.test');
+        });
 
     });
 

@@ -1604,7 +1604,7 @@
                                 </div>
 
                                 <div class="empty-state-text">
-                                    {{ __('records.records.create') }}
+                                    {{ __('records.create') }}
                                 </div>
 
                             </td>

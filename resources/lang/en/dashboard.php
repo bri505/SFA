@@ -7,6 +7,9 @@ return [
 
     'new_record' => 'New record',
 
+    'register_new_inspection' => 'Register new inspection',
+
+
     'stats' => [
         'today_records' => 'Today\'s records',
     ],

@@ -2,42 +2,72 @@
 
 return [
 
-    'title' => 'Backups',
+    /*
+    |--------------------------------------------------------------------------
+    | Backup page
+    |--------------------------------------------------------------------------
+    */
 
-    'description' => 'Manage database backups for the SFA system.',
+    'title'                 => 'Backups',
+    'subtitle'              => 'Manage the system database backups.',
 
-    'available' => 'Available backups',
+    /*
+    |--------------------------------------------------------------------------
+    | Main actions
+    |--------------------------------------------------------------------------
+    */
 
-    'stored_locally' => 'Backups are stored locally on the server.',
+    'create'                => 'Create backup',
+    'creating'              => 'Creating backup...',
+    'diagnostic'            => 'Diagnostic',
 
-    'create' => 'Create backup',
+    'download'              => 'Download',
+    'delete'                => 'Delete',
 
-    'create_confirm' => 'Do you want to create a new database backup?',
+    /*
+    |--------------------------------------------------------------------------
+    | Restore
+    |--------------------------------------------------------------------------
+    */
 
-    'download' => 'Download',
+    'restore_title'         => 'Restore backup',
+    'restore_description'   => 'Restore the database using a .dump file.',
+    'restore_button'        => 'Restore backup',
+    'restoring'             => 'Restoring...',
+    'select_file'           => 'Select backup',
 
-    'delete' => 'Delete',
+    'warning_label'         => 'Warning:',
+    'restore_warning'       => 'restoring a backup will replace the current database data. Make sure you have a recent backup before continuing.',
 
-    'delete_confirm' => 'Are you sure you want to delete this backup? This action cannot be undone.',
+    /*
+    |--------------------------------------------------------------------------
+    | Backups list
+    |--------------------------------------------------------------------------
+    */
 
-    'no_backups' => 'No backups',
+    'available'             => 'Available backups',
+    'available_description' => 'Backup files stored in the system.',
+    'no_backups'            => 'No backups available.',
 
-    'create_first' => 'Create the first database backup.',
+    'column_file'           => 'File',
+    'column_date'           => 'Date',
+    'column_size'           => 'Size',
+    'column_actions'        => 'Actions',
 
-    'database' => 'Database',
+    /*
+    |--------------------------------------------------------------------------
+    | Confirmations and JS messages
+    |--------------------------------------------------------------------------
+    */
 
-    'postgresql' => 'PostgreSQL',
+    'confirm_delete'        => "Delete this backup?\n\nThis action cannot be undone.",
 
-    'information_title' => 'Backup information',
+    'js_select_file'        => 'Select a backup file.',
 
-    'information_text' => 'Backup files contain information from the SFA database. Store them in a secure location and avoid sharing them with unauthorized persons.',
-
-    'created_successfully' => 'Backup created successfully.',
-
-    'deleted_successfully' => 'Backup deleted successfully.',
-
-    'not_found' => 'The backup does not exist.',
-
-    'creation_error' => 'The backup could not be created.',
+    'confirm_restore_title'    => 'WARNING',
+    'confirm_restore_body'     => 'Restoring will replace ALL current database data.',
+    'confirm_restore_file'     => 'Selected file:',
+    'confirm_restore_duration' => "The operation may take several minutes.\nDO NOT close this window until it finishes.",
+    'confirm_restore_question' => 'Do you want to continue?',
 
 ];

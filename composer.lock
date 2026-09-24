@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9e21fb41edd18ff01edcdb52153512f0",
+    "content-hash": "8043fbcf8dd5b4b86aa3eb8b876be200",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -7539,6 +7539,91 @@
                 }
             ],
             "time": "2026-04-26T05:33:54+00:00"
+        },
+        {
+            "name": "weslinkde/laravel-postgres-tools",
+            "version": "v2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/weslinkde/laravel-postgres-tools.git",
+                "reference": "50b6213bab351fdfac08a60c505b37e2a0f1ab45"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/weslinkde/laravel-postgres-tools/zipball/50b6213bab351fdfac08a60c505b37e2a0f1ab45",
+                "reference": "50b6213bab351fdfac08a60c505b37e2a0f1ab45",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/contracts": "^11.0 || ^12.0 || ^13.0",
+                "illuminate/filesystem": "^11.0 || ^12.0 || ^13.0",
+                "illuminate/support": "^11.0 || ^12.0 || ^13.0",
+                "laravel/prompts": "^0.1 || ^0.2 || ^0.3",
+                "php": "^8.2",
+                "symfony/process": "^7.0 || ^8.0"
+            },
+            "require-dev": {
+                "driftingly/rector-laravel": "^2.0",
+                "larastan/larastan": "^3.0",
+                "laravel/pint": "^1.0",
+                "nunomaduro/collision": "^8.0 || ^9.0",
+                "orchestra/testbench": "^9.0 || ^10.0 || ^11.0",
+                "pestphp/pest": "^3.0 || ^4.0",
+                "pestphp/pest-plugin-arch": "^3.0 || ^4.0",
+                "pestphp/pest-plugin-laravel": "^3.0 || ^4.0",
+                "phpstan/extension-installer": "^1.4",
+                "phpstan/phpstan-deprecation-rules": "^2.0",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "rector/rector": "^2.0",
+                "spatie/laravel-ray": "^1.39"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Weslinkde\\PostgresTools\\PostgresToolsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Weslinkde\\PostgresTools\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Dominik Lenz",
+                    "email": "dl@weslink.de",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Jan Hallekamp",
+                    "email": "jh@weslink.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Some handy helper function for PostgresSQL Databases",
+            "homepage": "https://github.com/weslinkde/laravel-postgres-tools",
+            "keywords": [
+                "Weslinkde",
+                "laravel",
+                "laravel-postgres-tools"
+            ],
+            "support": {
+                "issues": "https://github.com/weslinkde/laravel-postgres-tools/issues",
+                "source": "https://github.com/weslinkde/laravel-postgres-tools/tree/v2.0.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/Weslinkde",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-08-28T10:31:49+00:00"
         }
     ],
     "packages-dev": [
