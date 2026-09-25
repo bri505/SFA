@@ -1,0 +1,26 @@
+{
+    "name": "SFA - Sistema para Facturas Americanas",
+    "short_name": "SFA",
+    "description": "Sistema administrativo para gesti\u00f3n de registros, compa\u00f1\u00edas y facturas americanas.",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "any",
+    "background_color": "#f5f6f8",
+    "theme_color": "#111827",
+    "lang": "es",
+    "start_url": "/",
+    "icons": [
+        {
+            "src": "logo-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "logo-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}
